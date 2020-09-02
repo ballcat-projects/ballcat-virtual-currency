@@ -16,14 +16,6 @@ import java.util.concurrent.ExecutionException;
 public interface VirtualCurrencyService {
 
     /**
-     * 获取 web3j对象
-     *
-     * @return org.web3j.protocol.Web3j
-     * @author lingting 2020-09-01 19:55
-     */
-    Web3j getWeb3j();
-
-    /**
      * 通过交易hash获取交易信息
      *
      * @param hash 交易hash

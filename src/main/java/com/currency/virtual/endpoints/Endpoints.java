@@ -19,13 +19,6 @@ public interface Endpoints {
     String getHttp();
 
     /**
-     * 获取 getWss  前缀
-     *
-     * @return getWss 前缀
-     */
-    String getWss();
-
-    /**
      * 生成 http 连接
      *
      * @param suffix 拼接后面的字符串

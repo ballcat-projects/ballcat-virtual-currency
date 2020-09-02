@@ -14,6 +14,10 @@ public enum Protocol {
      * https://etherscan.io/
      */
     ETHERSCAN("0x"),
+    /**
+     * 比特
+     */
+    BTC("未知"),
     ;
     /**
      * 地址，交易号等前缀
