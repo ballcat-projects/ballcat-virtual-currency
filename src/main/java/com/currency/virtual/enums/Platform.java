@@ -1,0 +1,23 @@
+package com.currency.virtual.enums;
+
+import lombok.AllArgsConstructor;
+
+/**
+ * 平台
+ *
+ * @author lingting 2020-09-01 17:20
+ */
+@AllArgsConstructor
+public enum Platform {
+    /**
+     * 以太坊
+     * https://infura.io/
+     * 请使用 {@link com.currency.virtual.properties.InfuraProperties} 类进行配置
+     */
+    INFURA(Protocol.ETHERSCAN),
+    ;
+    /**
+     * 协议
+     */
+    private final Protocol protocol;
+}
