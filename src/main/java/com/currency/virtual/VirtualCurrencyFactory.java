@@ -1,13 +1,11 @@
 package com.currency.virtual;
 
 import com.currency.virtual.enums.Platform;
-import com.currency.virtual.properties.InfuraProperties;
-import com.currency.virtual.properties.OmniProperties;
-import com.currency.virtual.properties.PlatformProperties;
-import com.currency.virtual.properties.VirtualCurrencyProperties;
+import com.currency.virtual.properties.*;
 import com.currency.virtual.service.VirtualCurrencyService;
 import com.currency.virtual.service.impl.InfuraServiceImpl;
 import com.currency.virtual.service.impl.OmniServiceImpl;
+import com.currency.virtual.service.impl.TronscanServiceImpl;
 
 /**
  * 生成
@@ -28,6 +26,8 @@ public class VirtualCurrencyFactory {
             return new InfuraServiceImpl((InfuraProperties) platformProperties);
         } else if (properties.getPlatform() == Platform.OMNI) {
             return new OmniServiceImpl((OmniProperties) platformProperties);
+        } else if (properties.getPlatform() == Platform.TRONSCAN) {
+            return new TronscanServiceImpl((TronscanProperties) platformProperties);
         }
 
         throw new RuntimeException("未找到对应处理类");

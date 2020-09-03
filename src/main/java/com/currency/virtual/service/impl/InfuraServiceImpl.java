@@ -17,12 +17,9 @@ import org.web3j.protocol.core.methods.response.EthTransaction;
 import org.web3j.protocol.core.methods.response.Transaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 
-import java.io.IOException;
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.math.MathContext;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 
 /**
  * @author lingting 2020-09-01 17:16

@@ -1,12 +1,8 @@
 package com.currency.virtual.service;
 
-import com.currency.virtual.exception.TransactionException;
 import com.currency.virtual.transaction.VirtualCurrencyTransaction;
-import org.web3j.protocol.Web3j;
 
-import java.io.IOException;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 
 /**
  * 虚拟货币处理接口类

@@ -2,9 +2,11 @@ package com.currency.virtual;
 
 import com.currency.virtual.endpoints.InfuraEndpoints;
 import com.currency.virtual.endpoints.OmniEndpoints;
+import com.currency.virtual.endpoints.TronscanEndpoints;
 import com.currency.virtual.enums.Platform;
 import com.currency.virtual.properties.InfuraProperties;
 import com.currency.virtual.properties.OmniProperties;
+import com.currency.virtual.properties.TronscanProperties;
 import com.currency.virtual.properties.VirtualCurrencyProperties;
 import com.currency.virtual.service.VirtualCurrencyService;
 import com.currency.virtual.transaction.VirtualCurrencyTransaction;
@@ -40,7 +42,18 @@ public class VcTest {
                 new VirtualCurrencyProperties().setPlatform(Platform.OMNI),
                 new OmniProperties().setEndpoints(OmniEndpoints.MAINNET)
         );
-        Optional<VirtualCurrencyTransaction> transaction = service.getTransactionByHash("896fe1fd6d659cc949f8691891cea64d670d17145e4b9a737bee4bc91abcc0b0");
+        Optional<VirtualCurrencyTransaction> transaction = service.getTransactionByHash("6626088699bbcc43789c25554d3231c5106879d7ae7e96a2c77efdaeaa9b0e4d");
+
+        System.out.println(transaction.isEmpty());
+    }
+
+    @Test
+    public void tronscanTest() {
+        service = VirtualCurrencyFactory.getVirtualCurrencyService(
+                new VirtualCurrencyProperties().setPlatform(Platform.TRONSCAN),
+                new TronscanProperties().setEndpoints(TronscanEndpoints.MAINNET)
+        );
+        Optional<VirtualCurrencyTransaction> transaction = service.getTransactionByHash("546472bbca89b426d7c08dd4d24f7620ea743f13ad756d611aa42bccfa951a4e");
 
         System.out.println(transaction.isEmpty());
     }

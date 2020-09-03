@@ -18,6 +18,10 @@ public enum Protocol {
      * 比特
      */
     BTC("未知"),
+    /**
+     * 波场
+     */
+    TRONSCAN("未知"),
     ;
     /**
      * 地址，交易号等前缀

@@ -1,5 +1,6 @@
 package com.currency.virtual.util;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 
@@ -14,6 +15,7 @@ public class JsonUtil {
 
     static {
         OM = new ObjectMapper();
+        OM.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
     }
 
     public static <T> T readValue(String jsonStr, Class<T> t) {

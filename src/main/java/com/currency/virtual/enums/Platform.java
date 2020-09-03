@@ -1,5 +1,6 @@
 package com.currency.virtual.enums;
 
+import com.currency.virtual.properties.TronscanProperties;
 import lombok.AllArgsConstructor;
 
 /**
@@ -21,6 +22,12 @@ public enum Platform {
      * 请使用 {@link com.currency.virtual.properties.OmniProperties} 类进行配置
      */
     OMNI(Protocol.ETHERSCAN),
+    /**
+     * 波场
+     * https://tronscan.org/
+     * 请使用 {@link TronscanProperties} 类进行配置
+     */
+    TRONSCAN(Protocol.TRONSCAN),
     ;
     /**
      * 协议

@@ -33,7 +33,8 @@ public class OmniServiceImpl implements VirtualCurrencyService {
     public Optional<VirtualCurrencyTransaction> getTransactionByHash(String hash) {
         OmniTransaction omniTransaction = JsonUtil.readValue(HttpUtil.get(properties.getTransactionUrlByHash(hash)), OmniTransaction.class);
 
-        if (omniTransaction == null) {
+        // 返回值为null 或者 转账方为null
+        if (omniTransaction == null || omniTransaction.getFrom() == null) {
             return Optional.empty();
         }
 
