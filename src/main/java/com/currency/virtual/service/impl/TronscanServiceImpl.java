@@ -42,7 +42,7 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 
 
         VirtualCurrencyTransaction transaction = new VirtualCurrencyTransaction()
-                .setStatus(SUCCESS_RET.equals(tronscanTransaction.getContractRet()) ? TransactionStatus.SUCCESS : TransactionStatus.WAIT)
+                .setStatus(SUCCESS_RET.equals(tronscanTransaction.getContractRet()) ? TransactionStatus.SUCCESS : TransactionStatus.FAIL)
                 .setHash(hash)
                 .setBlock(tronscanTransaction.getBlock())
                 .setContract(tronscan);

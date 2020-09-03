@@ -47,7 +47,7 @@ public class OmniServiceImpl implements VirtualCurrencyService {
                 .setValue(new BigDecimal(omniTransaction.getAmount()))
                 .setProtocol(Protocol.BTC)
                 // 如果已确数小于 SUCCESS_CONFIRMATIONS_MIN 值，则不算交易成功
-                .setStatus(omniTransaction.getConfirmations() < SUCCESS_CONFIRMATIONS_MIN ? TransactionStatus.WAIT : TransactionStatus.SUCCESS)
+                .setStatus(omniTransaction.getConfirmations() < SUCCESS_CONFIRMATIONS_MIN ? TransactionStatus.FAIL : TransactionStatus.SUCCESS)
                 .setHash(hash));
     }
 }

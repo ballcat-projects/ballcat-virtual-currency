@@ -16,6 +16,7 @@ public enum TransactionStatus {
      */
     SUCCESS(1, "交易成功"),
     WAIT(2, "等待处理"),
+    FAIL(3, "交易失败"),
     ;
     private final Integer value;
     private final String desc;

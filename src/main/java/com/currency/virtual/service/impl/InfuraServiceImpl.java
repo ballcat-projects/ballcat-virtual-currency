@@ -85,7 +85,7 @@ public class InfuraServiceImpl implements VirtualCurrencyService {
             // 交易成功
             virtualCurrencyTransaction.setStatus(TransactionStatus.SUCCESS);
         } else {
-            virtualCurrencyTransaction.setStatus(TransactionStatus.WAIT);
+            virtualCurrencyTransaction.setStatus(TransactionStatus.FAIL);
         }
         return Optional.of(virtualCurrencyTransaction);
     }
