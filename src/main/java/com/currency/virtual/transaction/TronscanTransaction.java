@@ -25,11 +25,11 @@ public class TronscanTransaction {
     @JsonProperty("signature_addresses")
     private List<String> signatureAddresses;
     @JsonProperty("contractType")
-    private Integer contractType;
+    private Long contractType;
     @JsonProperty("toAddress")
     private String toAddress;
     @JsonProperty("confirmations")
-    private Integer confirmations;
+    private Long confirmations;
     @JsonProperty("confirmed")
     private boolean confirmed;
     @JsonProperty("revert")
@@ -75,17 +75,17 @@ public class TronscanTransaction {
     @Setter
     public static class Cost {
         @JsonProperty("net_usage")
-        private Integer netUsage;
+        private Long netUsage;
         @JsonProperty("net_fee")
-        private Integer netFee;
+        private Long netFee;
         @JsonProperty("energy_usage")
-        private Integer energyUsage;
+        private Long energyUsage;
         @JsonProperty("energy_fee")
         private long energyFee;
         @JsonProperty("origin_energy_usage")
-        private Integer originEnergyUsage;
+        private Long originEnergyUsage;
         @JsonProperty("energy_usage_total")
-        private Integer energyUsageTotal;
+        private Long energyUsageTotal;
     }
 
     @Getter
@@ -107,7 +107,7 @@ public class TronscanTransaction {
         @JsonProperty("contract_address")
         private String contractAddress;
         @JsonProperty("call_value")
-        private Integer callValue;
+        private Long callValue;
     }
 
     @Getter
@@ -118,7 +118,7 @@ public class TronscanTransaction {
         @JsonProperty("symbol")
         private String symbol;
         @JsonProperty("decimals")
-        private Integer decimals;
+        private Long decimals;
         @JsonProperty("name")
         private String name;
         @JsonProperty("to_address")
@@ -139,7 +139,7 @@ public class TronscanTransaction {
         @JsonProperty("symbol")
         private String symbol;
         @JsonProperty("decimals")
-        private Integer decimals;
+        private Long decimals;
         @JsonProperty("name")
         private String name;
         @JsonProperty("to_address")

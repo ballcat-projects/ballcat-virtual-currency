@@ -5,13 +5,13 @@
     <groupId>com.currency</groupId>
     <artifactId>virtual-currency</artifactId>
     <packaging>jar</packaging>
-    <version>0.0.2</version>
+    <version>0.0.3</version>
 
     <name>virtual-currency</name>
     <description>虚拟货币处理</description>
 
     <properties>
-        <java.version>11</java.version>
+        <java.version>1.8</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <maven-compiler-plugin.verison>3.8.1</maven-compiler-plugin.verison>

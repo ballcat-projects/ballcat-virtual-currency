@@ -33,7 +33,7 @@ public class VcTest {
         String txnHash = "0x45cb0c87e66979f4d837e199ee9cbfbf262eaf777c5629e5ae8fccab7358ab30";
         Optional<VirtualCurrencyTransaction> transaction = service.getTransactionByHash(txnHash.trim());
 
-        System.out.println(transaction.isEmpty());
+        System.out.println(transaction.isPresent());
     }
 
     @Test
@@ -44,7 +44,7 @@ public class VcTest {
         );
         Optional<VirtualCurrencyTransaction> transaction = service.getTransactionByHash("6626088699bbcc43789c25554d3231c5106879d7ae7e96a2c77efdaeaa9b0e4d");
 
-        System.out.println(transaction.isEmpty());
+        System.out.println(transaction.isPresent());
     }
 
     @Test
@@ -55,6 +55,6 @@ public class VcTest {
         );
         Optional<VirtualCurrencyTransaction> transaction = service.getTransactionByHash("546472bbca89b426d7c08dd4d24f7620ea743f13ad756d611aa42bccfa951a4e");
 
-        System.out.println(transaction.isEmpty());
+        System.out.println(transaction.isPresent());
     }
 }

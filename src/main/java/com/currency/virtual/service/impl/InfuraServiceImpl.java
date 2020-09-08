@@ -48,7 +48,7 @@ public class InfuraServiceImpl implements VirtualCurrencyService {
         /* 订单信息为空
             如果交易还没有被打包，就查询不到交易信息
          */
-        if (ethTransaction.getTransaction().isEmpty()) {
+        if (!ethTransaction.getTransaction().isPresent()) {
             return Optional.empty();
         }
         Transaction transaction = ethTransaction.getTransaction().get();
