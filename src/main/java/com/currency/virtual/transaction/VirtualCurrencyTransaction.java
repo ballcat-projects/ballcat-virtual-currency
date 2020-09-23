@@ -7,6 +7,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.TimeZone;
 import lombok.Getter;
 import lombok.Setter;
@@ -64,6 +65,15 @@ public class VirtualCurrencyTransaction {
      * 交易时间, 时区 UTC
      */
     private LocalDateTime time;
+
+    public VirtualCurrencyTransaction setTime(LocalDateTime time) {
+        this.time = time;
+        return this;
+    }
+
+    public VirtualCurrencyTransaction setTime(long time) {
+        return setTime(LocalDateTime.ofEpochSecond(time, 0, ZoneOffset.UTC));
+    }
 
     /**
      * 返回系统默认时区的交易时间
