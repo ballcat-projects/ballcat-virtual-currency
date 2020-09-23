@@ -49,9 +49,17 @@ public class VcTest {
                 new VirtualCurrencyProperties().setPlatform(Platform.OMNI),
                 new OmniProperties().setEndpoints(OmniEndpoints.MAINNET)
         );
-        Optional<VirtualCurrencyTransaction> transaction = service.getTransactionByHash("6626088699bbcc43789c25554d3231c5106879d7ae7e96a2c77efdaeaa9b0e4d");
+        Optional<VirtualCurrencyTransaction> optional = service.getTransactionByHash(
+                "91c9500c36613719604ce4d59d738ce125f6af1730569a326d1da425c43bd82e");
 
-        System.out.println(transaction.isPresent());
+        System.out.println(optional.isPresent());
+        if (optional.isPresent()) {
+            VirtualCurrencyTransaction transaction = optional.get();
+            // 获取系统默认时区的交易创建时间
+            System.out.println(transaction.getTime());
+            // 获取utc时区的交易创建时间
+            System.out.println(transaction.getTimeByUtc());
+        }
     }
 
     @Test
