@@ -10,11 +10,10 @@ import com.currency.virtual.properties.TronscanProperties;
 import com.currency.virtual.properties.VirtualCurrencyProperties;
 import com.currency.virtual.service.VirtualCurrencyService;
 import com.currency.virtual.transaction.VirtualCurrencyTransaction;
+import java.util.Optional;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
-
-import java.util.Optional;
 
 /**
  * @author lingting 2020-09-01 19:56
@@ -28,12 +27,20 @@ public class VcTest {
     public void ethTest() {
         service = VirtualCurrencyFactory.getVirtualCurrencyService(
                 new VirtualCurrencyProperties().setPlatform(Platform.INFURA),
-                new InfuraProperties().setEndpoints(InfuraEndpoints.MAINNET).setProjectId("b6066b4cfce54e7384ea38d52f9260ac")
+                new InfuraProperties().setEndpoints(InfuraEndpoints.MAINNET).setProjectId(
+                        "b6066b4cfce54e7384ea38d52f9260ac")
         );
-        String txnHash = "0x45cb0c87e66979f4d837e199ee9cbfbf262eaf777c5629e5ae8fccab7358ab30";
-        Optional<VirtualCurrencyTransaction> transaction = service.getTransactionByHash(txnHash.trim());
+        String txnHash = "0x438e851665668b3083220a0eecf798e5290e589d7f02824a044fea7155a1a0d1";
+        Optional<VirtualCurrencyTransaction> optional = service.getTransactionByHash(txnHash.trim());
 
-        System.out.println(transaction.isPresent());
+        System.out.println(optional.isPresent());
+        if (optional.isPresent()) {
+            VirtualCurrencyTransaction transaction = optional.get();
+            // 获取系统默认时区的交易创建时间
+            System.out.println(transaction.getTime());
+            // 获取utc时区的交易创建时间
+            System.out.println(transaction.getTimeByUtc());
+        }
     }
 
     @Test

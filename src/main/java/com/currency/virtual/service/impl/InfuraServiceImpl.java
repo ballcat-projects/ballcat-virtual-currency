@@ -1,5 +1,6 @@
 package com.currency.virtual.service.impl;
 
+import cn.hutool.core.convert.Convert;
 import com.currency.virtual.contract.Etherscan;
 import com.currency.virtual.enums.EtherscanReceiptStatus;
 import com.currency.virtual.enums.Protocol;
@@ -9,17 +10,19 @@ import com.currency.virtual.properties.InfuraProperties;
 import com.currency.virtual.service.VirtualCurrencyService;
 import com.currency.virtual.transaction.VirtualCurrencyTransaction;
 import com.currency.virtual.util.EtherscanUtil;
+import java.math.BigDecimal;
+import java.math.MathContext;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.Optional;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.methods.response.EthBlock;
 import org.web3j.protocol.core.methods.response.EthTransaction;
 import org.web3j.protocol.core.methods.response.Transaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
-
-import java.math.BigDecimal;
-import java.math.MathContext;
-import java.util.Optional;
 
 /**
  * @author lingting 2020-09-01 17:16
@@ -80,13 +83,23 @@ public class InfuraServiceImpl implements VirtualCurrencyService {
                 .setValue(input.getValue());
 
         // 获取交易状态
-        Optional<TransactionReceipt> receiptOptional = web3j.ethGetTransactionReceipt(hash).send().getTransactionReceipt();
+        Optional<TransactionReceipt> receiptOptional =
+                web3j.ethGetTransactionReceipt(hash).send().getTransactionReceipt();
         if (receiptOptional.isPresent() && receiptOptional.get().getStatus().equals(EtherscanReceiptStatus.SUCCESS.getValue())) {
             // 交易成功
             virtualCurrencyTransaction.setStatus(TransactionStatus.SUCCESS);
         } else {
             virtualCurrencyTransaction.setStatus(TransactionStatus.FAIL);
         }
-        return Optional.of(virtualCurrencyTransaction);
+
+        // 获取交易时间
+        EthBlock block = web3j.ethGetBlockByHash(transaction.getBlockHash(), false).sendAsync().get();
+
+        // 从平台获取的交易是属于 UTC 时区的
+        return Optional.of(virtualCurrencyTransaction.setTime(LocalDateTime.ofEpochSecond(
+                Convert.toLong(block.getBlock().getTimestamp()),
+                0,
+                ZoneOffset.UTC
+        )));
     }
 }
