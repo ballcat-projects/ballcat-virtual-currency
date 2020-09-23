@@ -90,6 +90,9 @@ public class VirtualCurrencyTransaction {
      * @author lingting 2020-09-23 19:12
      */
     public LocalDateTime getTimeByZone(ZoneId zoneId) {
+        if (time == null) {
+            return null;
+        }
         return time.plusSeconds(TimeZone.getTimeZone(zoneId).getRawOffset() / 1000);
     }
 
