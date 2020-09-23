@@ -68,8 +68,15 @@ public class VcTest {
                 new VirtualCurrencyProperties().setPlatform(Platform.TRONSCAN),
                 new TronscanProperties().setEndpoints(TronscanEndpoints.MAINNET)
         );
-        Optional<VirtualCurrencyTransaction> transaction = service.getTransactionByHash("546472bbca89b426d7c08dd4d24f7620ea743f13ad756d611aa42bccfa951a4e");
+        Optional<VirtualCurrencyTransaction> optional = service.getTransactionByHash("99a1e33afa08194951275d028aeb0af9a019f4f4ed7da5bb52285135fc4bea2f");
 
-        System.out.println(transaction.isPresent());
+        System.out.println(optional.isPresent());
+        if (optional.isPresent()) {
+            VirtualCurrencyTransaction transaction = optional.get();
+            // 获取系统默认时区的交易创建时间
+            System.out.println(transaction.getTime());
+            // 获取utc时区的交易创建时间
+            System.out.println(transaction.getTimeByUtc());
+        }
     }
 }

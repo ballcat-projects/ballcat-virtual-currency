@@ -9,13 +9,12 @@ import com.currency.virtual.service.VirtualCurrencyService;
 import com.currency.virtual.transaction.TronscanTransaction;
 import com.currency.virtual.transaction.VirtualCurrencyTransaction;
 import com.currency.virtual.util.JsonUtil;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.util.Optional;
+import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author lingting 2020-09-01 17:16
@@ -64,9 +63,11 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
             TronscanTransaction.ContractData contractData = tronscanTransaction.getContractData();
             transaction.setFrom(contractData.getOwnerAddress())
                     .setTo(contractData.getToAddress())
-                    .setValue(new BigDecimal(contractData.getAmount()).divide(new BigDecimal(1000000), MathContext.UNLIMITED));
+                    .setValue(new BigDecimal(contractData.getAmount()).divide(new BigDecimal(1000000),
+                            MathContext.UNLIMITED));
         }
 
-        return Optional.of(transaction);
+        // 这里返回的时间单位是 毫秒，需要转为秒
+        return Optional.of(transaction.setTime(tronscanTransaction.getTimestamp() / 1000));
     }
 }
