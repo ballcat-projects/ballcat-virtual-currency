@@ -3,12 +3,14 @@ package com.currency.virtual.transaction;
 import com.currency.virtual.contract.Contract;
 import com.currency.virtual.enums.Protocol;
 import com.currency.virtual.enums.TransactionStatus;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.TimeZone;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-
-import java.math.BigDecimal;
-import java.math.BigInteger;
 
 /**
  * @author lingting 2020-09-02 14:02
@@ -47,6 +49,7 @@ public class VirtualCurrencyTransaction {
      * 交易状态
      */
     private TransactionStatus status;
+
     /**
      * 合约类型，可能为空
      */
@@ -56,4 +59,38 @@ public class VirtualCurrencyTransaction {
      * 协议
      */
     private Protocol protocol;
+
+    /**
+     * 交易时间, 时区 UTC
+     */
+    private LocalDateTime time;
+
+    /**
+     * 返回系统默认时区的交易时间
+     *
+     * @author lingting 2020-09-23 18:41
+     */
+    public LocalDateTime getTime() {
+        // 计算当前时区的偏移量 单位: 秒， 然后让时间偏移
+        return getTimeByZone(ZoneId.systemDefault());
+    }
+
+    /**
+     * 返回UTC时区的交易时间
+     *
+     * @author lingting 2020-09-23 18:41
+     */
+    public LocalDateTime getTimeByUtc() {
+        return time;
+    }
+
+    /**
+     * 获取指定时区的交易时间
+     *
+     * @author lingting 2020-09-23 19:12
+     */
+    public LocalDateTime getTimeByZone(ZoneId zoneId) {
+        return time.plusSeconds(TimeZone.getTimeZone(zoneId).getRawOffset() / 1000);
+    }
+
 }
