@@ -6,11 +6,12 @@ package com.currency.virtual.contract;
  * @author lingting 2020-09-02 13:59
  */
 public interface Contract {
-    /**
-     * 获取合约 hash
-     *
-     * @return java.lang.String
-     * @author lingting 2020-09-02 14:00
-     */
-    String getHash();
+
+	/**
+	 * 获取合约 hash
+	 * @return java.lang.String
+	 * @author lingting 2020-09-02 14:00
+	 */
+	String getHash();
+
 }

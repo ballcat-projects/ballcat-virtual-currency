@@ -23,39 +23,35 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class OmniServiceImpl implements VirtualCurrencyService {
 
-    /**
-     * 至少多少个确认数， 认得交易成功
-     */
-    private static final int SUCCESS_CONFIRMATIONS_MIN = 6;
+	/**
+	 * 至少多少个确认数， 认得交易成功
+	 */
+	private static final int SUCCESS_CONFIRMATIONS_MIN = 6;
 
-    private final OmniProperties properties;
+	private final OmniProperties properties;
 
-    private final HttpRequest request = HttpRequest.get(OmniEndpoints.MAINNET.getHttp());
+	private final HttpRequest request = HttpRequest.get(OmniEndpoints.MAINNET.getHttp());
 
-    @Override
-    @SneakyThrows
-    public Optional<VirtualCurrencyTransaction> getTransactionByHash(String hash) {
-        OmniTransaction omniTransaction =
-                JsonUtil.readValue(request.setUrl(properties.getTransactionUrlByHash(hash)).execute().body(),
-                        OmniTransaction.class);
+	@Override
+	@SneakyThrows
+	public Optional<VirtualCurrencyTransaction> getTransactionByHash(String hash) {
+		OmniTransaction omniTransaction = JsonUtil.readValue(
+				request.setUrl(properties.getTransactionUrlByHash(hash)).execute().body(), OmniTransaction.class);
 
-        // 返回值为null 或者 转账方为null
-        if (omniTransaction == null || omniTransaction.getFrom() == null) {
-            return Optional.empty();
-        }
+		// 返回值为null 或者 转账方为null
+		if (omniTransaction == null || omniTransaction.getFrom() == null) {
+			return Optional.empty();
+		}
 
-        return Optional.of(new VirtualCurrencyTransaction()
-                .setBlock(omniTransaction.getBlock())
-                .setBlockHash(omniTransaction.getBlockHash())
-                .setContract(Btc.getByHash(omniTransaction.getPropertyId().toString()))
-                .setFrom(omniTransaction.getFrom())
-                .setTo(omniTransaction.getTo())
-                .setValue(new BigDecimal(omniTransaction.getAmount()))
-                .setProtocol(Protocol.BTC)
-                // 如果已确数小于 SUCCESS_CONFIRMATIONS_MIN 值，则不算交易成功
-                .setStatus(omniTransaction.getConfirmations() < SUCCESS_CONFIRMATIONS_MIN ? TransactionStatus.FAIL :
-                        TransactionStatus.SUCCESS)
-                .setHash(hash)
-                .setTime(omniTransaction.getBlockTime()));
-    }
+		return Optional.of(new VirtualCurrencyTransaction().setBlock(omniTransaction.getBlock())
+				.setBlockHash(omniTransaction.getBlockHash())
+				.setContract(Btc.getByHash(omniTransaction.getPropertyId().toString()))
+				.setFrom(omniTransaction.getFrom()).setTo(omniTransaction.getTo())
+				.setValue(new BigDecimal(omniTransaction.getAmount())).setProtocol(Protocol.BTC)
+				// 如果已确数小于 SUCCESS_CONFIRMATIONS_MIN 值，则不算交易成功
+				.setStatus(omniTransaction.getConfirmations() < SUCCESS_CONFIRMATIONS_MIN ? TransactionStatus.FAIL
+						: TransactionStatus.SUCCESS)
+				.setHash(hash).setTime(omniTransaction.getBlockTime()).setDelay(properties.getDelay()));
+	}
+
 }

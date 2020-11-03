@@ -11,10 +11,12 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum EtherscanReceiptStatus {
-    /**
-     * 交易状态
-     */
-    SUCCESS("0x1"),
-    ;
-    private final String value;
+
+	/**
+	 * 交易状态
+	 */
+	SUCCESS("0x1"),;
+
+	private final String value;
+
 }

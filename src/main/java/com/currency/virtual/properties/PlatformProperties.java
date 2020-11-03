@@ -6,4 +6,5 @@ package com.currency.virtual.properties;
  * @author lingting 2020-09-01 17:21
  */
 public interface PlatformProperties {
+
 }

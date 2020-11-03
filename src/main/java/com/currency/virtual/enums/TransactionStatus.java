@@ -11,13 +11,14 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum TransactionStatus {
-    /**
-     * 交易状态
-     */
-    SUCCESS(1, "交易成功"),
-    WAIT(2, "等待处理"),
-    FAIL(3, "交易失败"),
-    ;
-    private final Integer value;
-    private final String desc;
+
+	/**
+	 * 交易状态
+	 */
+	SUCCESS(1, "交易成功"), WAIT(2, "等待处理"), FAIL(3, "交易失败"),;
+
+	private final Integer value;
+
+	private final String desc;
+
 }

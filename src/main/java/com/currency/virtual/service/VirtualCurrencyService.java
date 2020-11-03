@@ -11,11 +11,11 @@ import java.util.Optional;
  */
 public interface VirtualCurrencyService {
 
-    /**
-     * 通过交易hash获取交易信息
-     *
-     * @param hash 交易hash
-     * @return 交易信息
-     */
-    Optional<VirtualCurrencyTransaction> getTransactionByHash(String hash);
+	/**
+	 * 通过交易hash获取交易信息
+	 * @param hash 交易hash
+	 * @return 交易信息
+	 */
+	Optional<VirtualCurrencyTransaction> getTransactionByHash(String hash);
+
 }

@@ -13,23 +13,27 @@ import com.currency.virtual.service.impl.TronscanServiceImpl;
  * @author lingting 2020-09-01 17:16
  */
 public class VirtualCurrencyFactory {
-    /**
-     * 生成虚拟货币处理类
-     *
-     * @param properties         虚拟货币配置
-     * @param platformProperties 平台配置
-     * @return com.currency.virtual.service.VirtualCurrencyService
-     * @author lingting 2020-09-01 17:23
-     */
-    public static VirtualCurrencyService getVirtualCurrencyService(VirtualCurrencyProperties properties, PlatformProperties platformProperties) {
-        if (properties.getPlatform() == Platform.INFURA) {
-            return new InfuraServiceImpl((InfuraProperties) platformProperties);
-        } else if (properties.getPlatform() == Platform.OMNI) {
-            return new OmniServiceImpl((OmniProperties) platformProperties);
-        } else if (properties.getPlatform() == Platform.TRONSCAN) {
-            return new TronscanServiceImpl((TronscanProperties) platformProperties);
-        }
 
-        throw new RuntimeException("未找到对应处理类");
-    }
+	/**
+	 * 生成虚拟货币处理类
+	 * @param properties 虚拟货币配置
+	 * @param platformProperties 平台配置
+	 * @return com.currency.virtual.service.VirtualCurrencyService
+	 * @author lingting 2020-09-01 17:23
+	 */
+	public static VirtualCurrencyService getVirtualCurrencyService(VirtualCurrencyProperties properties,
+			PlatformProperties platformProperties) {
+		if (properties.getPlatform() == Platform.INFURA) {
+			return new InfuraServiceImpl((InfuraProperties) platformProperties);
+		}
+		else if (properties.getPlatform() == Platform.OMNI) {
+			return new OmniServiceImpl((OmniProperties) platformProperties);
+		}
+		else if (properties.getPlatform() == Platform.TRONSCAN) {
+			return new TronscanServiceImpl((TronscanProperties) platformProperties);
+		}
+
+		throw new RuntimeException("未找到对应处理类");
+	}
+
 }

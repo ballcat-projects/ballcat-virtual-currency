@@ -11,11 +11,14 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum TronscanEndpoints implements Endpoints {
-    /**
-     * 节点名
-     */
-    MAINNET("https://apilist.tronscan.org/api/", "主节点"),
-    ;
-    private final String http;
-    private final String desc;
+
+	/**
+	 * 节点名
+	 */
+	MAINNET("https://apilist.tronscan.org/api/", "主节点"),;
+
+	private final String http;
+
+	private final String desc;
+
 }

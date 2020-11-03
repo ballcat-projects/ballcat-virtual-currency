@@ -12,30 +12,32 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum Btc implements Contract {
-    /**
-     * 代币名称
-     */
-    USDT("31"),
-    ;
-    /**
-     * 比特合约地址, 仅提供正式服
-     */
-    private final String hash;
 
-    /**
-     * 通过合约hash获取属于哪个 比特合约
-     *
-     * @author lingting 2020-09-02 13:44
-     */
-    public static Btc getByHash(String hash) {
-        if (StrUtil.isEmpty(hash)) {
-            return null;
-        }
-        for (Btc c : values()) {
-            if (c.hash.equalsIgnoreCase(hash)) {
-                return c;
-            }
-        }
-        return null;
-    }
+	/**
+	 * 代币名称
+	 */
+	USDT("31"),;
+
+	/**
+	 * 比特合约地址, 仅提供正式服
+	 */
+	private final String hash;
+
+	/**
+	 * 通过合约hash获取属于哪个 比特合约
+	 *
+	 * @author lingting 2020-09-02 13:44
+	 */
+	public static Btc getByHash(String hash) {
+		if (StrUtil.isEmpty(hash)) {
+			return null;
+		}
+		for (Btc c : values()) {
+			if (c.hash.equalsIgnoreCase(hash)) {
+				return c;
+			}
+		}
+		return null;
+	}
+
 }

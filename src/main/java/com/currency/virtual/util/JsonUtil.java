@@ -11,19 +11,22 @@ import java.io.IOException;
  */
 @Slf4j
 public class JsonUtil {
-    private static final ObjectMapper OM;
 
-    static {
-        OM = new ObjectMapper();
-        OM.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-    }
+	private static final ObjectMapper OM;
 
-    public static <T> T readValue(String jsonStr, Class<T> t) {
-        try {
-            return OM.readValue(jsonStr, t);
-        } catch (IOException e) {
-            log.error("json转对象失败", e);
-            return null;
-        }
-    }
+	static {
+		OM = new ObjectMapper();
+		OM.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+	}
+
+	public static <T> T readValue(String jsonStr, Class<T> t) {
+		try {
+			return OM.readValue(jsonStr, t);
+		}
+		catch (IOException e) {
+			log.error("json转对象失败", e);
+			return null;
+		}
+	}
+
 }

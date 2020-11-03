@@ -6,49 +6,48 @@ package com.currency.virtual.endpoints;
  * @author lingting 2020-09-01 17:06
  */
 public interface Endpoints {
-    /**
-     * 需要处理的符号
-     */
-    String FLAG = "/";
 
-    /**
-     * 获取 http  前缀
-     *
-     * @return http 前缀
-     */
-    String getHttp();
+	/**
+	 * 需要处理的符号
+	 */
+	String FLAG = "/";
 
-    /**
-     * 生成 http 连接
-     *
-     * @param suffix 拼接后面的字符串
-     * @return 返回 http 连接
-     */
-    default String getHttpUrl(String suffix) {
-        String pre = getHttp();
-        if (!pre.endsWith(FLAG)) {
-            pre += FLAG;
-        }
-        if (suffix.startsWith(FLAG)) {
-            suffix = suffix.substring(1);
-        }
-        return pre + suffix;
-    }
+	/**
+	 * 获取 http 前缀
+	 * @return http 前缀
+	 */
+	String getHttp();
 
-    /**
-     * 生成 wss 连接
-     *
-     * @param suffix 拼接后面的字符串
-     * @return 返回 wss 连接
-     */
-    default String getWssUrl(String suffix) {
-        String pre = getHttp();
-        if (!pre.endsWith(FLAG)) {
-            pre += FLAG;
-        }
-        if (suffix.startsWith(FLAG)) {
-            suffix = suffix.substring(1);
-        }
-        return pre + suffix;
-    }
+	/**
+	 * 生成 http 连接
+	 * @param suffix 拼接后面的字符串
+	 * @return 返回 http 连接
+	 */
+	default String getHttpUrl(String suffix) {
+		String pre = getHttp();
+		if (!pre.endsWith(FLAG)) {
+			pre += FLAG;
+		}
+		if (suffix.startsWith(FLAG)) {
+			suffix = suffix.substring(1);
+		}
+		return pre + suffix;
+	}
+
+	/**
+	 * 生成 wss 连接
+	 * @param suffix 拼接后面的字符串
+	 * @return 返回 wss 连接
+	 */
+	default String getWssUrl(String suffix) {
+		String pre = getHttp();
+		if (!pre.endsWith(FLAG)) {
+			pre += FLAG;
+		}
+		if (suffix.startsWith(FLAG)) {
+			suffix = suffix.substring(1);
+		}
+		return pre + suffix;
+	}
+
 }
