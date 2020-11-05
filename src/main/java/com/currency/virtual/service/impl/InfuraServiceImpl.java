@@ -48,18 +48,25 @@ public class InfuraServiceImpl implements VirtualCurrencyService {
 	public Optional<VirtualCurrencyTransaction> getTransactionByHash(String hash) {
 		EthTransaction ethTransaction = web3j.ethGetTransactionByHash(hash).sendAsync().get();
 
+		Optional<Transaction> optional;
 		if (ethTransaction.hasError()) {
 			// 订单出错
-			throw new TransactionException(ethTransaction.getError().getMessage());
+			log.error("查询eth订单出错: code: {}, message:{}", ethTransaction.getError().getCode(),
+					ethTransaction.getError().getMessage());
+			optional = Optional.empty();
+		}
+		else {
+			// 订单没出错
+			optional = ethTransaction.getTransaction();
 		}
 
 		/*
 		 * 订单信息为空 如果交易还没有被打包，就查询不到交易信息
 		 */
-		if (!ethTransaction.getTransaction().isPresent()) {
+		if (!optional.isPresent()) {
 			return Optional.empty();
 		}
-		Transaction transaction = ethTransaction.getTransaction().get();
+		Transaction transaction = optional.get();
 
 		// 获取合约代币
 		Etherscan contract = Etherscan.getByHash(transaction.getTo());
