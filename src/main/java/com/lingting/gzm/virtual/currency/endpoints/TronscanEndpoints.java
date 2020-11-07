@@ -1,0 +1,24 @@
+package com.lingting.gzm.virtual.currency.endpoints;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+/**
+ * tronscan 节点
+ *
+ * @author lingting 2020-09-02 17:04
+ */
+@Getter
+@AllArgsConstructor
+public enum TronscanEndpoints implements Endpoints {
+
+	/**
+	 * 节点名
+	 */
+	MAINNET("https://apilist.tronscan.org/api/", "主节点"),;
+
+	private final String http;
+
+	private final String desc;
+
+}
