@@ -12,8 +12,8 @@ import lombok.AllArgsConstructor;
 public enum Platform {
 
 	/**
-	 * 以太坊 https://infura.io/ 请使用 {@link com.lingting.gzm.virtual.currency.properties.InfuraProperties}
-	 * 类进行配置
+	 * 以太坊 https://infura.io/ 请使用
+	 * {@link com.lingting.gzm.virtual.currency.properties.InfuraProperties} 类进行配置
 	 */
 	INFURA(Protocol.ETHERSCAN),
 	/**

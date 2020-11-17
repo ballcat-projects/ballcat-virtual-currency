@@ -3,6 +3,7 @@ package com.lingting.gzm.virtual.currency.transaction;
 import com.lingting.gzm.virtual.currency.contract.Contract;
 import com.lingting.gzm.virtual.currency.enums.Protocol;
 import com.lingting.gzm.virtual.currency.enums.TransactionStatus;
+import com.lingting.gzm.virtual.currency.util.EtherscanUtil;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.Duration;
@@ -68,21 +69,14 @@ public class VirtualCurrencyTransaction {
 	private Protocol protocol;
 
 	/**
+	 * 如果 protocol 为 {@link Protocol#ETHERSCAN} 则本值不为空, 其他值则为空
+	 */
+	private EtherscanUtil.Input input;
+
+	/**
 	 * 交易时间, 时区 UTC
 	 */
 	private LocalDateTime time;
-
-	/**
-	 * 延迟时间, 单位: 分钟 如果订单创建时间与当前时间差小于设定时间,则交易状态为等待
-	 */
-	private long delay;
-
-	public TransactionStatus getStatus() {
-		if (getTime() != null && Duration.between(getTime(), LocalDateTime.now()).toMinutes() <= delay) {
-			return TransactionStatus.WAIT;
-		}
-		return status;
-	}
 
 	public VirtualCurrencyTransaction setTime(LocalDateTime time) {
 		this.time = time;
@@ -122,10 +116,6 @@ public class VirtualCurrencyTransaction {
 			return null;
 		}
 		return time.plusSeconds(TimeZone.getTimeZone(zoneId).getRawOffset() / 1000);
-	}
-
-	public long getDelay() {
-		return delay > 0 ? delay : 0;
 	}
 
 }

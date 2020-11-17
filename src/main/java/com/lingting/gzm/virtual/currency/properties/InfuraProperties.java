@@ -29,11 +29,6 @@ public class InfuraProperties implements PlatformProperties {
 	 */
 	private Endpoints endpoints;
 
-	/**
-	 * 延迟时间, 单位: 分钟 如果订单创建时间与当前时间差小于设定时间,则交易状态为等待
-	 */
-	private long delay = 0;
-
 	public HttpService getHttpService() {
 		return new HttpService(getEndpoints().getHttpUrl(getProjectId()));
 	}

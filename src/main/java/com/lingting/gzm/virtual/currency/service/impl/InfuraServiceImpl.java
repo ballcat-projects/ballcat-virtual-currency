@@ -86,11 +86,18 @@ public class InfuraServiceImpl implements VirtualCurrencyService {
 		}
 
 		VirtualCurrencyTransaction virtualCurrencyTransaction = new VirtualCurrencyTransaction()
+
 				.setProtocol(Protocol.ETHERSCAN).setBlockHash(transaction.getBlockHash())
+
 				.setBlock(transaction.getBlockNumber()).setHash(transaction.getHash()).setFrom(transaction.getFrom())
+
 				.setTo(input.getTo())
-				// 设置代币类型
-				.setContract(contract).setValue(input.getValue());
+				// 设置代币类型, input 中的优先
+				.setContract(input.getContract() == null ? contract : input.getContract())
+				// 设置金额
+				.setValue(input.getValue())
+				// 设置 input data
+				.setInput(input);
 
 		// 获取交易状态
 		Optional<TransactionReceipt> receiptOptional = web3j.ethGetTransactionReceipt(hash).send()
@@ -108,10 +115,8 @@ public class InfuraServiceImpl implements VirtualCurrencyService {
 		EthBlock block = web3j.ethGetBlockByHash(transaction.getBlockHash(), false).sendAsync().get();
 
 		// 从平台获取的交易是属于 UTC 时区的
-		return Optional.of(virtualCurrencyTransaction
-				.setTime(
-						LocalDateTime.ofEpochSecond(Convert.toLong(block.getBlock().getTimestamp()), 0, ZoneOffset.UTC))
-				.setDelay(properties.getDelay()));
+		return Optional.of(virtualCurrencyTransaction.setTime(
+				LocalDateTime.ofEpochSecond(Convert.toLong(block.getBlock().getTimestamp()), 0, ZoneOffset.UTC)));
 	}
 
 }

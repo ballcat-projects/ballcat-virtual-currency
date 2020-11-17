@@ -1,12 +1,14 @@
 package com.lingting.gzm.virtual.currency.enums;
 
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 
 /**
  * 虚拟货币协议
  *
  * @author lingting 2020-09-02 11:44
  */
+@Getter
 @AllArgsConstructor
 public enum Protocol {
 

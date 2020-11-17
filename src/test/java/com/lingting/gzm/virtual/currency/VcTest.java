@@ -31,7 +31,7 @@ public class VcTest {
 		service = VirtualCurrencyFactory.getVirtualCurrencyService(
 				new VirtualCurrencyProperties().setPlatform(Platform.INFURA), new InfuraProperties()
 						.setEndpoints(InfuraEndpoints.MAINNET).setProjectId("b6066b4cfce54e7384ea38d52f9260ac"));
-		String txnHash = "0xedce8a92d886242bb9dc73db3c6412ed8b3e9810cf247c93254352a50eaadc4a";
+		String txnHash = "0x0bd7636c79eb821db00ccfeceab53bab1014885de8d1e00e4a31eebb067e5c2a";
 
 		Numeric.decodeQuantity(txnHash);
 		Optional<VirtualCurrencyTransaction> optional = service.getTransactionByHash(txnHash.trim());

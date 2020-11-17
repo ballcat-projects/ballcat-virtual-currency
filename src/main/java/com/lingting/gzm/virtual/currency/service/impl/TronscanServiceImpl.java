@@ -68,8 +68,7 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 		}
 
 		// 这里返回的时间单位是 毫秒，需要转为秒
-		return Optional
-				.of(transaction.setTime(tronscanTransaction.getTimestamp() / 1000).setDelay(properties.getDelay()));
+		return Optional.of(transaction.setTime(tronscanTransaction.getTimestamp() / 1000));
 	}
 
 }
