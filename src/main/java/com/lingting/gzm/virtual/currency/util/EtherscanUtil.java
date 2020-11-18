@@ -121,7 +121,15 @@ public class EtherscanUtil {
 				input.setTo(array[0]);
 				input.setValue(new BigDecimal(Long.parseLong(array[1], 16)).divide(USDT_FLAG, MathContext.UNLIMITED));
 				input.setContract(Etherscan.getByHash(Protocol.ETHERSCAN.getStart() + removePreZero(array[2])));
-			}),;
+			}),
+
+			SEND_MULTI_SIG("0x39125215", input -> {
+				String[] array = stringToArray(input.getData().substring(10));
+				input.setTo(array[0]);
+				input.setValue(new BigDecimal(Long.parseLong(array[1], 16)).divide(USDT_FLAG, MathContext.UNLIMITED));
+			}),
+
+			;
 
 			private final String id;
 
