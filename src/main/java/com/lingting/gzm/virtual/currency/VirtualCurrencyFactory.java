@@ -1,6 +1,6 @@
 package com.lingting.gzm.virtual.currency;
 
-import com.lingting.gzm.virtual.currency.enums.Platform;
+import com.lingting.gzm.virtual.currency.enums.ApiPlatform;
 import com.lingting.gzm.virtual.currency.properties.*;
 import com.lingting.gzm.virtual.currency.service.VirtualCurrencyService;
 import com.lingting.gzm.virtual.currency.service.impl.InfuraServiceImpl;
@@ -23,13 +23,13 @@ public class VirtualCurrencyFactory {
 	 */
 	public static VirtualCurrencyService getVirtualCurrencyService(VirtualCurrencyProperties properties,
 			PlatformProperties platformProperties) {
-		if (properties.getPlatform() == Platform.INFURA) {
+		if (properties.getApiPlatform() == ApiPlatform.INFURA) {
 			return new InfuraServiceImpl((InfuraProperties) platformProperties);
 		}
-		else if (properties.getPlatform() == Platform.OMNI) {
+		else if (properties.getApiPlatform() == ApiPlatform.OMNI) {
 			return new OmniServiceImpl((OmniProperties) platformProperties);
 		}
-		else if (properties.getPlatform() == Platform.TRONSCAN) {
+		else if (properties.getApiPlatform() == ApiPlatform.TRONSCAN) {
 			return new TronscanServiceImpl((TronscanProperties) platformProperties);
 		}
 

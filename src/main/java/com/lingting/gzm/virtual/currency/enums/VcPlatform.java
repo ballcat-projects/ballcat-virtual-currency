@@ -4,13 +4,13 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
- * 虚拟货币协议
+ * 虚拟货币平台
  *
  * @author lingting 2020-09-02 11:44
  */
 @Getter
 @AllArgsConstructor
-public enum Protocol {
+public enum VcPlatform {
 
 	/**
 	 * 以太坊 https://etherscan.io/
@@ -19,11 +19,11 @@ public enum Protocol {
 	/**
 	 * 比特
 	 */
-	BTC("未知"),
+	OMNI("未知"),
 	/**
 	 * 波场
 	 */
-	TRONSCAN("未知"),;
+	TRONSCAN("T"),;
 
 	/**
 	 * 地址，交易号等前缀

@@ -1,6 +1,6 @@
 package com.lingting.gzm.virtual.currency.properties;
 
-import com.lingting.gzm.virtual.currency.enums.Platform;
+import com.lingting.gzm.virtual.currency.enums.ApiPlatform;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -16,8 +16,8 @@ public class VirtualCurrencyProperties {
 	/**
 	 * 平台，使用哪个平台
 	 * <p>
-	 * 请确定获取处理类时传入的是对应平台的参数，具体请查阅 {@link Platform} 类
+	 * 请确定获取处理类时传入的是对应平台的参数，具体请查阅 {@link ApiPlatform} 类
 	 */
-	private Platform platform;
+	private ApiPlatform apiPlatform;
 
 }

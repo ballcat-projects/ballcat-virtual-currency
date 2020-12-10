@@ -1,12 +1,11 @@
 package com.lingting.gzm.virtual.currency.transaction;
 
 import com.lingting.gzm.virtual.currency.contract.Contract;
-import com.lingting.gzm.virtual.currency.enums.Protocol;
+import com.lingting.gzm.virtual.currency.enums.VcPlatform;
 import com.lingting.gzm.virtual.currency.enums.TransactionStatus;
 import com.lingting.gzm.virtual.currency.util.EtherscanUtil;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
@@ -66,10 +65,10 @@ public class VirtualCurrencyTransaction {
 	/**
 	 * 协议
 	 */
-	private Protocol protocol;
+	private VcPlatform vcPlatform;
 
 	/**
-	 * 如果 protocol 为 {@link Protocol#ETHERSCAN} 则本值不为空, 其他值则为空
+	 * 如果 protocol 为 {@link VcPlatform#ETHERSCAN} 则本值不为空, 其他值则为空
 	 */
 	private EtherscanUtil.Input input;
 

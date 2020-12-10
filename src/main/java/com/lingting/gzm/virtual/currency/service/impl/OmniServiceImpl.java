@@ -3,7 +3,7 @@ package com.lingting.gzm.virtual.currency.service.impl;
 import cn.hutool.http.HttpRequest;
 import com.lingting.gzm.virtual.currency.contract.Btc;
 import com.lingting.gzm.virtual.currency.endpoints.OmniEndpoints;
-import com.lingting.gzm.virtual.currency.enums.Protocol;
+import com.lingting.gzm.virtual.currency.enums.VcPlatform;
 import com.lingting.gzm.virtual.currency.enums.TransactionStatus;
 import com.lingting.gzm.virtual.currency.properties.OmniProperties;
 import com.lingting.gzm.virtual.currency.service.VirtualCurrencyService;
@@ -48,7 +48,7 @@ public class OmniServiceImpl implements VirtualCurrencyService {
 						.setBlockHash(omniTransaction.getBlockHash())
 						.setContract(Btc.getByHash(omniTransaction.getPropertyId().toString()))
 						.setFrom(omniTransaction.getFrom()).setTo(omniTransaction.getTo())
-						.setValue(new BigDecimal(omniTransaction.getAmount())).setProtocol(Protocol.BTC)
+						.setValue(new BigDecimal(omniTransaction.getAmount())).setVcPlatform(VcPlatform.OMNI)
 						// 如果已确数小于 SUCCESS_CONFIRMATIONS_MIN 值，则不算交易成功
 						.setStatus(omniTransaction.getConfirmations() < SUCCESS_CONFIRMATIONS_MIN
 								? TransactionStatus.FAIL : TransactionStatus.SUCCESS)

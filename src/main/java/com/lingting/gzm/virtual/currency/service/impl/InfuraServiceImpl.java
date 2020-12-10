@@ -3,7 +3,7 @@ package com.lingting.gzm.virtual.currency.service.impl;
 import cn.hutool.core.convert.Convert;
 import com.lingting.gzm.virtual.currency.contract.Etherscan;
 import com.lingting.gzm.virtual.currency.enums.EtherscanReceiptStatus;
-import com.lingting.gzm.virtual.currency.enums.Protocol;
+import com.lingting.gzm.virtual.currency.enums.VcPlatform;
 import com.lingting.gzm.virtual.currency.enums.TransactionStatus;
 import com.lingting.gzm.virtual.currency.exception.TransactionException;
 import com.lingting.gzm.virtual.currency.properties.InfuraProperties;
@@ -87,7 +87,7 @@ public class InfuraServiceImpl implements VirtualCurrencyService {
 
 		VirtualCurrencyTransaction virtualCurrencyTransaction = new VirtualCurrencyTransaction()
 
-				.setProtocol(Protocol.ETHERSCAN).setBlockHash(transaction.getBlockHash())
+				.setVcPlatform(VcPlatform.ETHERSCAN).setBlockHash(transaction.getBlockHash())
 
 				.setBlock(transaction.getBlockNumber()).setHash(transaction.getHash()).setFrom(transaction.getFrom())
 

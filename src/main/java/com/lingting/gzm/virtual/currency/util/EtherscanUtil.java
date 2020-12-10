@@ -3,7 +3,7 @@ package com.lingting.gzm.virtual.currency.util;
 import cn.hutool.core.util.StrUtil;
 import com.lingting.gzm.virtual.currency.contract.Contract;
 import com.lingting.gzm.virtual.currency.contract.Etherscan;
-import com.lingting.gzm.virtual.currency.enums.Protocol;
+import com.lingting.gzm.virtual.currency.enums.VcPlatform;
 import com.lingting.gzm.virtual.currency.exception.TransactionException;
 import java.math.BigDecimal;
 import java.math.MathContext;
@@ -94,11 +94,11 @@ public class EtherscanUtil {
 		private Contract contract;
 
 		public Input setTo(String to) {
-			if (to.startsWith(Protocol.ETHERSCAN.getStart())) {
+			if (to.startsWith(VcPlatform.ETHERSCAN.getStart())) {
 				this.to = to;
 			}
 			else {
-				this.to = Protocol.ETHERSCAN.getStart() + removePreZero(to);
+				this.to = VcPlatform.ETHERSCAN.getStart() + removePreZero(to);
 			}
 			return this;
 		}
@@ -120,7 +120,7 @@ public class EtherscanUtil {
 				String[] array = stringToArray(input.getData().substring(10));
 				input.setTo(array[0]);
 				input.setValue(new BigDecimal(Long.parseLong(array[1], 16)).divide(USDT_FLAG, MathContext.UNLIMITED));
-				input.setContract(Etherscan.getByHash(Protocol.ETHERSCAN.getStart() + removePreZero(array[2])));
+				input.setContract(Etherscan.getByHash(VcPlatform.ETHERSCAN.getStart() + removePreZero(array[2])));
 			}),
 
 			SEND_MULTI_SIG("0x39125215", input -> {
