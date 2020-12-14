@@ -1,14 +1,17 @@
 package com.lingting.gzm.virtual.currency.service.impl;
 
+import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.http.HttpRequest;
 import com.lingting.gzm.virtual.currency.VirtualCurrencyTransaction;
 import com.lingting.gzm.virtual.currency.contract.Contract;
 import com.lingting.gzm.virtual.currency.contract.Etherscan;
 import com.lingting.gzm.virtual.currency.contract.Omni;
+import com.lingting.gzm.virtual.currency.endpoints.Endpoints;
 import com.lingting.gzm.virtual.currency.endpoints.OmniEndpoints;
 import com.lingting.gzm.virtual.currency.enums.TransactionStatus;
 import com.lingting.gzm.virtual.currency.enums.VcPlatform;
 import com.lingting.gzm.virtual.currency.omni.Balances;
+import com.lingting.gzm.virtual.currency.omni.Domain;
 import com.lingting.gzm.virtual.currency.omni.TokenHistory;
 import com.lingting.gzm.virtual.currency.omni.TransactionByHash;
 import com.lingting.gzm.virtual.currency.properties.OmniProperties;
@@ -18,6 +21,7 @@ import java.math.MathContext;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -39,13 +43,27 @@ public class OmniServiceImpl implements VirtualCurrencyService {
 
 	private final HttpRequest transactionByHashRequest = HttpRequest.get(OmniEndpoints.MAINNET.getHttp());
 
-	private final HttpRequest tokenHistoryRequest = HttpRequest.post(OmniEndpoints.MAINNET.getHttp())
-			.form("page", 0);
+	private final HttpRequest tokenHistoryRequest = HttpRequest.post(OmniEndpoints.MAINNET.getHttp()).form("page", 0);
 
 	private final HttpRequest balanceRequest = HttpRequest.post(OmniEndpoints.MAINNET.getHttp());
 
 	@Getter
 	private static final Map<Contract, Integer> CONTRACT_DECIMAL_CACHE;
+
+	/**
+	 * 用于调用of方法生成新对象
+	 */
+	private static final TransactionByHash STATIC_TRANSACTION_HASH = new TransactionByHash();
+
+	/**
+	 * 用于调用of方法生成新对象
+	 */
+	private static final Balances STATIC_BALANCES = new Balances();
+
+	/**
+	 * 用于调用of方法生成新对象
+	 */
+	private static final TokenHistory STATIC_TOKEN_HISTORY = new TokenHistory();
 
 	static {
 		CONTRACT_DECIMAL_CACHE = new ConcurrentHashMap<>(Etherscan.values().length + 1);
@@ -58,7 +76,8 @@ public class OmniServiceImpl implements VirtualCurrencyService {
 	@Override
 	@SneakyThrows
 	public Optional<VirtualCurrencyTransaction> getTransactionByHash(String hash) {
-		TransactionByHash response = TransactionByHash.of(transactionByHashRequest, properties.getEndpoints(), hash);
+		TransactionByHash response = request(STATIC_TRANSACTION_HASH, transactionByHashRequest,
+				properties.getEndpoints(), hash);
 		// 交易查询不到 或者 valid 为 false
 		if (response.getAmount() == null || !response.getValid()) {
 			return Optional.empty();
@@ -95,7 +114,8 @@ public class OmniServiceImpl implements VirtualCurrencyService {
 			return CONTRACT_DECIMAL_CACHE.get(contract);
 		}
 
-		TokenHistory history = TokenHistory.of(tokenHistoryRequest, properties.getEndpoints(), contract.getHash());
+		TokenHistory history = request(STATIC_TOKEN_HISTORY, tokenHistoryRequest, properties.getEndpoints(),
+				contract.getHash());
 		int decimals = getDecimalsByString(history.getTransactions().get(0).getAmount());
 		CONTRACT_DECIMAL_CACHE.put(contract, decimals);
 		return decimals;
@@ -103,7 +123,7 @@ public class OmniServiceImpl implements VirtualCurrencyService {
 
 	@Override
 	public BigDecimal getBalanceByAddressAndContract(String address, Contract contract) {
-		Balances balances = Balances.of(balanceRequest, properties.getEndpoints(), address);
+		Balances balances = request(STATIC_BALANCES, balanceRequest, properties.getEndpoints(), address);
 		for (Balances.Balance balance : balances.getBalance()) {
 			// 协助缓存精度
 			if (!CONTRACT_DECIMAL_CACHE.containsKey(contract)) {
@@ -137,6 +157,31 @@ public class OmniServiceImpl implements VirtualCurrencyService {
 			return 0;
 		}
 		return str.substring(str.indexOf(FLAG)).length() - 1;
+	}
+
+	/**
+	 * 休眠时间,如果不允许请求,则手动休眠, 默认5秒
+	 * @return 单位: 毫秒
+	 * @author lingting 2020-12-14 16:38
+	 */
+	public long sleepTime() {
+		return TimeUnit.SECONDS.toMillis(5);
+	}
+
+	/**
+	 * 发起请求
+	 *
+	 * @author lingting 2020-12-14 16:46
+	 */
+	private <T> T request(Domain<T> domain, HttpRequest request, Endpoints endpoints, Object params) {
+		// 如果允许请求
+		if (properties.getAllowRequest().get()) {
+			// 执行请求方法
+			return domain.of(request, endpoints, params);
+		}
+		// 休眠, 然后调用自身
+		ThreadUtil.sleep(sleepTime());
+		return domain.of(request, endpoints, params);
 	}
 
 }

@@ -14,11 +14,12 @@ import lombok.NoArgsConstructor;
  */
 @NoArgsConstructor
 @Data
-public class TokenHistory {
+public class TokenHistory implements Domain<TokenHistory> {
 
-	public static TokenHistory of(HttpRequest request, Endpoints endpoints, String address) {
+	@Override
+	public TokenHistory of(HttpRequest request, Endpoints endpoints, Object params) {
 		return JsonUtil.toObj(
-				request.setUrl(endpoints.getHttpUrl("v1/properties/gethistory/" + address)).execute().body(),
+				request.setUrl(endpoints.getHttpUrl("v1/properties/gethistory/" + params)).execute().body(),
 				TokenHistory.class);
 	}
 

@@ -1,6 +1,7 @@
 package com.lingting.gzm.virtual.currency.properties;
 
 import com.lingting.gzm.virtual.currency.endpoints.Endpoints;
+import java.util.function.Supplier;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -22,6 +23,11 @@ public class OmniProperties implements PlatformProperties {
 	 * 多少确认数以上才认为交易成功
 	 */
 	private Integer confirmationsMin = 6;
+
+	/**
+	 * 是否允许发送请求, 手动实现限制, 限制请求在 5-10s 一次
+	 */
+	private Supplier<Boolean> allowRequest = () -> true;
 
 	/**
 	 * 拼接 根据hash查询交易信息的url

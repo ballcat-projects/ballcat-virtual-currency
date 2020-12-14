@@ -14,11 +14,12 @@ import lombok.NoArgsConstructor;
  */
 @NoArgsConstructor
 @Data
-public class Balances {
+public class Balances implements Domain<Balances> {
 
-	public static Balances of(HttpRequest request, Endpoints endpoints, String address) {
+	@Override
+	public Balances of(HttpRequest request, Endpoints endpoints, Object params) {
 		request.setUrl(endpoints.getHttpUrl("v1/address/addr/"));
-		request.form("addr", address);
+		request.form("addr", params);
 		String response = request.execute().body();
 		return JsonUtil.toObj(response, Balances.class);
 	}

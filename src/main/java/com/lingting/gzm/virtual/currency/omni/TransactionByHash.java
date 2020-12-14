@@ -14,10 +14,11 @@ import lombok.NoArgsConstructor;
  */
 @NoArgsConstructor
 @Data
-public class TransactionByHash {
+public class TransactionByHash implements Domain<TransactionByHash> {
 
-	public static TransactionByHash of(HttpRequest request, Endpoints endpoints, String address) {
-		return JsonUtil.toObj(request.setUrl(endpoints.getHttpUrl("v1/transaction/tx/" + address)).execute().body(),
+	@Override
+	public TransactionByHash of(HttpRequest request, Endpoints endpoints, Object params) {
+		return JsonUtil.toObj(request.setUrl(endpoints.getHttpUrl("v1/transaction/tx/" + params)).execute().body(),
 				TransactionByHash.class);
 	}
 
