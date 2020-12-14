@@ -40,7 +40,7 @@ public class OmniServiceImpl implements VirtualCurrencyService {
 	private final HttpRequest transactionByHashRequest = HttpRequest.get(OmniEndpoints.MAINNET.getHttp());
 
 	private final HttpRequest tokenHistoryRequest = HttpRequest.post(OmniEndpoints.MAINNET.getHttp())
-			.body("{\"page\":0}", "application/x-www-form-urlencoded");
+			.form("page", 0);
 
 	private final HttpRequest balanceRequest = HttpRequest.post(OmniEndpoints.MAINNET.getHttp());
 
@@ -58,7 +58,7 @@ public class OmniServiceImpl implements VirtualCurrencyService {
 	@Override
 	@SneakyThrows
 	public Optional<VirtualCurrencyTransaction> getTransactionByHash(String hash) {
-		TransactionByHash response = TransactionByHash.of(balanceRequest, properties.getEndpoints(), hash);
+		TransactionByHash response = TransactionByHash.of(transactionByHashRequest, properties.getEndpoints(), hash);
 		// 交易查询不到 或者 valid 为 false
 		if (response.getAmount() == null || !response.getValid()) {
 			return Optional.empty();
