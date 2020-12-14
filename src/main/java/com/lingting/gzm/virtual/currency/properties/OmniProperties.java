@@ -19,6 +19,11 @@ public class OmniProperties implements PlatformProperties {
 	private Endpoints endpoints;
 
 	/**
+	 * 多少确认数以上才认为交易成功
+	 */
+	private Integer confirmationsMin = 6;
+
+	/**
 	 * 拼接 根据hash查询交易信息的url
 	 *
 	 * @author lingting 2020-09-02 17:11

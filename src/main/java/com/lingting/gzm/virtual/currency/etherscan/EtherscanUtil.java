@@ -1,4 +1,4 @@
-package com.lingting.gzm.virtual.currency.util;
+package com.lingting.gzm.virtual.currency.etherscan;
 
 import cn.hutool.core.util.StrUtil;
 import com.lingting.gzm.virtual.currency.contract.Contract;
@@ -21,12 +21,7 @@ public class EtherscanUtil {
 
 	public static final String REMOVE_ZERO_REG_STR = "^(0+)";
 
-	/**
-	 * 价格单位 1000000:1
-	 */
-	public static final BigDecimal USDT_FLAG = new BigDecimal(1000000);
-
-	public static final BigDecimal ETH = new BigDecimal(1000000000000000000L);
+	public static final String START = "0x";
 
 	/**
 	 * 传入删除 methodId的 input data
@@ -91,14 +86,19 @@ public class EtherscanUtil {
 		/**
 		 * 合约
 		 */
-		private Contract contract;
+		private Etherscan contract;
+
+		/**
+		 * 合约地址
+		 */
+		private String contractAddress;
 
 		public Input setTo(String to) {
-			if (to.startsWith(VcPlatform.ETHERSCAN.getStart())) {
+			if (to.startsWith(START)) {
 				this.to = to;
 			}
 			else {
-				this.to = VcPlatform.ETHERSCAN.getStart() + removePreZero(to);
+				this.to = START + removePreZero(to);
 			}
 			return this;
 		}
@@ -113,20 +113,22 @@ public class EtherscanUtil {
 			TRANSFER("0xa9059cbb", input -> {
 				String[] array = stringToArray(input.getData().substring(10));
 				input.setTo(array[0]);
-				input.setValue(new BigDecimal(Long.parseLong(array[1], 16)).divide(USDT_FLAG, MathContext.UNLIMITED));
+				input.setValue(new BigDecimal(Long.parseLong(array[1], 16)));
 			}),
 
 			SEND_MULTI_SIG_TOKEN("0x0dcd7a6c", input -> {
 				String[] array = stringToArray(input.getData().substring(10));
 				input.setTo(array[0]);
-				input.setValue(new BigDecimal(Long.parseLong(array[1], 16)).divide(USDT_FLAG, MathContext.UNLIMITED));
-				input.setContract(Etherscan.getByHash(VcPlatform.ETHERSCAN.getStart() + removePreZero(array[2])));
+				input.setValue(new BigDecimal(Long.parseLong(array[1], 16)));
+				String address = START + removePreZero(array[2]);
+				input.setContract(Etherscan.getByHash(address));
+				input.setContractAddress(address);
 			}),
 
 			SEND_MULTI_SIG("0x39125215", input -> {
 				String[] array = stringToArray(input.getData().substring(10));
 				input.setTo(array[0]);
-				input.setValue(new BigDecimal(Long.parseLong(array[1], 16)).divide(USDT_FLAG, MathContext.UNLIMITED));
+				input.setValue(new BigDecimal(Long.parseLong(array[1], 16)));
 			}),
 
 			;

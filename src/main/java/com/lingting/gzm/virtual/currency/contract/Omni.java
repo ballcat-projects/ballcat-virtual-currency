@@ -11,12 +11,20 @@ import lombok.Getter;
  */
 @Getter
 @AllArgsConstructor
-public enum Btc implements Contract {
+public enum Omni implements Contract {
 
 	/**
 	 * 代币名称
 	 */
-	USDT("31"),;
+	USDT("31"),
+
+	BTC("0"),
+
+	OMNI("1"),
+
+	MAID_SAFE_COIN("3"),
+
+	;
 
 	/**
 	 * 比特合约地址, 仅提供正式服
@@ -28,16 +36,20 @@ public enum Btc implements Contract {
 	 *
 	 * @author lingting 2020-09-02 13:44
 	 */
-	public static Btc getByHash(String hash) {
+	public static Omni getByHash(String hash) {
 		if (StrUtil.isEmpty(hash)) {
 			return null;
 		}
-		for (Btc c : values()) {
+		for (Omni c : values()) {
 			if (c.hash.equalsIgnoreCase(hash)) {
 				return c;
 			}
 		}
 		return null;
+	}
+
+	public static Omni getById(Integer id) {
+		return getByHash(id.toString());
 	}
 
 }

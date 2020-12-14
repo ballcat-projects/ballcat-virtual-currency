@@ -9,7 +9,6 @@ import com.lingting.gzm.virtual.currency.properties.OmniProperties;
 import com.lingting.gzm.virtual.currency.properties.TronscanProperties;
 import com.lingting.gzm.virtual.currency.properties.VirtualCurrencyProperties;
 import com.lingting.gzm.virtual.currency.service.VirtualCurrencyService;
-import com.lingting.gzm.virtual.currency.transaction.VirtualCurrencyTransaction;
 import java.util.Optional;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +19,7 @@ import org.web3j.utils.Numeric;
  * @author lingting 2020-09-01 19:56
  */
 @Slf4j
-public class VcTest {
+public class GetTransactionByHashTest {
 
 	private VirtualCurrencyService service;
 
@@ -30,7 +29,7 @@ public class VcTest {
 		service = VirtualCurrencyFactory.getVirtualCurrencyService(
 				new VirtualCurrencyProperties().setApiPlatform(ApiPlatform.INFURA), new InfuraProperties()
 						.setEndpoints(InfuraEndpoints.MAINNET).setProjectId("b6066b4cfce54e7384ea38d52f9260ac"));
-		String txnHash = "0xaa8ef4ee8d52ad573f5f299092394cec32635a68db0aa59e9b291fe05764a933";
+		String txnHash = "0xcce82c876641d6cab25f71c9f2287ef662e47ba8a5bbfc3d15b9e0054db4af9c";
 
 		Numeric.decodeQuantity(txnHash);
 		Optional<VirtualCurrencyTransaction> optional = service.getTransactionByHash(txnHash.trim());
@@ -51,7 +50,7 @@ public class VcTest {
 				new VirtualCurrencyProperties().setApiPlatform(ApiPlatform.OMNI),
 				new OmniProperties().setEndpoints(OmniEndpoints.MAINNET));
 		Optional<VirtualCurrencyTransaction> optional = service
-				.getTransactionByHash("91c9500c36613719604ce4d59d738ce125f6af1730569a326d1da425c43bd82e");
+				.getTransactionByHash("e13e475a613d96f655e6f3c08d5a51a55a5f9d7287e34c60c45c892be39b19b7");
 
 		System.out.println(optional.isPresent());
 		if (optional.isPresent()) {
@@ -69,7 +68,9 @@ public class VcTest {
 				new VirtualCurrencyProperties().setApiPlatform(ApiPlatform.TRONSCAN),
 				new TronscanProperties().setEndpoints(TronscanEndpoints.MAINNET));
 		Optional<VirtualCurrencyTransaction> optional = service
-				.getTransactionByHash("99a1e33afa08194951275d028aeb0af9a019f4f4ed7da5bb52285135fc4bea2f");
+				// 这笔交易贼奇怪.
+				// .getTransactionByHash("99a1e33afa08194951275d028aeb0af9a019f4f4ed7da5bb52285135fc4bea2f");
+				.getTransactionByHash("e3a6e7685ec3f3b57e8fd77fadc8ac1964d5dd3bd7c75c0f7474198d45c251f3");
 
 		System.out.println(optional.isPresent());
 		if (optional.isPresent()) {

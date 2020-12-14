@@ -1,9 +1,9 @@
-package com.lingting.gzm.virtual.currency.transaction;
+package com.lingting.gzm.virtual.currency;
 
 import com.lingting.gzm.virtual.currency.contract.Contract;
-import com.lingting.gzm.virtual.currency.enums.VcPlatform;
 import com.lingting.gzm.virtual.currency.enums.TransactionStatus;
-import com.lingting.gzm.virtual.currency.util.EtherscanUtil;
+import com.lingting.gzm.virtual.currency.enums.VcPlatform;
+import com.lingting.gzm.virtual.currency.etherscan.EtherscanUtil;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.LocalDateTime;
@@ -33,11 +33,6 @@ public class VirtualCurrencyTransaction {
 	private BigInteger block;
 
 	/**
-	 * 块hash
-	 */
-	private String blockHash;
-
-	/**
 	 * 转账方
 	 */
 	private String from;
@@ -63,7 +58,20 @@ public class VirtualCurrencyTransaction {
 	private Contract contract;
 
 	/**
-	 * 协议
+	 * 合约地址, 可能为空
+	 */
+	private String contractAddress;
+
+	/**
+	 * 获取合约地址
+	 * @author lingting 2020-12-11 16:11
+	 */
+	public String getContractAddress() {
+		return contract == null ? contractAddress : contract.getHash();
+	}
+
+	/**
+	 * 虚拟货币平台
 	 */
 	private VcPlatform vcPlatform;
 

@@ -14,13 +14,27 @@ import lombok.Getter;
 public enum Tronscan implements Contract {
 
 	/**
-	 * 代币名称
+	 * trx
 	 */
-	USDT("31"),
-	/*
-	 * token转账
+	TRX("_"),
+	/**
+	 * USDT
 	 */
-	TOKEN("2"),;
+	USDT("TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"),
+	/**
+	 * JUST
+	 */
+	JUST("TCFLL5dx5ZJdKnWuesXxi1VPwjLVmWZZy9"),
+	/**
+	 * PEER
+	 */
+	PEER("1003406"),
+	/**
+	 * PW
+	 */
+	PW("1002263"),
+
+	;
 
 	/**
 	 * 比特合约地址, 仅提供正式服
@@ -34,7 +48,7 @@ public enum Tronscan implements Contract {
 	 */
 	public static Tronscan getByHash(String hash) {
 		if (StrUtil.isEmpty(hash)) {
-			return null;
+			return TRX;
 		}
 		for (Tronscan c : values()) {
 			if (c.hash.equalsIgnoreCase(hash)) {

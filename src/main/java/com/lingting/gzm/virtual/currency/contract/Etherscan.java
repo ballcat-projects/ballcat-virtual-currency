@@ -14,9 +14,15 @@ import lombok.Getter;
 public enum Etherscan implements Contract {
 
 	/**
+	 * ETH
+	 */
+	ETH(""),
+	/**
 	 * 代币名称
 	 */
-	USDT("0xdac17f958d2ee523a2206206994597c13d831ec7"),;
+	USDT("0xdac17f958d2ee523a2206206994597c13d831ec7"),
+
+	;
 
 	/**
 	 * 以太坊合约地址, 仅提供正式服
@@ -30,7 +36,7 @@ public enum Etherscan implements Contract {
 	 */
 	public static Etherscan getByHash(String hash) {
 		if (StrUtil.isEmpty(hash)) {
-			return null;
+			return ETH;
 		}
 		for (Etherscan c : values()) {
 			if (c.hash.equalsIgnoreCase(hash)) {

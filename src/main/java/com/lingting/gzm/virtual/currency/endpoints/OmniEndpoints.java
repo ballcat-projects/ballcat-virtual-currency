@@ -15,7 +15,9 @@ public enum OmniEndpoints implements Endpoints {
 	/**
 	 * 节点名
 	 */
-	MAINNET("https://api.omniexplorer.info/", "主节点"),;
+	MAINNET("https://api.omniexplorer.info/", "主节点"),
+
+	;
 
 	private final String http;
 

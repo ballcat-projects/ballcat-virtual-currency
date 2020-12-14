@@ -20,7 +20,7 @@ public enum ApiPlatform {
 	 * 比特 https://omniexplorer.info/ 请使用
 	 * {@link com.lingting.gzm.virtual.currency.properties.OmniProperties} 类进行配置
 	 */
-	OMNI(VcPlatform.ETHERSCAN),
+	OMNI(VcPlatform.OMNI),
 	/**
 	 * 波场 https://tronscan.org/ 请使用 {@link TronscanProperties} 类进行配置
 	 */
