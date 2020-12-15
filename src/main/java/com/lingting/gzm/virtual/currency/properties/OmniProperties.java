@@ -25,9 +25,14 @@ public class OmniProperties implements PlatformProperties {
 	private Integer confirmationsMin = 6;
 
 	/**
-	 * 是否允许发送请求, 手动实现限制, 限制请求在 5-10s 一次
+	 * 获取锁, 成功则允许发送请求, 手动实现限制, 限制请求在 5-10s 一次
 	 */
-	private Supplier<Boolean> allowRequest = () -> true;
+	private Supplier<Boolean> lock = () -> true;
+
+	/**
+	 * 释放锁, 请求完成后执行, 返回值无效, 返回false也不会继续尝试释放锁
+	 */
+	private Supplier<Boolean> unlock = () -> true;
 
 	/**
 	 * 拼接 根据hash查询交易信息的url

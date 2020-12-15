@@ -174,14 +174,17 @@ public class OmniServiceImpl implements VirtualCurrencyService {
 	 * @author lingting 2020-12-14 16:46
 	 */
 	private <T> T request(Domain<T> domain, HttpRequest request, Endpoints endpoints, Object params) {
-		// 如果允许请求
-		if (properties.getAllowRequest().get()) {
+		// 获取锁
+		if (properties.getLock().get()) {
 			// 执行请求方法
-			return domain.of(request, endpoints, params);
+			T t = domain.of(request, endpoints, params);
+			// 释放锁
+			properties.getUnlock().get();
+			return t;
 		}
 		// 休眠, 然后调用自身
 		ThreadUtil.sleep(sleepTime());
-		return domain.of(request, endpoints, params);
+		return request(domain, request, endpoints, params);
 	}
 
 }
