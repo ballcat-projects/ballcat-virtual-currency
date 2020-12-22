@@ -1,5 +1,6 @@
 package com.lingting.gzm.virtual.currency.util;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JavaType;
@@ -8,11 +9,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsontype.NamedType;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.util.function.Consumer;
 import lombok.Getter;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -42,8 +43,7 @@ public class JsonUtil {
 	 *
 	 * @author lingting 2020-12-02 20:08
 	 */
-	@SneakyThrows
-	public static String toJson(Object o) {
+	public static String toJson(Object o) throws JsonProcessingException {
 		return mapper.writeValueAsString(o);
 	}
 
@@ -52,8 +52,7 @@ public class JsonUtil {
 	 * @param <T> 目标类型
 	 * @author lingting 2020-12-02 20:12
 	 */
-	@SneakyThrows
-	public static <T> T toObj(String json, Class<T> t) {
+	public static <T> T toObj(String json, Class<T> t) throws JsonProcessingException {
 		return mapper.readValue(json, t);
 	}
 
@@ -62,8 +61,7 @@ public class JsonUtil {
 	 * @param type 目标类型
 	 * @author lingting 2020-12-02 20:12
 	 */
-	@SneakyThrows
-	public static <T> T toObj(String json, Type type) {
+	public static <T> T toObj(String json, Type type) throws JsonProcessingException {
 		return mapper.readValue(json, mapper.constructType(type));
 	}
 
@@ -72,8 +70,7 @@ public class JsonUtil {
 	 * @param ref 目标类型
 	 * @author lingting 2020-12-02 20:12
 	 */
-	@SneakyThrows
-	public static <T> T toObj(String json, TypeReference<T> ref) {
+	public static <T> T toObj(String json, TypeReference<T> ref) throws JsonProcessingException {
 		return mapper.readValue(json, ref);
 	}
 
@@ -82,8 +79,7 @@ public class JsonUtil {
 	 * @param <T> 目标类型
 	 * @author lingting 2020-12-02 20:12
 	 */
-	@SneakyThrows
-	public static <T> T toObj(InputStream inputStream, Class<T> t) {
+	public static <T> T toObj(InputStream inputStream, Class<T> t) throws IOException {
 		return mapper.readValue(inputStream, t);
 	}
 
@@ -92,8 +88,7 @@ public class JsonUtil {
 	 * @param type 目标类型
 	 * @author lingting 2020-12-02 20:12
 	 */
-	@SneakyThrows
-	public static <T> T toObj(InputStream inputStream, Type type) {
+	public static <T> T toObj(InputStream inputStream, Type type) throws IOException {
 		return mapper.readValue(inputStream, mapper.constructType(type));
 	}
 
@@ -102,8 +97,7 @@ public class JsonUtil {
 	 * @param ref 目标类型
 	 * @author lingting 2020-12-02 20:12
 	 */
-	@SneakyThrows
-	public static <T> T toObj(InputStream inputStream, TypeReference<T> ref) {
+	public static <T> T toObj(InputStream inputStream, TypeReference<T> ref) throws IOException {
 		return mapper.readValue(inputStream, ref);
 	}
 

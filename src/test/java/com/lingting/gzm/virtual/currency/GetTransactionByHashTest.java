@@ -24,8 +24,8 @@ public class GetTransactionByHashTest {
 
 	private VirtualCurrencyService service;
 
-	@SneakyThrows
 	@Test
+	@SneakyThrows
 	public void ethTest() {
 		service = new InfuraServiceImpl(new InfuraProperties()
 				.setEndpoints(InfuraEndpoints.MAINNET).setProjectId("b6066b4cfce54e7384ea38d52f9260ac"));
@@ -45,6 +45,7 @@ public class GetTransactionByHashTest {
 	}
 
 	@Test
+	@SneakyThrows
 	public void btcTest() {
 		service = new OmniServiceImpl(new OmniProperties().setEndpoints(OmniEndpoints.MAINNET));
 		Optional<VirtualCurrencyTransaction> optional = service
@@ -61,6 +62,7 @@ public class GetTransactionByHashTest {
 	}
 
 	@Test
+	@SneakyThrows
 	public void tronscanTest() {
 		service = new TronscanServiceImpl(new TronscanProperties().setEndpoints(TronscanEndpoints.MAINNET));
 		Optional<VirtualCurrencyTransaction> optional = service

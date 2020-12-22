@@ -2,6 +2,7 @@ package com.lingting.gzm.virtual.currency.tronscan;
 
 import cn.hutool.http.HttpRequest;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.lingting.gzm.virtual.currency.endpoints.Endpoints;
 import com.lingting.gzm.virtual.currency.util.JsonUtil;
 import java.math.BigDecimal;
@@ -18,7 +19,7 @@ import lombok.NoArgsConstructor;
 @Data
 public class TokenTrc10 {
 
-	public static TokenTrc10 of(HttpRequest request, Endpoints endpoints, String hash) {
+	public static TokenTrc10 of(HttpRequest request, Endpoints endpoints, String hash) throws JsonProcessingException {
 		return JsonUtil.toObj(request.setUrl(endpoints.getHttpUrl("token?showAll=1&id=" + hash)).execute().body(),
 				TokenTrc10.class);
 	}

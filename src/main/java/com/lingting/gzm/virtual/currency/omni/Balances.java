@@ -2,6 +2,7 @@ package com.lingting.gzm.virtual.currency.omni;
 
 import cn.hutool.http.HttpRequest;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.lingting.gzm.virtual.currency.endpoints.Endpoints;
 import com.lingting.gzm.virtual.currency.util.JsonUtil;
 import java.math.BigDecimal;
@@ -17,7 +18,7 @@ import lombok.NoArgsConstructor;
 public class Balances implements Domain<Balances> {
 
 	@Override
-	public Balances of(HttpRequest request, Endpoints endpoints, Object params) {
+	public Balances of(HttpRequest request, Endpoints endpoints, Object params)throws JsonProcessingException {
 		request.setUrl(endpoints.getHttpUrl("v1/address/addr/"));
 		request.form("addr", params);
 		String response = request.execute().body();

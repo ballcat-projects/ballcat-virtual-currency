@@ -1,6 +1,7 @@
 package com.lingting.gzm.virtual.currency.omni;
 
 import cn.hutool.http.HttpRequest;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.lingting.gzm.virtual.currency.endpoints.Endpoints;
 
 /**
@@ -18,6 +19,6 @@ public interface Domain<T> {
 	 * @return com.lingting.gzm.virtual.currency.omni.Balances
 	 * @author lingting 2020-12-14 16:40
 	 */
-	T of(HttpRequest request, Endpoints endpoints, Object params);
+	T of(HttpRequest request, Endpoints endpoints, Object params) throws JsonProcessingException;
 
 }

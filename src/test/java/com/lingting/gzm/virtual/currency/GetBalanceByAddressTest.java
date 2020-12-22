@@ -26,8 +26,8 @@ public class GetBalanceByAddressTest {
 
 	private VirtualCurrencyService service;
 
-	@SneakyThrows
 	@Test
+	@SneakyThrows
 	public void ethTest() {
 
 		service = new InfuraServiceImpl(new InfuraProperties()
@@ -39,6 +39,7 @@ public class GetBalanceByAddressTest {
 	}
 
 	@Test
+	@SneakyThrows
 	public void btcTest() {
 		service = new OmniServiceImpl(new OmniProperties().setEndpoints(OmniEndpoints.MAINNET));
 		BigDecimal decimal = service.getNumberByAddressAndContract("1KN4mnqdUhtERmrZdfke1VUkBQUMcicNHE",
@@ -47,6 +48,7 @@ public class GetBalanceByAddressTest {
 	}
 
 	@Test
+	@SneakyThrows
 	public void tronscanTest() {
 		service = new TronscanServiceImpl(new TronscanProperties().setEndpoints(TronscanEndpoints.MAINNET));
 

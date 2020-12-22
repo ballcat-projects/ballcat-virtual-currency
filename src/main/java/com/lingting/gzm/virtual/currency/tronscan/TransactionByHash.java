@@ -2,6 +2,7 @@ package com.lingting.gzm.virtual.currency.tronscan;
 
 import cn.hutool.http.HttpRequest;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.lingting.gzm.virtual.currency.endpoints.Endpoints;
 import com.lingting.gzm.virtual.currency.util.JsonUtil;
 import java.math.BigDecimal;
@@ -18,7 +19,7 @@ import lombok.NoArgsConstructor;
 @Data
 public class TransactionByHash {
 
-	public static TransactionByHash of(HttpRequest request, Endpoints endpoints, String hash) {
+	public static TransactionByHash of(HttpRequest request, Endpoints endpoints, String hash) throws JsonProcessingException {
 		String response = request.setUrl(endpoints.getHttpUrl("transaction-info?hash=") + hash).execute().body();
 		// 由于查询 trx 转账时, 返回的 internal_transactions 值可能为空字符串,会导致后续转换异常, 直接处理掉
 		response = response.replace("\"internal_transactions\":\"\"", "\"internal_transactions\":{}");

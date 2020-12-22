@@ -2,6 +2,7 @@ package com.lingting.gzm.virtual.currency.tronscan;
 
 import cn.hutool.http.HttpRequest;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.lingting.gzm.virtual.currency.endpoints.Endpoints;
 import com.lingting.gzm.virtual.currency.util.JsonUtil;
 import java.math.BigDecimal;
@@ -18,7 +19,7 @@ import lombok.NoArgsConstructor;
 @Data
 public class Contract {
 
-	public static Contract of(HttpRequest request, Endpoints endpoints, String hash) {
+	public static Contract of(HttpRequest request, Endpoints endpoints, String hash) throws JsonProcessingException {
 		return JsonUtil.toObj(request.setUrl(endpoints.getHttpUrl("contract?contract=" + hash)).execute().body(),
 				Contract.class);
 	}

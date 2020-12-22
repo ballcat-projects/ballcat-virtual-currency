@@ -5,15 +5,18 @@ import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.convert.Convert;
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.StrUtil;
+import com.lingting.gzm.virtual.currency.VirtualCurrencyAccount;
 import com.lingting.gzm.virtual.currency.contract.Contract;
 import com.lingting.gzm.virtual.currency.contract.Etherscan;
 import com.lingting.gzm.virtual.currency.enums.EtherscanReceiptStatus;
 import com.lingting.gzm.virtual.currency.enums.TransactionStatus;
 import com.lingting.gzm.virtual.currency.enums.VcPlatform;
 import com.lingting.gzm.virtual.currency.etherscan.EtherscanUtil;
+import com.lingting.gzm.virtual.currency.exception.VirtualCurrencyException;
 import com.lingting.gzm.virtual.currency.properties.InfuraProperties;
 import com.lingting.gzm.virtual.currency.service.VirtualCurrencyService;
 import com.lingting.gzm.virtual.currency.VirtualCurrencyTransaction;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.time.LocalDateTime;
@@ -23,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +38,7 @@ import org.web3j.abi.datatypes.Function;
 import org.web3j.abi.datatypes.Type;
 import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.abi.datatypes.generated.Uint8;
+import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameter;
 import org.web3j.protocol.core.DefaultBlockParameterName;
@@ -42,6 +47,8 @@ import org.web3j.protocol.core.methods.response.EthCall;
 import org.web3j.protocol.core.methods.response.EthTransaction;
 import org.web3j.protocol.core.methods.response.Transaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.protocol.exceptions.TransactionException;
+import org.web3j.tx.Transfer;
 
 /**
  * @author lingting 2020-09-01 17:16
@@ -64,6 +71,7 @@ public class InfuraServiceImpl implements VirtualCurrencyService {
 	static {
 		CONTRACT_DECIMAL_CACHE = new ConcurrentHashMap<>(Etherscan.values().length + 1);
 		CONTRACT_DECIMAL_CACHE.put(Etherscan.ETH, 18);
+		CONTRACT_DECIMAL_CACHE.put(Etherscan.USDT, 6);
 	}
 
 	public InfuraServiceImpl(InfuraProperties properties) {
@@ -73,8 +81,7 @@ public class InfuraServiceImpl implements VirtualCurrencyService {
 	}
 
 	@Override
-	@SneakyThrows
-	public Optional<VirtualCurrencyTransaction> getTransactionByHash(String hash) {
+	public Optional<VirtualCurrencyTransaction> getTransactionByHash(String hash) throws IOException, VirtualCurrencyException {
 		EthTransaction ethTransaction = web3j.ethGetTransactionByHash(hash).send();
 
 		Optional<Transaction> optional;
@@ -154,7 +161,7 @@ public class InfuraServiceImpl implements VirtualCurrencyService {
 
 	@Override
 	@SuppressWarnings("all")
-	public Integer getDecimalsByContract(Contract contract) {
+	public Integer getDecimalsByContract(Contract contract) throws IOException {
 		if (contract == null) {
 			return 0;
 		}
@@ -176,9 +183,8 @@ public class InfuraServiceImpl implements VirtualCurrencyService {
 	}
 
 	@Override
-	@SneakyThrows
 	@SuppressWarnings("all")
-	public BigDecimal getBalanceByAddressAndContract(String address, Contract contract) {
+	public BigDecimal getBalanceByAddressAndContract(String address, Contract contract) throws IOException {
 		if (contract == Etherscan.ETH) {
 			return new BigDecimal(web3j.ethGetBalance(address, DefaultBlockParameterName.LATEST).send().getBalance());
 		}
@@ -194,13 +200,34 @@ public class InfuraServiceImpl implements VirtualCurrencyService {
 	}
 
 	@Override
-	public BigDecimal getNumberByBalanceAndContract(BigDecimal balance, Contract contract, MathContext mathContext) {
+	public BigDecimal getNumberByBalanceAndContract(BigDecimal balance, Contract contract, MathContext mathContext) throws IOException {
 		// 合约为null 返回原值
 		if (contract == null) {
 			return balance;
 		}
 		// 计算返回值
 		return balance.divide(BigDecimal.TEN.pow(getDecimalsByContract(contract)), mathContext);
+	}
+
+	@Override
+	public boolean transfer(VirtualCurrencyAccount from, String to, Contract contract, BigDecimal value) throws IOException {
+		Credentials credentials = Credentials.create(from.getPrivateKey());
+		// 转换转账金额
+		BigDecimal amount = value.multiply(BigDecimal.TEN.pow(getDecimalsByContract(contract)));
+		// 构造转账请求
+		try {
+			TransactionReceipt receipt = Transfer.sendFunds(web3j, credentials, to, amount,
+					org.web3j.utils.Convert.Unit.SZABO).sendAsync().get();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		} catch (ExecutionException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (TransactionException e) {
+			e.printStackTrace();
+		}
+		return false;
 	}
 
 	/**
@@ -214,14 +241,13 @@ public class InfuraServiceImpl implements VirtualCurrencyService {
 	 * @author lingting 2020-12-11 16:21
 	 */
 	@SuppressWarnings("all")
-	private List<Type> ethCall(String method, List<Type> input, List<TypeReference<?>> out, String from, String to) {
+	private List<Type> ethCall(String method, List<Type> input, List<TypeReference<?>> out, String from, String to) throws IOException {
 		return ethCall(method, input, out, from, to, DefaultBlockParameterName.LATEST);
 	}
 
-	@SneakyThrows
 	@SuppressWarnings("all")
 	private List<Type> ethCall(String method, List<Type> input, List<TypeReference<?>> out, String from, String to,
-			DefaultBlockParameter block) {
+			DefaultBlockParameter block) throws IOException {
 		Assert.notNull(input);
 		Assert.notNull(out);
 		// 编译方法

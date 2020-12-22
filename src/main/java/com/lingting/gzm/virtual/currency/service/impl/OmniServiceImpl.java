@@ -2,6 +2,8 @@ package com.lingting.gzm.virtual.currency.service.impl;
 
 import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.http.HttpRequest;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.lingting.gzm.virtual.currency.VirtualCurrencyAccount;
 import com.lingting.gzm.virtual.currency.VirtualCurrencyTransaction;
 import com.lingting.gzm.virtual.currency.contract.Contract;
 import com.lingting.gzm.virtual.currency.contract.Etherscan;
@@ -74,8 +76,7 @@ public class OmniServiceImpl implements VirtualCurrencyService {
 	}
 
 	@Override
-	@SneakyThrows
-	public Optional<VirtualCurrencyTransaction> getTransactionByHash(String hash) {
+	public Optional<VirtualCurrencyTransaction> getTransactionByHash(String hash) throws JsonProcessingException {
 		TransactionByHash response = request(STATIC_TRANSACTION_HASH, transactionByHashRequest,
 				properties.getEndpoints(), hash);
 		// 交易查询不到 或者 valid 为 false
@@ -109,7 +110,7 @@ public class OmniServiceImpl implements VirtualCurrencyService {
 	}
 
 	@Override
-	public Integer getDecimalsByContract(Contract contract) {
+	public Integer getDecimalsByContract(Contract contract) throws JsonProcessingException {
 		if (CONTRACT_DECIMAL_CACHE.containsKey(contract)) {
 			return CONTRACT_DECIMAL_CACHE.get(contract);
 		}
@@ -122,7 +123,7 @@ public class OmniServiceImpl implements VirtualCurrencyService {
 	}
 
 	@Override
-	public BigDecimal getBalanceByAddressAndContract(String address, Contract contract) {
+	public BigDecimal getBalanceByAddressAndContract(String address, Contract contract) throws JsonProcessingException {
 		Balances balances = request(STATIC_BALANCES, balanceRequest, properties.getEndpoints(), address);
 		for (Balances.Balance balance : balances.getBalance()) {
 			// 协助缓存精度
@@ -138,13 +139,18 @@ public class OmniServiceImpl implements VirtualCurrencyService {
 	}
 
 	@Override
-	public BigDecimal getNumberByBalanceAndContract(BigDecimal balance, Contract contract, MathContext mathContext) {
+	public BigDecimal getNumberByBalanceAndContract(BigDecimal balance, Contract contract, MathContext mathContext) throws JsonProcessingException {
 		if (contract == null) {
 			return balance;
 		}
 
 		// 计算返回值
 		return balance.divide(BigDecimal.TEN.pow(getDecimalsByContract(contract)), mathContext);
+	}
+
+	@Override
+	public boolean transfer(VirtualCurrencyAccount from, String to, Contract contract, BigDecimal value) {
+		return false;
 	}
 
 	/**
@@ -173,7 +179,7 @@ public class OmniServiceImpl implements VirtualCurrencyService {
 	 *
 	 * @author lingting 2020-12-14 16:46
 	 */
-	private <T> T request(Domain<T> domain, HttpRequest request, Endpoints endpoints, Object params) {
+	private <T> T request(Domain<T> domain, HttpRequest request, Endpoints endpoints, Object params) throws JsonProcessingException {
 		// 获取锁
 		if (properties.getLock().get()) {
 			// 执行请求方法

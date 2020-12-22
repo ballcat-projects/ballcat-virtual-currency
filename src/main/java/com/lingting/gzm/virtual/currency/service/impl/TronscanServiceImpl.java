@@ -3,7 +3,10 @@ package com.lingting.gzm.virtual.currency.service.impl;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpRequest;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.lingting.gzm.virtual.currency.VirtualCurrencyAccount;
 import com.lingting.gzm.virtual.currency.VirtualCurrencyTransaction;
+import com.lingting.gzm.virtual.currency.contract.Contract;
 import com.lingting.gzm.virtual.currency.contract.Tronscan;
 import com.lingting.gzm.virtual.currency.endpoints.Endpoints;
 import com.lingting.gzm.virtual.currency.enums.TransactionStatus;
@@ -14,6 +17,7 @@ import com.lingting.gzm.virtual.currency.tronscan.Account;
 import com.lingting.gzm.virtual.currency.tronscan.TokenTrc10;
 import com.lingting.gzm.virtual.currency.tronscan.TokenTrc20;
 import com.lingting.gzm.virtual.currency.tronscan.TransactionByHash;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.util.List;
@@ -58,8 +62,7 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 	}
 
 	@Override
-	@SneakyThrows
-	public Optional<VirtualCurrencyTransaction> getTransactionByHash(String hash) {
+	public Optional<VirtualCurrencyTransaction> getTransactionByHash(String hash) throws IOException {
 		// 交易成功时的返回结果
 		String success = "SUCCESS";
 		TransactionByHash transactionByHash = TransactionByHash.of(transactionByHashRequest, endpoints, hash);
@@ -126,7 +129,7 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 	}
 
 	@Override
-	public Integer getDecimalsByContract(com.lingting.gzm.virtual.currency.contract.Contract contract) {
+	public Integer getDecimalsByContract(com.lingting.gzm.virtual.currency.contract.Contract contract) throws JsonProcessingException {
 		if (contract == null) {
 			return 0;
 		}
@@ -157,7 +160,7 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 
 	@Override
 	public BigDecimal getBalanceByAddressAndContract(String address,
-			com.lingting.gzm.virtual.currency.contract.Contract contract) {
+			com.lingting.gzm.virtual.currency.contract.Contract contract) throws JsonProcessingException {
 		Account account = Account.of(accountRequest, endpoints, address);
 		// 搜索拥有的token
 		for (Account.Tokens token : account.getTokens()) {
@@ -178,13 +181,18 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 
 	@Override
 	public BigDecimal getNumberByBalanceAndContract(BigDecimal balance,
-			com.lingting.gzm.virtual.currency.contract.Contract contract, MathContext mathContext) {
+			com.lingting.gzm.virtual.currency.contract.Contract contract, MathContext mathContext) throws JsonProcessingException {
 		// 合约为null 返回原值
 		if (contract == null) {
 			return balance;
 		}
 		// 计算返回值
 		return balance.divide(BigDecimal.TEN.pow(getDecimalsByContract(contract)), mathContext);
+	}
+
+	@Override
+	public boolean transfer(VirtualCurrencyAccount from, String to, Contract contract, BigDecimal value) {
+		return false;
 	}
 
 	public static final Pattern NUMBER_PATTERN = Pattern.compile("^\\d+$");
