@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
 public class TokenHistory implements Domain<TokenHistory> {
 
 	@Override
-	public TokenHistory of(HttpRequest request, Endpoints endpoints, Object params)throws JsonProcessingException {
+	public TokenHistory of(HttpRequest request, Endpoints endpoints, Object params) throws JsonProcessingException {
 		return JsonUtil.toObj(
 				request.setUrl(endpoints.getHttpUrl("v1/properties/gethistory/" + params)).execute().body(),
 				TokenHistory.class);

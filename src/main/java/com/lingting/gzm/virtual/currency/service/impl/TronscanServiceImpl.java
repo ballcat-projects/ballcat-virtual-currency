@@ -62,7 +62,7 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 	}
 
 	@Override
-	public Optional<VirtualCurrencyTransaction> getTransactionByHash(String hash) throws IOException {
+	public Optional<VirtualCurrencyTransaction> getTransactionByHash(String hash) throws Exception {
 		// 交易成功时的返回结果
 		String success = "SUCCESS";
 		TransactionByHash transactionByHash = TransactionByHash.of(transactionByHashRequest, endpoints, hash);
@@ -129,7 +129,8 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 	}
 
 	@Override
-	public Integer getDecimalsByContract(com.lingting.gzm.virtual.currency.contract.Contract contract) throws JsonProcessingException {
+	public Integer getDecimalsByContract(com.lingting.gzm.virtual.currency.contract.Contract contract)
+			throws JsonProcessingException {
 		if (contract == null) {
 			return 0;
 		}
@@ -181,7 +182,8 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 
 	@Override
 	public BigDecimal getNumberByBalanceAndContract(BigDecimal balance,
-			com.lingting.gzm.virtual.currency.contract.Contract contract, MathContext mathContext) throws JsonProcessingException {
+			com.lingting.gzm.virtual.currency.contract.Contract contract, MathContext mathContext)
+			throws JsonProcessingException {
 		// 合约为null 返回原值
 		if (contract == null) {
 			return balance;

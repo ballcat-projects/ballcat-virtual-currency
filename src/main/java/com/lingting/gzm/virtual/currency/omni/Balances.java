@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
 public class Balances implements Domain<Balances> {
 
 	@Override
-	public Balances of(HttpRequest request, Endpoints endpoints, Object params)throws JsonProcessingException {
+	public Balances of(HttpRequest request, Endpoints endpoints, Object params) throws JsonProcessingException {
 		request.setUrl(endpoints.getHttpUrl("v1/address/addr/"));
 		request.form("addr", params);
 		String response = request.execute().body();

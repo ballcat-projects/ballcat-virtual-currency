@@ -139,7 +139,8 @@ public class OmniServiceImpl implements VirtualCurrencyService {
 	}
 
 	@Override
-	public BigDecimal getNumberByBalanceAndContract(BigDecimal balance, Contract contract, MathContext mathContext) throws JsonProcessingException {
+	public BigDecimal getNumberByBalanceAndContract(BigDecimal balance, Contract contract, MathContext mathContext)
+			throws JsonProcessingException {
 		if (contract == null) {
 			return balance;
 		}
@@ -179,7 +180,8 @@ public class OmniServiceImpl implements VirtualCurrencyService {
 	 *
 	 * @author lingting 2020-12-14 16:46
 	 */
-	private <T> T request(Domain<T> domain, HttpRequest request, Endpoints endpoints, Object params) throws JsonProcessingException {
+	private <T> T request(Domain<T> domain, HttpRequest request, Endpoints endpoints, Object params)
+			throws JsonProcessingException {
 		// 获取锁
 		if (properties.getLock().get()) {
 			// 执行请求方法

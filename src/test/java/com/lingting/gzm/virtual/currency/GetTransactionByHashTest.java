@@ -27,8 +27,8 @@ public class GetTransactionByHashTest {
 	@Test
 	@SneakyThrows
 	public void ethTest() {
-		service = new InfuraServiceImpl(new InfuraProperties()
-				.setEndpoints(InfuraEndpoints.MAINNET).setProjectId("b6066b4cfce54e7384ea38d52f9260ac"));
+		service = new InfuraServiceImpl(new InfuraProperties().setEndpoints(InfuraEndpoints.MAINNET)
+				.setProjectId("b6066b4cfce54e7384ea38d52f9260ac"));
 		String txnHash = "0xcce82c876641d6cab25f71c9f2287ef662e47ba8a5bbfc3d15b9e0054db4af9c";
 
 		Numeric.decodeQuantity(txnHash);

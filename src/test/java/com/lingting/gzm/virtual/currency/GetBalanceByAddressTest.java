@@ -30,8 +30,8 @@ public class GetBalanceByAddressTest {
 	@SneakyThrows
 	public void ethTest() {
 
-		service = new InfuraServiceImpl(new InfuraProperties()
-				.setEndpoints(InfuraEndpoints.MAINNET).setProjectId("b6066b4cfce54e7384ea38d52f9260ac"));
+		service = new InfuraServiceImpl(new InfuraProperties().setEndpoints(InfuraEndpoints.MAINNET)
+				.setProjectId("b6066b4cfce54e7384ea38d52f9260ac"));
 		String address = "0xb501E624f65683Ab6ceA24d3Eb82FB1187d690aD";
 
 		BigDecimal decimal = service.getNumberByAddressAndContract(address, Etherscan.ETH);

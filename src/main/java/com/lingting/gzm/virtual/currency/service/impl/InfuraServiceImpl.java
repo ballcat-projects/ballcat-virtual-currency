@@ -1,21 +1,22 @@
 package com.lingting.gzm.virtual.currency.service.impl;
 
+import static org.web3j.utils.Convert.Unit;
+
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.convert.Convert;
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.StrUtil;
 import com.lingting.gzm.virtual.currency.VirtualCurrencyAccount;
+import com.lingting.gzm.virtual.currency.VirtualCurrencyTransaction;
 import com.lingting.gzm.virtual.currency.contract.Contract;
 import com.lingting.gzm.virtual.currency.contract.Etherscan;
 import com.lingting.gzm.virtual.currency.enums.EtherscanReceiptStatus;
 import com.lingting.gzm.virtual.currency.enums.TransactionStatus;
 import com.lingting.gzm.virtual.currency.enums.VcPlatform;
 import com.lingting.gzm.virtual.currency.etherscan.EtherscanUtil;
-import com.lingting.gzm.virtual.currency.exception.VirtualCurrencyException;
 import com.lingting.gzm.virtual.currency.properties.InfuraProperties;
 import com.lingting.gzm.virtual.currency.service.VirtualCurrencyService;
-import com.lingting.gzm.virtual.currency.VirtualCurrencyTransaction;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.MathContext;
@@ -28,7 +29,6 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import lombok.Getter;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.FunctionReturnDecoder;
@@ -81,7 +81,7 @@ public class InfuraServiceImpl implements VirtualCurrencyService {
 	}
 
 	@Override
-	public Optional<VirtualCurrencyTransaction> getTransactionByHash(String hash) throws IOException, VirtualCurrencyException {
+	public Optional<VirtualCurrencyTransaction> getTransactionByHash(String hash) throws Exception {
 		EthTransaction ethTransaction = web3j.ethGetTransactionByHash(hash).send();
 
 		Optional<Transaction> optional;
@@ -200,7 +200,8 @@ public class InfuraServiceImpl implements VirtualCurrencyService {
 	}
 
 	@Override
-	public BigDecimal getNumberByBalanceAndContract(BigDecimal balance, Contract contract, MathContext mathContext) throws IOException {
+	public BigDecimal getNumberByBalanceAndContract(BigDecimal balance, Contract contract, MathContext mathContext)
+			throws IOException {
 		// 合约为null 返回原值
 		if (contract == null) {
 			return balance;
@@ -210,21 +211,17 @@ public class InfuraServiceImpl implements VirtualCurrencyService {
 	}
 
 	@Override
-	public boolean transfer(VirtualCurrencyAccount from, String to, Contract contract, BigDecimal value) throws IOException {
+	public boolean transfer(VirtualCurrencyAccount from, String to, Contract contract, BigDecimal value)
+			throws IOException, InterruptedException, ExecutionException {
 		Credentials credentials = Credentials.create(from.getPrivateKey());
 		// 转换转账金额
 		BigDecimal amount = value.multiply(BigDecimal.TEN.pow(getDecimalsByContract(contract)));
 		// 构造转账请求
 		try {
-			TransactionReceipt receipt = Transfer.sendFunds(web3j, credentials, to, amount,
-					org.web3j.utils.Convert.Unit.SZABO).sendAsync().get();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		} catch (ExecutionException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (TransactionException e) {
+			TransactionReceipt receipt = Transfer.sendFunds(web3j, credentials, to, amount, Unit.SZABO).sendAsync()
+					.get();
+		}
+		catch (TransactionException e) {
 			e.printStackTrace();
 		}
 		return false;
@@ -241,7 +238,8 @@ public class InfuraServiceImpl implements VirtualCurrencyService {
 	 * @author lingting 2020-12-11 16:21
 	 */
 	@SuppressWarnings("all")
-	private List<Type> ethCall(String method, List<Type> input, List<TypeReference<?>> out, String from, String to) throws IOException {
+	private List<Type> ethCall(String method, List<Type> input, List<TypeReference<?>> out, String from, String to)
+			throws IOException {
 		return ethCall(method, input, out, from, to, DefaultBlockParameterName.LATEST);
 	}
 
