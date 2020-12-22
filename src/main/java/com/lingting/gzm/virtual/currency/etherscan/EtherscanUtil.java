@@ -1,12 +1,9 @@
 package com.lingting.gzm.virtual.currency.etherscan;
 
 import cn.hutool.core.util.StrUtil;
-import com.lingting.gzm.virtual.currency.contract.Contract;
 import com.lingting.gzm.virtual.currency.contract.Etherscan;
-import com.lingting.gzm.virtual.currency.enums.VcPlatform;
-import com.lingting.gzm.virtual.currency.exception.TransactionException;
+import com.lingting.gzm.virtual.currency.exception.VirtualCurrencyException;
 import java.math.BigDecimal;
-import java.math.MathContext;
 import java.util.function.Consumer;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -46,13 +43,13 @@ public class EtherscanUtil {
 	 *
 	 * @author lingting 2020-09-02 14:23
 	 */
-	public static Input resolveInput(String inputString) throws TransactionException {
+	public static Input resolveInput(String inputString) throws VirtualCurrencyException {
 		// 获取方法id
 		String methodId = inputString.substring(0, 10);
 		Input input = new Input().setMethod(Input.MethodEnum.getById(methodId)).setData(inputString);
 
 		if (input.getMethod() == null) {
-			throw new TransactionException("无法正确解析input data 请额外开发支持");
+			throw new VirtualCurrencyException("无法正确解析input data 请额外开发支持");
 		}
 		// 处理
 		input.getMethod().handler.accept(input);
