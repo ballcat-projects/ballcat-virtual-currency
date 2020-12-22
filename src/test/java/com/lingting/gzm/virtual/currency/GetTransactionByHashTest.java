@@ -3,12 +3,13 @@ package com.lingting.gzm.virtual.currency;
 import com.lingting.gzm.virtual.currency.endpoints.InfuraEndpoints;
 import com.lingting.gzm.virtual.currency.endpoints.OmniEndpoints;
 import com.lingting.gzm.virtual.currency.endpoints.TronscanEndpoints;
-import com.lingting.gzm.virtual.currency.enums.ApiPlatform;
 import com.lingting.gzm.virtual.currency.properties.InfuraProperties;
 import com.lingting.gzm.virtual.currency.properties.OmniProperties;
 import com.lingting.gzm.virtual.currency.properties.TronscanProperties;
-import com.lingting.gzm.virtual.currency.properties.VirtualCurrencyProperties;
 import com.lingting.gzm.virtual.currency.service.VirtualCurrencyService;
+import com.lingting.gzm.virtual.currency.service.impl.InfuraServiceImpl;
+import com.lingting.gzm.virtual.currency.service.impl.OmniServiceImpl;
+import com.lingting.gzm.virtual.currency.service.impl.TronscanServiceImpl;
 import java.util.Optional;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -26,9 +27,8 @@ public class GetTransactionByHashTest {
 	@SneakyThrows
 	@Test
 	public void ethTest() {
-		service = VirtualCurrencyFactory.getVirtualCurrencyService(
-				new VirtualCurrencyProperties().setApiPlatform(ApiPlatform.INFURA), new InfuraProperties()
-						.setEndpoints(InfuraEndpoints.MAINNET).setProjectId("b6066b4cfce54e7384ea38d52f9260ac"));
+		service = new InfuraServiceImpl(new InfuraProperties()
+				.setEndpoints(InfuraEndpoints.MAINNET).setProjectId("b6066b4cfce54e7384ea38d52f9260ac"));
 		String txnHash = "0xcce82c876641d6cab25f71c9f2287ef662e47ba8a5bbfc3d15b9e0054db4af9c";
 
 		Numeric.decodeQuantity(txnHash);
@@ -46,9 +46,7 @@ public class GetTransactionByHashTest {
 
 	@Test
 	public void btcTest() {
-		service = VirtualCurrencyFactory.getVirtualCurrencyService(
-				new VirtualCurrencyProperties().setApiPlatform(ApiPlatform.OMNI),
-				new OmniProperties().setEndpoints(OmniEndpoints.MAINNET));
+		service = new OmniServiceImpl(new OmniProperties().setEndpoints(OmniEndpoints.MAINNET));
 		Optional<VirtualCurrencyTransaction> optional = service
 				.getTransactionByHash("e13e475a613d96f655e6f3c08d5a51a55a5f9d7287e34c60c45c892be39b19b7");
 
@@ -64,9 +62,7 @@ public class GetTransactionByHashTest {
 
 	@Test
 	public void tronscanTest() {
-		service = VirtualCurrencyFactory.getVirtualCurrencyService(
-				new VirtualCurrencyProperties().setApiPlatform(ApiPlatform.TRONSCAN),
-				new TronscanProperties().setEndpoints(TronscanEndpoints.MAINNET));
+		service = new TronscanServiceImpl(new TronscanProperties().setEndpoints(TronscanEndpoints.MAINNET));
 		Optional<VirtualCurrencyTransaction> optional = service
 				// 这笔交易贼奇怪.
 				// .getTransactionByHash("99a1e33afa08194951275d028aeb0af9a019f4f4ed7da5bb52285135fc4bea2f");
