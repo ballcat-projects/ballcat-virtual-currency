@@ -35,6 +35,11 @@ public class VirtualCurrencyAccount {
 	 */
 	private Credentials credentials;
 
+	/**
+	 * keystore 内容
+	 */
+	private String keystore;
+
 	public VirtualCurrencyAccount(String address, String publicKey, String privateKey) {
 		this.address = address;
 		this.publicKey = publicKey;

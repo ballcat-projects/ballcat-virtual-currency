@@ -2,6 +2,7 @@ package com.lingting.gzm.virtual.currency.util;
 
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.StrUtil;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.lingting.gzm.virtual.currency.VirtualCurrencyAccount;
 import com.lingting.gzm.virtual.currency.exception.VirtualCurrencyException;
 import java.io.IOException;
@@ -27,18 +28,28 @@ public class EtherscanUtil {
 	 * @author lingting 2020-12-22 17:32
 	 */
 	public static VirtualCurrencyAccount createAccount() throws InvalidAlgorithmParameterException,
-			NoSuchAlgorithmException, NoSuchProviderException, CipherException {
+			NoSuchAlgorithmException, NoSuchProviderException, CipherException, JsonProcessingException {
+		return createAccount(StrUtil.EMPTY);
+	}
+
+	/**
+	 * 创建eth账号
+	 * @param password 密码
+	 * @author lingting 2020-12-22 17:32
+	 */
+	public static VirtualCurrencyAccount createAccount(String password) throws InvalidAlgorithmParameterException,
+			NoSuchAlgorithmException, NoSuchProviderException, CipherException, JsonProcessingException {
 		ECKeyPair keyPair = Keys.createEcKeyPair();
 		// 私钥
 		String privateKey = keyDeserialization(keyPair.getPrivateKey());
 		// 公钥
 		String publicKey = keyDeserialization(keyPair.getPublicKey());
 		// 钱包文件
-		WalletFile walletFile = Wallet.createStandard(StrUtil.EMPTY, keyPair);
+		WalletFile walletFile = Wallet.createStandard(password, keyPair);
 		// 获取钱包地址
 		String address = walletFile.getAddress();
 		// 生成 account 对象
-		return new VirtualCurrencyAccount(address, publicKey, privateKey);
+		return new VirtualCurrencyAccount(address, publicKey, privateKey).setKeystore(JsonUtil.toJson(walletFile));
 	}
 
 	/**
@@ -103,7 +114,9 @@ public class EtherscanUtil {
 				// 私钥
 				.setPrivateKey(keyDeserialization(keyPair.getPrivateKey()))
 				// 公钥
-				.setPublicKey(keyDeserialization(keyPair.getPublicKey()));
+				.setPublicKey(keyDeserialization(keyPair.getPublicKey()))
+				// keystore
+				.setKeystore(ketStore);
 	}
 
 	/**
