@@ -1,4 +1,4 @@
-package com.lingting.gzm.virtual.currency.etherscan;
+package com.lingting.gzm.virtual.currency.util;
 
 import cn.hutool.core.util.StrUtil;
 import com.lingting.gzm.virtual.currency.contract.Etherscan;
@@ -14,7 +14,7 @@ import lombok.var;
 /**
  * @author lingting 2020-09-02 14:20
  */
-public class EtherscanUtil {
+public class EtherscanInputDecodeUtil {
 
 	public static final String REMOVE_ZERO_REG_STR = "^(0+)";
 
