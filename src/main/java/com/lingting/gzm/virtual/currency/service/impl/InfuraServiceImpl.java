@@ -1,7 +1,5 @@
 package com.lingting.gzm.virtual.currency.service.impl;
 
-import static org.web3j.utils.Convert.Unit;
-
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.convert.Convert;
@@ -9,6 +7,7 @@ import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.StrUtil;
 import com.lingting.gzm.virtual.currency.VirtualCurrencyAccount;
 import com.lingting.gzm.virtual.currency.VirtualCurrencyTransaction;
+import com.lingting.gzm.virtual.currency.VirtualCurrencyTransferResult;
 import com.lingting.gzm.virtual.currency.contract.Contract;
 import com.lingting.gzm.virtual.currency.contract.Etherscan;
 import com.lingting.gzm.virtual.currency.enums.EtherscanReceiptStatus;
@@ -19,15 +18,17 @@ import com.lingting.gzm.virtual.currency.properties.InfuraProperties;
 import com.lingting.gzm.virtual.currency.service.VirtualCurrencyService;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.math.MathContext;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.web3j.abi.FunctionEncoder;
@@ -39,16 +40,20 @@ import org.web3j.abi.datatypes.Type;
 import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.abi.datatypes.generated.Uint8;
 import org.web3j.crypto.Credentials;
+import org.web3j.crypto.RawTransaction;
+import org.web3j.crypto.TransactionEncoder;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameter;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.response.EthBlock;
 import org.web3j.protocol.core.methods.response.EthCall;
+import org.web3j.protocol.core.methods.response.EthEstimateGas;
+import org.web3j.protocol.core.methods.response.EthSendTransaction;
 import org.web3j.protocol.core.methods.response.EthTransaction;
 import org.web3j.protocol.core.methods.response.Transaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
-import org.web3j.protocol.exceptions.TransactionException;
-import org.web3j.tx.Transfer;
+import org.web3j.tx.gas.DefaultGasProvider;
+import org.web3j.utils.Numeric;
 
 /**
  * @author lingting 2020-09-01 17:16
@@ -211,20 +216,75 @@ public class InfuraServiceImpl implements VirtualCurrencyService {
 	}
 
 	@Override
-	public boolean transfer(VirtualCurrencyAccount from, String to, Contract contract, BigDecimal value)
-			throws IOException, InterruptedException, ExecutionException {
+	public VirtualCurrencyTransferResult transfer(VirtualCurrencyAccount from, String to, Contract contract,
+			BigDecimal value) throws IOException {
+		// 合约地址
+		String cHash = contract.getHash();
+		// 获取账户信息
 		Credentials credentials = Credentials.create(from.getPrivateKey());
 		// 转换转账金额
-		BigDecimal amount = value.multiply(BigDecimal.TEN.pow(getDecimalsByContract(contract)));
-		// 构造转账请求
-		try {
-			TransactionReceipt receipt = Transfer.sendFunds(web3j, credentials, to, amount, Unit.SZABO).sendAsync()
-					.get();
+		BigInteger amount = value.multiply(BigDecimal.TEN.pow(getDecimalsByContract(contract))).toBigInteger();
+		// nonce, 由于要保证每笔交易递增, 所以直接使用eth数量
+		BigInteger nonce = web3j.ethGetTransactionCount(from.getAddress(), DefaultBlockParameterName.PENDING).send()
+				.getTransactionCount();
+		BigInteger gasPrice = DefaultGasProvider.GAS_PRICE;
+		BigInteger gasLimit = DefaultGasProvider.GAS_LIMIT;
+		// 交易原始数据
+		RawTransaction rawTransaction;
+		// 构造数据- eth
+		if (contract == Etherscan.ETH) {
+			// 获取交易原始数据
+			rawTransaction = RawTransaction.createEtherTransaction(nonce, gasPrice, gasLimit, to, amount);
 		}
-		catch (TransactionException e) {
-			e.printStackTrace();
+		// 构建请求 合约转账
+		else {
+			// 创建转账方法
+			Function function = new Function("transfer", Arrays.asList(new Address(to), new Uint256(amount)),
+					Collections.emptyList());
+			// 编码
+			String fData = FunctionEncoder.encode(function);
+			// 创建 gas 查询交易
+			org.web3j.protocol.core.methods.request.Transaction callTransaction = org.web3j.protocol.core.methods.request.Transaction
+					.createFunctionCallTransaction(from.getAddress(), nonce, gasPrice, null, cHash, fData);
+			// 发送查询请求
+			EthEstimateGas estimateGas = web3j.ethEstimateGas(callTransaction).send();
+			// 处理返回值
+			if (estimateGas.hasError()) {
+				return new VirtualCurrencyTransferResult()
+						// 失败
+						.setSuccess(false)
+						// 错误信息
+						.setMessage(estimateGas.getError().getMessage())
+						// 错误码
+						.setCode(Convert.toStr(estimateGas.getError().getCode()));
+			}
+			// 获取 gasLimit
+			gasLimit = estimateGas.getAmountUsed();
+			// 获取交易原始数据
+			rawTransaction = RawTransaction.createTransaction(nonce, gasPrice, gasLimit, cHash, fData);
+
 		}
-		return false;
+		// 签名
+		byte[] sign = TransactionEncoder.signMessage(rawTransaction, credentials);
+		// 转16进制
+		String hex = Numeric.toHexString(sign);
+		// 广播交易
+		EthSendTransaction transaction = web3j.ethSendRawTransaction(hex).send();
+		// 结果处理
+		if (transaction.hasError()) {
+			return new VirtualCurrencyTransferResult()
+					// 失败
+					.setSuccess(false)
+					// 错误消息
+					.setMessage(transaction.getError().getMessage())
+					// 错误码
+					.setCode(Convert.toStr(transaction.getError().getCode()));
+		}
+		return new VirtualCurrencyTransferResult()
+				// 交易hash
+				.setHash(transaction.getTransactionHash())
+				// 成功
+				.setSuccess(true);
 	}
 
 	/**

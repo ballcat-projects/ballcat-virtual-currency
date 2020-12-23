@@ -2,13 +2,11 @@ package com.lingting.gzm.virtual.currency.service;
 
 import com.lingting.gzm.virtual.currency.VirtualCurrencyAccount;
 import com.lingting.gzm.virtual.currency.VirtualCurrencyTransaction;
+import com.lingting.gzm.virtual.currency.VirtualCurrencyTransferResult;
 import com.lingting.gzm.virtual.currency.contract.Contract;
-import com.lingting.gzm.virtual.currency.exception.VirtualCurrencyException;
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 
 /**
  * 虚拟货币处理接口类
@@ -21,6 +19,7 @@ public interface VirtualCurrencyService {
 	 * 通过交易hash获取交易信息
 	 * @param hash 交易hash
 	 * @return 交易信息
+	 * @exception Exception 可能抛出的异常
 	 */
 	Optional<VirtualCurrencyTransaction> getTransactionByHash(String hash) throws Exception;
 
@@ -29,6 +28,7 @@ public interface VirtualCurrencyService {
 	 * @param contract 合约
 	 * @return 精度
 	 * @author lingting 2020-12-11 16:09
+	 * @exception Exception 可能抛出的异常
 	 */
 	Integer getDecimalsByContract(Contract contract) throws Exception;
 
@@ -41,6 +41,7 @@ public interface VirtualCurrencyService {
 	 * @param contract 合约
 	 * @return java.math.BigDecimal
 	 * @author lingting 2020-12-10 23:56
+	 * @exception Exception 可能抛出的异常
 	 */
 	BigDecimal getBalanceByAddressAndContract(String address, Contract contract) throws Exception;
 
@@ -50,6 +51,7 @@ public interface VirtualCurrencyService {
 	 * @param contract 余额
 	 * @return java.math.BigDecimal
 	 * @author lingting 2020-12-11 19:47
+	 * @exception Exception 可能抛出的异常
 	 */
 	default BigDecimal getNumberByAddressAndContract(String address, Contract contract) throws Exception {
 		return getNumberByBalanceAndContract(getBalanceByAddressAndContract(address, contract), contract);
@@ -63,6 +65,7 @@ public interface VirtualCurrencyService {
 	 * @param contract 合约地址
 	 * @return java.math.BigDecimal
 	 * @author lingting 2020-12-11 17:20
+	 * @exception Exception 可能抛出的异常
 	 */
 	default BigDecimal getNumberByBalanceAndContract(BigDecimal balance, Contract contract) throws Exception {
 		return getNumberByBalanceAndContract(balance, contract, MathContext.UNLIMITED);
@@ -77,6 +80,7 @@ public interface VirtualCurrencyService {
 	 * @param mathContext 精度要求
 	 * @return java.math.BigDecimal
 	 * @author lingting 2020-12-11 17:20
+	 * @exception Exception 可能抛出的异常
 	 */
 	BigDecimal getNumberByBalanceAndContract(BigDecimal balance, Contract contract, MathContext mathContext)
 			throws Exception;
@@ -89,8 +93,9 @@ public interface VirtualCurrencyService {
 	 * @param value 转账金额, 单位 个
 	 * @return boolean
 	 * @author lingting 2020-12-22 16:14
+	 * @exception Exception 可能抛出的异常
 	 */
-	boolean transfer(VirtualCurrencyAccount from, String to, Contract contract, BigDecimal value)
-			throws Exception, InterruptedException, ExecutionException;
+	VirtualCurrencyTransferResult transfer(VirtualCurrencyAccount from, String to, Contract contract, BigDecimal value)
+			throws Exception;
 
 }

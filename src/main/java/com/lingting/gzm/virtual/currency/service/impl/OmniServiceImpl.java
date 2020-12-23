@@ -5,6 +5,7 @@ import cn.hutool.http.HttpRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.lingting.gzm.virtual.currency.VirtualCurrencyAccount;
 import com.lingting.gzm.virtual.currency.VirtualCurrencyTransaction;
+import com.lingting.gzm.virtual.currency.VirtualCurrencyTransferResult;
 import com.lingting.gzm.virtual.currency.contract.Contract;
 import com.lingting.gzm.virtual.currency.contract.Etherscan;
 import com.lingting.gzm.virtual.currency.contract.Omni;
@@ -150,8 +151,9 @@ public class OmniServiceImpl implements VirtualCurrencyService {
 	}
 
 	@Override
-	public boolean transfer(VirtualCurrencyAccount from, String to, Contract contract, BigDecimal value) {
-		return false;
+	public VirtualCurrencyTransferResult transfer(VirtualCurrencyAccount from, String to, Contract contract,
+			BigDecimal value) {
+		return null;
 	}
 
 	/**
