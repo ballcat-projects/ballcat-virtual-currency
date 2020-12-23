@@ -1,5 +1,6 @@
 package com.lingting.gzm.virtual.currency.properties;
 
+import cn.hutool.core.util.StrUtil;
 import com.lingting.gzm.virtual.currency.endpoints.Endpoints;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -29,7 +30,16 @@ public class InfuraProperties implements PlatformProperties {
 	 */
 	private Endpoints endpoints;
 
+	/**
+	 * 自定义url, 可为空
+	 */
+	private String url;
+
 	public HttpService getHttpService() {
+		// 是否自定义 web3j url
+		if (StrUtil.isNotBlank(url)) {
+			return new HttpService(url);
+		}
 		return new HttpService(getEndpoints().getHttpUrl(getProjectId()));
 	}
 
