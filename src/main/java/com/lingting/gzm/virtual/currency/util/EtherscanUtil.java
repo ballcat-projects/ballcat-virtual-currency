@@ -1,5 +1,8 @@
 package com.lingting.gzm.virtual.currency.util;
 
+import static com.lingting.gzm.virtual.currency.util.KeyUtil.keyDeserialization;
+import static com.lingting.gzm.virtual.currency.util.KeyUtil.keySerialization;
+
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -117,22 +120,6 @@ public class EtherscanUtil {
 				.setPublicKey(keyDeserialization(keyPair.getPublicKey()))
 				// keystore
 				.setKeystore(ketStore);
-	}
-
-	/**
-	 * 序列化key
-	 * @author lingting 2020-12-22 19:20
-	 */
-	public static BigInteger keySerialization(String key) {
-		return new BigInteger(key, 16);
-	}
-
-	/**
-	 * 反序列化key
-	 * @author lingting 2020-12-22 19:20
-	 */
-	public static String keyDeserialization(BigInteger key) {
-		return key.toString(16);
 	}
 
 }
