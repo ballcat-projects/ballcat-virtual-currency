@@ -20,6 +20,9 @@
         <lombok.version>1.18.12</lombok.version>
         <hutool.version>5.4.1</hutool.version>
         <jackson.version>2.11.2</jackson.version>
+        <spring-javaformat-checkstyle.version>0.0.26</spring-javaformat-checkstyle.version>
+        <web3j.version>5.0.0</web3j.version>
+        <bitcoinj.version>0.15.9</bitcoinj.version>
     </properties>
 
     <dependencies>
@@ -67,12 +70,12 @@
         <dependency>
             <groupId>org.web3j</groupId>
             <artifactId>core</artifactId>
-            <version>3.3.1</version>
+            <version>${web3j.version}</version>
         </dependency>
         <dependency>
             <groupId>org.bitcoinj</groupId>
             <artifactId>bitcoinj-core</artifactId>
-            <version>0.15.8</version>
+            <version>${bitcoinj.version}</version>
         </dependency>
     </dependencies>
 
@@ -95,6 +98,23 @@
                 <configuration>
                     <skip>true</skip>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>io.spring.javaformat</groupId>
+                <artifactId>spring-javaformat-maven-plugin</artifactId>
+                <version>${spring-javaformat-checkstyle.version}</version>
+                <configuration>
+                    <lineSeparator>LF</lineSeparator>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>validate</phase>
+                        <inherited>true</inherited>
+                        <goals>
+                            <goal>validate</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
