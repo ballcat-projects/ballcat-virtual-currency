@@ -1,7 +1,9 @@
-package com.lingting.gzm.virtual.currency.util;
+package com.lingting.gzm.virtual.currency.etherscan;
 
-import cn.hutool.core.util.StrUtil;
-import com.lingting.gzm.virtual.currency.contract.Etherscan;
+import static com.lingting.gzm.virtual.currency.util.ResolveUtil.removePreZero;
+import static com.lingting.gzm.virtual.currency.util.ResolveUtil.stringToArrayBy64;
+
+import com.lingting.gzm.virtual.currency.contract.EtherscanContract;
 import com.lingting.gzm.virtual.currency.exception.VirtualCurrencyException;
 import java.math.BigDecimal;
 import java.util.function.Consumer;
@@ -14,29 +16,9 @@ import lombok.var;
 /**
  * @author lingting 2020-09-02 14:20
  */
-public class EtherscanInputDecodeUtil {
-
-	public static final String REMOVE_ZERO_REG_STR = "^(0+)";
+public class EtherscanInputDecode {
 
 	public static final String START = "0x";
-
-	/**
-	 * 传入删除 methodId的 input data
-	 *
-	 * @author lingting 2020-11-17 21:40
-	 */
-	public static String[] stringToArray(String str) {
-		return StrUtil.cut(str, 64);
-	}
-
-	/**
-	 * 移除字符串前的0
-	 *
-	 * @author lingting 2020-11-17 21:44
-	 */
-	public static String removePreZero(String str) {
-		return str.replaceAll(REMOVE_ZERO_REG_STR, "");
-	}
 
 	/**
 	 * 解析input数据
@@ -83,7 +65,7 @@ public class EtherscanInputDecodeUtil {
 		/**
 		 * 合约
 		 */
-		private Etherscan contract;
+		private EtherscanContract contract;
 
 		/**
 		 * 合约地址
@@ -108,22 +90,22 @@ public class EtherscanInputDecodeUtil {
 			 * 各种 abi 方法处理
 			 */
 			TRANSFER("0xa9059cbb", input -> {
-				String[] array = stringToArray(input.getData().substring(10));
+				String[] array = stringToArrayBy64(input.getData().substring(10));
 				input.setTo(array[0]);
 				input.setValue(new BigDecimal(Long.parseLong(array[1], 16)));
 			}),
 
 			SEND_MULTI_SIG_TOKEN("0x0dcd7a6c", input -> {
-				String[] array = stringToArray(input.getData().substring(10));
+				String[] array = stringToArrayBy64(input.getData().substring(10));
 				input.setTo(array[0]);
 				input.setValue(new BigDecimal(Long.parseLong(array[1], 16)));
 				String address = START + removePreZero(array[2]);
-				input.setContract(Etherscan.getByHash(address));
+				input.setContract(EtherscanContract.getByHash(address));
 				input.setContractAddress(address);
 			}),
 
 			SEND_MULTI_SIG("0x39125215", input -> {
-				String[] array = stringToArray(input.getData().substring(10));
+				String[] array = stringToArrayBy64(input.getData().substring(10));
 				input.setTo(array[0]);
 				input.setValue(new BigDecimal(Long.parseLong(array[1], 16)));
 			}),

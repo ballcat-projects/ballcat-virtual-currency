@@ -7,8 +7,8 @@ import com.lingting.gzm.virtual.currency.VirtualCurrencyAccount;
 import com.lingting.gzm.virtual.currency.VirtualCurrencyTransaction;
 import com.lingting.gzm.virtual.currency.VirtualCurrencyTransferResult;
 import com.lingting.gzm.virtual.currency.contract.Contract;
-import com.lingting.gzm.virtual.currency.contract.Etherscan;
-import com.lingting.gzm.virtual.currency.contract.Omni;
+import com.lingting.gzm.virtual.currency.contract.EtherscanContract;
+import com.lingting.gzm.virtual.currency.contract.OmniContract;
 import com.lingting.gzm.virtual.currency.endpoints.Endpoints;
 import com.lingting.gzm.virtual.currency.endpoints.OmniEndpoints;
 import com.lingting.gzm.virtual.currency.enums.TransactionStatus;
@@ -68,11 +68,11 @@ public class OmniServiceImpl implements VirtualCurrencyService {
 	private static final TokenHistory STATIC_TOKEN_HISTORY = new TokenHistory();
 
 	static {
-		CONTRACT_DECIMAL_CACHE = new ConcurrentHashMap<>(Etherscan.values().length + 1);
-		CONTRACT_DECIMAL_CACHE.put(Omni.BTC, 0);
-		CONTRACT_DECIMAL_CACHE.put(Omni.OMNI, 8);
-		CONTRACT_DECIMAL_CACHE.put(Omni.USDT, 8);
-		CONTRACT_DECIMAL_CACHE.put(Omni.MAID_SAFE_COIN, 0);
+		CONTRACT_DECIMAL_CACHE = new ConcurrentHashMap<>(EtherscanContract.values().length + 1);
+		CONTRACT_DECIMAL_CACHE.put(OmniContract.BTC, 0);
+		CONTRACT_DECIMAL_CACHE.put(OmniContract.OMNI, 8);
+		CONTRACT_DECIMAL_CACHE.put(OmniContract.USDT, 8);
+		CONTRACT_DECIMAL_CACHE.put(OmniContract.MAID_SAFE_COIN, 0);
 	}
 
 	@Override
@@ -86,7 +86,7 @@ public class OmniServiceImpl implements VirtualCurrencyService {
 
 		VirtualCurrencyTransaction transaction = new VirtualCurrencyTransaction()
 
-				.setContract(Omni.getById(response.getPropertyId()))
+				.setContract(OmniContract.getById(response.getPropertyId()))
 
 				.setContractAddress(response.getPropertyId().toString())
 

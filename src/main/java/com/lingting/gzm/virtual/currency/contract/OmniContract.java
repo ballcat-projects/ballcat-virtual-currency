@@ -5,34 +5,24 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
- * 波场 合约地址
+ * 比特代币 合约地址
  *
  * @author lingting 2020-09-02 13:40
  */
 @Getter
 @AllArgsConstructor
-public enum Tronscan implements Contract {
+public enum OmniContract implements Contract {
 
 	/**
-	 * trx
+	 * 代币名称
 	 */
-	TRX("_"),
-	/**
-	 * USDT
-	 */
-	USDT("TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"),
-	/**
-	 * JUST
-	 */
-	JUST("TCFLL5dx5ZJdKnWuesXxi1VPwjLVmWZZy9"),
-	/**
-	 * PEER
-	 */
-	PEER("1003406"),
-	/**
-	 * PW
-	 */
-	PW("1002263"),
+	USDT("31"),
+
+	BTC("0"),
+
+	OMNI("1"),
+
+	MAID_SAFE_COIN("3"),
 
 	;
 
@@ -46,16 +36,20 @@ public enum Tronscan implements Contract {
 	 *
 	 * @author lingting 2020-09-02 13:44
 	 */
-	public static Tronscan getByHash(String hash) {
+	public static OmniContract getByHash(String hash) {
 		if (StrUtil.isEmpty(hash)) {
-			return TRX;
+			return null;
 		}
-		for (Tronscan c : values()) {
+		for (OmniContract c : values()) {
 			if (c.hash.equalsIgnoreCase(hash)) {
 				return c;
 			}
 		}
 		return null;
+	}
+
+	public static OmniContract getById(Integer id) {
+		return getByHash(id.toString());
 	}
 
 }

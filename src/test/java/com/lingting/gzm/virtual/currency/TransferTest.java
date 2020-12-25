@@ -1,6 +1,7 @@
 package com.lingting.gzm.virtual.currency;
 
-import com.lingting.gzm.virtual.currency.contract.Etherscan;
+import com.lingting.gzm.virtual.currency.contract.EtherscanContract;
+import com.lingting.gzm.virtual.currency.contract.TronscanContract;
 import com.lingting.gzm.virtual.currency.endpoints.InfuraEndpoints;
 import com.lingting.gzm.virtual.currency.endpoints.OmniEndpoints;
 import com.lingting.gzm.virtual.currency.endpoints.TronscanEndpoints;
@@ -46,9 +47,9 @@ public class TransferTest {
 		String pwd = "123456";
 		VirtualCurrencyAccount account = EtherscanUtil.getAccountOfKeystore(address, pwd, keystore);
 
-		BigDecimal bAccount = service.getNumberByAddressAndContract(account.getAddress(), Etherscan.ETH);
+		BigDecimal bAccount = service.getNumberByAddressAndContract(account.getAddress(), EtherscanContract.ETH);
 		System.out.println("account ETH余额: " + bAccount.toPlainString());
-		bAccount = service.getNumberByAddressAndContract(account.getAddress(), Etherscan.USDT);
+		bAccount = service.getNumberByAddressAndContract(account.getAddress(), EtherscanContract.USDT);
 		System.out.println("account USDT余额: " + bAccount.toPlainString());
 
 		String a1 = "0x9471851ad4032899a6fd45fc730dfc40f91ffd3c";
@@ -56,9 +57,9 @@ public class TransferTest {
 		String pr1 = "f520231e9ff23a651135467028136bbc5193c6bc71465480215ccf8e16a97be";
 		VirtualCurrencyAccount ac1 = EtherscanUtil.getAccountOfKey(a1, pr1);
 
-		BigDecimal b1 = service.getNumberByAddressAndContract(a1, Etherscan.ETH);
+		BigDecimal b1 = service.getNumberByAddressAndContract(a1, EtherscanContract.ETH);
 		System.out.println("a1 ETH余额: " + b1.toPlainString());
-		b1 = service.getNumberByAddressAndContract(a1, Etherscan.USDT);
+		b1 = service.getNumberByAddressAndContract(a1, EtherscanContract.USDT);
 		System.out.println("a1 USDT余额: " + b1.toPlainString());
 
 		String a2 = "0x5fa7e29ffcd685f9fd31d7fe6940be5ef7cb6358";
@@ -66,9 +67,9 @@ public class TransferTest {
 		String pr2 = "3a1477cd2b3f8bdb47a419760cd11d24b50ac9e2a80cc6e4f7ff902d8871978f";
 		VirtualCurrencyAccount ac2 = EtherscanUtil.getAccountOfKey(a2, pr2);
 
-		BigDecimal b2 = service.getNumberByAddressAndContract(a2, Etherscan.ETH);
+		BigDecimal b2 = service.getNumberByAddressAndContract(a2, EtherscanContract.ETH);
 		System.out.println("a2 ETH余额: " + b2.toPlainString());
-		b2 = service.getNumberByAddressAndContract(a2, Etherscan.USDT);
+		b2 = service.getNumberByAddressAndContract(a2, EtherscanContract.USDT);
 		System.out.println("a2 USDT余额: " + b2.toPlainString());
 	}
 
@@ -82,6 +83,10 @@ public class TransferTest {
 	@SneakyThrows
 	public void tronscanTest() {
 		service = new TronscanServiceImpl(new TronscanProperties().setEndpoints(TronscanEndpoints.MAINNET));
+		String a1 = "TBQa122mEvNbodaPTh5DXaEU7wFv7W1rci";
+		String puk1 = "d209cbd454acd5646ecebb4260640c9f823a9ea811c1d65699717e27e8ce9a4cd9bd4c9dd21dabd55661074a98f0aeaf8c64c73630745f26154444f4e535e58c";
+		String prk1 = "6784b3c8872db612adc0fac098440689f52e18b37f995eedb8db489374edb215";
+		BigDecimal b1 = service.getNumberByAddressAndContract(a1, TronscanContract.TRX);
 	}
 
 }

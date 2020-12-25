@@ -11,7 +11,7 @@ import lombok.Getter;
  */
 @Getter
 @AllArgsConstructor
-public enum Etherscan implements Contract {
+public enum EtherscanContract implements Contract {
 
 	/**
 	 * ETH
@@ -34,11 +34,11 @@ public enum Etherscan implements Contract {
 	 *
 	 * @author lingting 2020-09-02 13:44
 	 */
-	public static Etherscan getByHash(String hash) {
+	public static EtherscanContract getByHash(String hash) {
 		if (StrUtil.isEmpty(hash)) {
-			return ETH;
+			return null;
 		}
-		for (Etherscan c : values()) {
+		for (EtherscanContract c : values()) {
 			if (c.hash.equalsIgnoreCase(hash)) {
 				return c;
 			}

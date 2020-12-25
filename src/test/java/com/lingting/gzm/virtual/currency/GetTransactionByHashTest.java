@@ -68,7 +68,9 @@ public class GetTransactionByHashTest {
 		Optional<VirtualCurrencyTransaction> optional = service
 				// 这笔交易贼奇怪.
 				// .getTransactionByHash("99a1e33afa08194951275d028aeb0af9a019f4f4ed7da5bb52285135fc4bea2f");
-				.getTransactionByHash("e3a6e7685ec3f3b57e8fd77fadc8ac1964d5dd3bd7c75c0f7474198d45c251f3");
+				//.getTransactionByHash("e7226047b86d35a6cd3d530864deecb295011a786060a9269b21498069eb27f1");
+				//.getTransactionByHash("15dbacb7e0323b7fd07c4b794835947a807845c3d1eca3fc54770ff4e57b0f76");
+				.getTransactionByHash("7e9d94fbff84e8ed097a95e8619aab0cb12ad3bc7388dc1fe6002e552015e069");
 
 		System.out.println(optional.isPresent());
 		if (optional.isPresent()) {

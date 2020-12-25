@@ -1,5 +1,8 @@
 package com.lingting.gzm.virtual.currency.service.impl;
 
+import static com.lingting.gzm.virtual.currency.util.TronscanUtil.isTrc20;
+import static com.lingting.gzm.virtual.currency.util.TronscanUtil.resolve;
+
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpRequest;
@@ -8,23 +11,26 @@ import com.lingting.gzm.virtual.currency.VirtualCurrencyAccount;
 import com.lingting.gzm.virtual.currency.VirtualCurrencyTransaction;
 import com.lingting.gzm.virtual.currency.VirtualCurrencyTransferResult;
 import com.lingting.gzm.virtual.currency.contract.Contract;
-import com.lingting.gzm.virtual.currency.contract.Tronscan;
+import com.lingting.gzm.virtual.currency.contract.TronscanContract;
 import com.lingting.gzm.virtual.currency.endpoints.Endpoints;
 import com.lingting.gzm.virtual.currency.enums.TransactionStatus;
 import com.lingting.gzm.virtual.currency.enums.VcPlatform;
+import com.lingting.gzm.virtual.currency.exception.VirtualCurrencyException;
 import com.lingting.gzm.virtual.currency.properties.TronscanProperties;
 import com.lingting.gzm.virtual.currency.service.VirtualCurrencyService;
 import com.lingting.gzm.virtual.currency.tronscan.Account;
-import com.lingting.gzm.virtual.currency.tronscan.TokenTrc10;
-import com.lingting.gzm.virtual.currency.tronscan.TokenTrc20;
-import com.lingting.gzm.virtual.currency.tronscan.TransactionByHash;
+import com.lingting.gzm.virtual.currency.tronscan.Transaction;
+import com.lingting.gzm.virtual.currency.tronscan.TransactionInfo;
+import com.lingting.gzm.virtual.currency.tronscan.Trc10;
+import com.lingting.gzm.virtual.currency.tronscan.Trc20Data;
+import com.lingting.gzm.virtual.currency.util.TronscanUtil;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.math.MathContext;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Pattern;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -38,93 +44,117 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 
 	private final Endpoints endpoints;
 
-	private final HttpRequest transactionByHashRequest;
-
 	private final HttpRequest tokenRequest;
 
 	private final HttpRequest accountRequest;
+
+	private final HttpRequest transactionRequest;
+
+	private final HttpRequest transactionInfoRequest;
+
+	private final HttpRequest trc10Request;
 
 	@Getter
 	private static final Map<com.lingting.gzm.virtual.currency.contract.Contract, Integer> CONTRACT_DECIMAL_CACHE;
 
 	static {
-		CONTRACT_DECIMAL_CACHE = new ConcurrentHashMap<>(Tronscan.values().length + 1);
-		CONTRACT_DECIMAL_CACHE.put(Tronscan.TRX, 6);
+		CONTRACT_DECIMAL_CACHE = new ConcurrentHashMap<>(TronscanContract.values().length + 1);
+		CONTRACT_DECIMAL_CACHE.put(TronscanContract.TRX, 6);
 	}
 
-	public TronscanServiceImpl(TronscanProperties properties) {
+	public TronscanServiceImpl(TronscanProperties properties) throws VirtualCurrencyException {
 		this.properties = properties;
 		this.endpoints = properties.getEndpoints();
-		transactionByHashRequest = HttpRequest.get(endpoints.getHttp());
 		tokenRequest = HttpRequest.get(endpoints.getHttp());
+
 		accountRequest = HttpRequest.get(endpoints.getHttp());
+		transactionRequest = HttpRequest.post(endpoints.getHttp());
+		transactionInfoRequest = HttpRequest.post(endpoints.getHttp());
+		trc10Request = HttpRequest.post(endpoints.getHttp());
 	}
 
 	@Override
 	public Optional<VirtualCurrencyTransaction> getTransactionByHash(String hash) throws Exception {
-		// 交易成功时的返回结果
-		String success = "SUCCESS";
-		TransactionByHash transactionByHash = TransactionByHash.of(transactionByHashRequest, endpoints, hash);
+		Transaction transaction = Transaction.of(transactionRequest, endpoints, hash);
 
-		VirtualCurrencyTransaction transaction = new VirtualCurrencyTransaction().setBlock(transactionByHash.getBlock())
-				.setHash(hash).setVcPlatform(VcPlatform.TRONSCAN);
-		com.lingting.gzm.virtual.currency.contract.Contract contract;
-		BigDecimal value = BigDecimal.ZERO;
-		// 金额为空, 其他合约交易
-		TransactionByHash.ContractData contractData = transactionByHash.getContractData();
-		if (transactionByHash.getContractType() != 1 || contractData.getAmount() == null) {
-			Integer decimals;
-			// trc10 token 转账
-			if (transactionByHash.getContractType() == 2) {
-				TransactionByHash.ContractData.TokenInfo tokenInfo = contractData.getTokenInfo();
-				contract = Tronscan.getByHash(tokenInfo.getTokenId());
-				decimals = tokenInfo.getTokenDecimal();
-				value = contractData.getAmount();
-				transaction.setFrom(contractData.getOwnerAddress()).setTo(contractData.getToAddress())
-						.setContractAddress(tokenInfo.getTokenId());
+		// 没有返回txId 表示此交易未被确认 或 不存在
+		if (StrUtil.isBlank(transaction.getTxId())) {
+			return Optional.empty();
+		}
+
+		// 生成返回值
+		VirtualCurrencyTransaction vcTransaction = new VirtualCurrencyTransaction()
+				// 平台
+				.setVcPlatform(VcPlatform.TRONSCAN)
+				// hash
+				.setHash(hash);
+		// 原始数据
+		Transaction.RawData rawData = transaction.getRawData();
+		// 合约参数
+		Transaction.RawData.Contract.Parameter.Value data = rawData.getContract().get(0).getParameter().getValue();
+		// trx 或 trc10 交易
+		if (data.getAmount() != null) {
+			// trx 交易
+			if (StrUtil.isBlank(data.getAssetName())) {
+				// 合约
+				vcTransaction.setContract(TronscanContract.TRX);
 			}
-			// trc20 token 转账
+			// trc10 交易
 			else {
-				String type = "Transfer";
-				TransactionByHash.TokenTransferInfo transferInfo = transactionByHash.getTokenTransferInfo();
-				contract = Tronscan.getByHash(transferInfo.getContractAddress());
-				transaction.setFrom(transferInfo.getFromAddress()).setTo(transferInfo.getToAddress())
-						.setContractAddress(transferInfo.getContractAddress());
-				decimals = transferInfo.getDecimals();
-
-				// 转账交易
-				if (type.equals(transferInfo.getType())) {
-					value = new BigDecimal(transferInfo.getAmountStr());
+				// 合约
+				vcTransaction.setContract(TronscanContract.getByHash(data.getAssetName()));
+				// 如果合约未找到
+				if (vcTransaction.getContract() == null) {
+					vcTransaction.setContract(data::getAssetName);
 				}
 			}
 
-			// 合约不为空, 且目前未缓存当前合约精度 则进行精度缓存
-			if (contract != null && !CONTRACT_DECIMAL_CACHE.containsKey(contract)) {
-				CONTRACT_DECIMAL_CACHE.put(contract, decimals);
+			vcTransaction
+					// 转账金额
+					.setValue(getNumberByBalanceAndContract(data.getAmount(), vcTransaction.getContract()))
+					// 转账人
+					.setFrom(data.getOwnerAddress())
+					// 收款人
+					.setTo(data.getToAddress());
+		}
+		// trc20 交易
+		else {
+			// 合约
+			vcTransaction.setContract(TronscanContract.getByHash(data.getContractAddress()));
+			// 如果合约未找到
+			if (vcTransaction.getContract() == null) {
+				vcTransaction.setContract(data::getContractAddress);
 			}
+			// 解析数据
+			Trc20Data resolve = resolve(data.getData());
+
+			vcTransaction
+					// 转账金额
+					.setValue(getNumberByBalanceAndContract(resolve.getAmount(), vcTransaction.getContract()))
+					// 转账人
+					.setFrom(data.getOwnerAddress())
+					// 收款人
+					.setTo(resolve.getTo());
 		}
-		// trx 转账
+
+		// 获取交易详细信息
+		TransactionInfo info = TransactionInfo.of(transactionInfoRequest, endpoints, hash);
+		vcTransaction
+				// 块高度
+				.setBlock(info.getBlockNumber())
+				// 交易时间, 毫秒转秒
+				.setTime(info.getBlockTimeStamp() / 1000);
+		// 交易状态
+		List<Transaction.Ret> rets = transaction.getRet();
+		// 失败
+		if (CollectionUtil.isEmpty(rets) || !rets.get(0).getContractRet().equals(Transaction.Ret.SUCCESS)) {
+			vcTransaction.setStatus(TransactionStatus.FAIL);
+		}
+		// 成功
 		else {
-			contract = Tronscan.TRX;
-			value = contractData.getAmount();
-			transaction.setFrom(transactionByHash.getOwnerAddress()).setTo(transactionByHash.getToAddress());
+			vcTransaction.setStatus(TransactionStatus.SUCCESS);
 		}
-
-		// 交易成功 且 已确认
-		if (success.equals(transactionByHash.getContractRet()) && transactionByHash.getConfirmed()) {
-			transaction.setStatus(TransactionStatus.SUCCESS);
-		}
-		// 未确认或交易失败
-		else {
-			// 交易未确认则等待, 交易失败则失败
-			transaction.setStatus(success.equals(transactionByHash.getContractRet()) ? TransactionStatus.WAIT
-					: TransactionStatus.FAIL);
-		}
-
-		transaction.setValue(getNumberByBalanceAndContract(value, contract)).setContract(contract);
-
-		// 这里返回的时间单位是 毫秒，需要转为秒
-		return Optional.of(transaction.setTime(transactionByHash.getTimestamp() / 1000));
+		return Optional.of(vcTransaction);
 	}
 
 	@Override
@@ -140,18 +170,12 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 
 		// trc20 查询
 		if (isTrc20(contract.getHash())) {
-			List<TokenTrc20.Trc20Token> tokens = TokenTrc20.of(tokenRequest, endpoints, contract.getHash())
-					.getTrc20Tokens();
-			if (!CollectionUtil.isEmpty(tokens)) {
-				decimals = tokens.get(0).getDecimals();
-			}
+			decimals = TronscanUtil.getDecimalByTrc20(endpoints, contract);
 		}
 		// trc10 查询
 		else {
-			List<TokenTrc10.TokenData> list = TokenTrc10.of(tokenRequest, endpoints, contract.getHash()).getData();
-			if (!CollectionUtil.isEmpty(list)) {
-				decimals = list.get(0).getPrecision();
-			}
+			Trc10 trc10 = Trc10.of(trc10Request, endpoints, contract.getHash());
+			decimals = trc10.getPrecision();
 		}
 
 		CONTRACT_DECIMAL_CACHE.put(contract, decimals);
@@ -163,18 +187,35 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 			com.lingting.gzm.virtual.currency.contract.Contract contract) throws JsonProcessingException {
 		Account account = Account.of(accountRequest, endpoints, address);
 		// 搜索拥有的token
-		for (Account.Tokens token : account.getTokens()) {
-			// 如果存在 ownerAddress, 对比 ownerAddress, 如果指定合约的 hash 与 当前 token.ownerAddress 相同
-			if (StrUtil.isNotBlank(token.getOwnerAddress())
-					&& contract.getHash().equalsIgnoreCase(token.getOwnerAddress())) {
-				return token.getBalance();
-			}
+		List<Account.Data> data = account.getData();
 
-			// 如果 token.token_id 与 指定合约的 hash 相同
-			if (token.getTokenId().equalsIgnoreCase(contract.getHash())) {
-				return token.getBalance();
+		if (data.size() == 0) {
+			return BigDecimal.ZERO;
+		}
+
+		// trc20
+		if (isTrc20(contract.getHash())) {
+			// 从trc20中寻找
+			for (Map<String, BigInteger> map : data.get(0).getTrc20()) {
+				for (Map.Entry<String, BigInteger> entry : map.entrySet()) {
+					// 如果指定合约的hash 与当前trc20 key相同
+					if (entry.getKey().equals(contract.getHash())) {
+						return new BigDecimal(entry.getValue());
+					}
+				}
 			}
 		}
+		// 非 trc20
+		else {
+			// 从assetV2中寻找
+			for (Account.Data.AssetV2 v2 : data.get(0).getAssetV2()) {
+				// 如果指定合约的hash 与当前v2数据相同
+				if (v2.getKey().equals(contract.getHash())) {
+					return new BigDecimal(v2.getValue());
+				}
+			}
+		}
+
 		// 未找到合约, 返回 0
 		return BigDecimal.ZERO;
 	}
@@ -195,17 +236,6 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 	public VirtualCurrencyTransferResult transfer(VirtualCurrencyAccount from, String to, Contract contract,
 			BigDecimal value) {
 		return null;
-	}
-
-	public static final Pattern NUMBER_PATTERN = Pattern.compile("^\\d+$");
-
-	/**
-	 * 判断合约是否为 trc20, hash 纯数字为trc10
-	 *
-	 * @author lingting 2020-12-13 15:19
-	 */
-	private boolean isTrc20(String hash) {
-		return !NUMBER_PATTERN.matcher(hash).find();
 	}
 
 }

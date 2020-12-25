@@ -4,6 +4,9 @@ import com.lingting.gzm.virtual.currency.VirtualCurrencyAccount;
 import com.lingting.gzm.virtual.currency.VirtualCurrencyTransaction;
 import com.lingting.gzm.virtual.currency.VirtualCurrencyTransferResult;
 import com.lingting.gzm.virtual.currency.contract.Contract;
+import com.lingting.gzm.virtual.currency.contract.EtherscanContract;
+import com.lingting.gzm.virtual.currency.contract.OmniContract;
+import com.lingting.gzm.virtual.currency.contract.TronscanContract;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.util.Optional;
@@ -34,9 +37,9 @@ public interface VirtualCurrencyService {
 
 	/**
 	 * 查询指定地址, 指定合约余额. 不同平台请使用不同平台对应的 contract . eth
-	 * {@link com.lingting.gzm.virtual.currency.contract.Etherscan}. omni
-	 * {@link com.lingting.gzm.virtual.currency.contract.Omni}. tronscan
-	 * {@link com.lingting.gzm.virtual.currency.contract.Tronscan}.
+	 * {@link EtherscanContract}. omni
+	 * {@link OmniContract}. tronscan
+	 * {@link TronscanContract}.
 	 * @param address 账号地址
 	 * @param contract 合约
 	 * @return java.math.BigDecimal

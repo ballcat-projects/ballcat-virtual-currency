@@ -1,8 +1,8 @@
 package com.lingting.gzm.virtual.currency;
 
-import com.lingting.gzm.virtual.currency.contract.Etherscan;
-import com.lingting.gzm.virtual.currency.contract.Omni;
-import com.lingting.gzm.virtual.currency.contract.Tronscan;
+import com.lingting.gzm.virtual.currency.contract.EtherscanContract;
+import com.lingting.gzm.virtual.currency.contract.OmniContract;
+import com.lingting.gzm.virtual.currency.contract.TronscanContract;
 import com.lingting.gzm.virtual.currency.endpoints.InfuraEndpoints;
 import com.lingting.gzm.virtual.currency.endpoints.OmniEndpoints;
 import com.lingting.gzm.virtual.currency.endpoints.TronscanEndpoints;
@@ -34,7 +34,7 @@ public class GetBalanceByAddressTest {
 				.setProjectId("b6066b4cfce54e7384ea38d52f9260ac"));
 		String address = "0xb501E624f65683Ab6ceA24d3Eb82FB1187d690aD";
 
-		BigDecimal decimal = service.getNumberByAddressAndContract(address, Etherscan.ETH);
+		BigDecimal decimal = service.getNumberByAddressAndContract(address, EtherscanContract.ETH);
 		System.out.println(decimal);
 	}
 
@@ -43,7 +43,7 @@ public class GetBalanceByAddressTest {
 	public void btcTest() {
 		service = new OmniServiceImpl(new OmniProperties().setEndpoints(OmniEndpoints.MAINNET));
 		BigDecimal decimal = service.getNumberByAddressAndContract("1KN4mnqdUhtERmrZdfke1VUkBQUMcicNHE",
-				Omni.MAID_SAFE_COIN);
+				OmniContract.MAID_SAFE_COIN);
 		System.out.println(decimal);
 	}
 
@@ -53,7 +53,7 @@ public class GetBalanceByAddressTest {
 		service = new TronscanServiceImpl(new TronscanProperties().setEndpoints(TronscanEndpoints.MAINNET));
 
 		String address = "TBAbX6ezwTRLEoYW2DUhQQjQ2aA3KWxFkp";
-		BigDecimal value = service.getNumberByAddressAndContract(address, Tronscan.TRX);
+		BigDecimal value = service.getNumberByAddressAndContract(address, TronscanContract.TRX);
 		System.out.println(value);
 
 	}

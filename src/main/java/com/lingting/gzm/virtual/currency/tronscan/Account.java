@@ -5,473 +5,228 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.lingting.gzm.virtual.currency.endpoints.Endpoints;
 import com.lingting.gzm.virtual.currency.util.JsonUtil;
-import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
-import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
  * @author lingting 2020-12-11 23:41
  */
 @NoArgsConstructor
-@Data
+@lombok.Data
 public class Account {
 
 	public static Account of(HttpRequest request, Endpoints endpoints, String address) throws JsonProcessingException {
-		return JsonUtil.toObj(request.setUrl(endpoints.getHttpUrl("account?address=" + address)).execute().body(),
+		return JsonUtil.toObj(request.setUrl(endpoints.getHttpUrl("accounts/" + address)).execute().body(),
 				Account.class);
 	}
 
-	@JsonProperty("address")
-	private String address;
+	@JsonProperty("success")
+	private Boolean success;
 
-	@JsonProperty("bandwidth")
-	private Bandwidth bandwidth;
+	@JsonProperty("meta")
+	private Meta meta;
 
-	@JsonProperty("date_created")
-	private String dateCreated;
-
-	@JsonProperty("accountType")
-	private Integer accountType;
-
-	@JsonProperty("frozen")
-	private Frozen frozen;
-
-	@JsonProperty("accountResource")
-	private AccountResource accountResource;
-
-	@JsonProperty("ownerPermission")
-	private OwnerPermission ownerPermission;
-
-	@JsonProperty("balance")
-	private BigDecimal balance;
-
-	@JsonProperty("voteTotal")
-	private Integer voteTotal;
-
-	@JsonProperty("name")
-	private String name;
-
-	@JsonProperty("delegated")
-	private Delegated delegated;
-
-	@JsonProperty("totalTransactionCount")
-	private Integer totalTransactionCount;
-
-	@JsonProperty("representative")
-	private Representative representative;
-
-	@JsonProperty("trc20token_balances")
-	private List<Trc20tokenBalances> trc20tokenBalances;
-
-	@JsonProperty("allowExchange")
-	private List<?> allowExchange;
-
-	@JsonProperty("frozen_supply")
-	private List<?> frozenSupply;
-
-	@JsonProperty("exchanges")
-	private List<?> exchanges;
-
-	@JsonProperty("tokenBalances")
-	private List<TokenBalances> tokenBalances;
-
-	@JsonProperty("balances")
-	private List<Balances> balances;
-
-	@JsonProperty("tokens")
-	private List<Tokens> tokens;
-
-	@JsonProperty("activePermissions")
-	private List<ActivePermissions> activePermissions;
+	@JsonProperty("data")
+	private List<Data> data;
 
 	@NoArgsConstructor
-	@Data
-	public static class Bandwidth {
+	@lombok.Data
+	public static class Meta {
 
-		@JsonProperty("energyRemaining")
-		private Integer energyRemaining;
+		@JsonProperty("at")
+		private Long at;
 
-		@JsonProperty("totalEnergyLimit")
-		private Long totalEnergyLimit;
-
-		@JsonProperty("totalEnergyWeight")
-		private Long totalEnergyWeight;
-
-		@JsonProperty("netUsed")
-		private Integer netUsed;
-
-		@JsonProperty("storageLimit")
-		private Integer storageLimit;
-
-		@JsonProperty("storagePercentage")
-		private Integer storagePercentage;
-
-		@JsonProperty("assets")
-		private Map<String, Asset> assets;
-
-		@JsonProperty("netPercentage")
-		private Integer netPercentage;
-
-		@JsonProperty("storageUsed")
-		private Integer storageUsed;
-
-		@JsonProperty("storageRemaining")
-		private Integer storageRemaining;
-
-		@JsonProperty("freeNetLimit")
-		private Integer freeNetLimit;
-
-		@JsonProperty("energyUsed")
-		private Integer energyUsed;
-
-		@JsonProperty("freeNetRemaining")
-		private Integer freeNetRemaining;
-
-		@JsonProperty("netLimit")
-		private Integer netLimit;
-
-		@JsonProperty("netRemaining")
-		private Integer netRemaining;
-
-		@JsonProperty("energyLimit")
-		private Integer energyLimit;
-
-		@JsonProperty("freeNetUsed")
-		private Integer freeNetUsed;
-
-		@JsonProperty("totalNetWeight")
-		private Long totalNetWeight;
-
-		@JsonProperty("freeNetPercentage")
-		private Double freeNetPercentage;
-
-		@JsonProperty("energyPercentage")
-		private Integer energyPercentage;
-
-		@JsonProperty("totalNetLimit")
-		private Long totalNetLimit;
-
-		@NoArgsConstructor
-		@Data
-		public static class Asset {
-
-			@JsonProperty("netPercentage")
-			private Integer netPercentage;
-
-			@JsonProperty("netLimit")
-			private Integer netLimit;
-
-			@JsonProperty("netRemaining")
-			private Integer netRemaining;
-
-			@JsonProperty("netUsed")
-			private Integer netUsed;
-
-		}
+		@JsonProperty("page_size")
+		private Integer pageSize;
 
 	}
 
 	@NoArgsConstructor
-	@Data
-	public static class Frozen {
+	@lombok.Data
+	public static class Data {
 
-		@JsonProperty("total")
-		private Integer total;
+		@JsonProperty("owner_permission")
+		private OwnerPermission ownerPermission;
 
-		@JsonProperty("balances")
-		private List<?> balances;
+		@JsonProperty("account_resource")
+		private AccountResource accountResource;
 
-	}
+		@JsonProperty("address")
+		private String address;
 
-	@NoArgsConstructor
-	@Data
-	public static class AccountResource {
+		@JsonProperty("create_time")
+		private Long createTime;
 
-		@JsonProperty("frozen_balance_for_energy")
-		private FrozenBalanceForEnergy frozenBalanceForEnergy;
-
-		@NoArgsConstructor
-		@Data
-		public static class FrozenBalanceForEnergy {
-
-		}
-
-	}
-
-	@NoArgsConstructor
-	@Data
-	public static class OwnerPermission {
-
-		/**
-		 * keys : [{"address":"TBAbX6ezwTRLEoYW2DUhQQjQ2aA3KWxFkp","weight":1}] threshold
-		 * : 1 permission_name : owner
-		 */
-
-		@JsonProperty("threshold")
-		private Integer threshold;
-
-		@JsonProperty("permission_name")
-		private String permissionName;
-
-		@JsonProperty("keys")
-		private List<Keys> keys;
-
-		@NoArgsConstructor
-		@Data
-		public static class Keys {
-
-			/**
-			 * address : TBAbX6ezwTRLEoYW2DUhQQjQ2aA3KWxFkp weight : 1
-			 */
-
-			@JsonProperty("address")
-			private String address;
-
-			@JsonProperty("weight")
-			private Integer weight;
-
-		}
-
-	}
-
-	@NoArgsConstructor
-	@Data
-	public static class Delegated {
-
-		@JsonProperty("sentDelegatedBandwidth")
-		private List<?> sentDelegatedBandwidth;
-
-		@JsonProperty("sentDelegatedResource")
-		private List<?> sentDelegatedResource;
-
-		@JsonProperty("receivedDelegatedResource")
-		private List<?> receivedDelegatedResource;
-
-		@JsonProperty("receivedDelegatedBandwidth")
-		private List<?> receivedDelegatedBandwidth;
-
-	}
-
-	@NoArgsConstructor
-	@Data
-	public static class Representative {
-
-		@JsonProperty("lastWithDrawTime")
-		private Integer lastWithDrawTime;
+		@JsonProperty("latest_consume_time")
+		private Long latestConsumeTime;
 
 		@JsonProperty("allowance")
-		private Integer allowance;
+		private BigInteger allowance;
 
-		@JsonProperty("enabled")
-		private Boolean enabled;
+		@JsonProperty("latest_opration_time")
+		private Long latestOprationTime;
 
-		@JsonProperty("url")
-		private String url;
+		@JsonProperty("is_witness")
+		private Boolean isWitness;
 
-	}
-
-	@NoArgsConstructor
-	@Data
-	public static class Trc20tokenBalances {
-
-		@JsonProperty("tokenId")
-		private String tokenId;
+		@JsonProperty("free_net_usage")
+		private BigInteger freeNetUsage;
 
 		@JsonProperty("balance")
-		private BigDecimal balance;
+		private BigInteger balance;
 
-		@JsonProperty("tokenName")
-		private String tokenName;
+		@JsonProperty("latest_consume_free_time")
+		private Long latestConsumeFreeTime;
 
-		@JsonProperty("tokenAbbr")
-		private String tokenAbbr;
+		@JsonProperty("account_name")
+		private String accountName;
 
-		@JsonProperty("tokenDecimal")
-		private Integer tokenDecimal;
+		@JsonProperty("latest_withdraw_time")
+		private Long latestWithdrawTime;
 
-		@JsonProperty("tokenCanShow")
-		private Integer tokenCanShow;
+		@JsonProperty("witness_permission")
+		private WitnessPermission witnessPermission;
 
-		@JsonProperty("tokenType")
-		private String tokenType;
+		@JsonProperty("active_permission")
+		private List<ActivePermission> activePermission;
 
-		@JsonProperty("tokenLogo")
-		private String tokenLogo;
+		@JsonProperty("free_asset_net_usageV2")
+		private List<FreeAssetNetUsageV2> freeAssetNetUsageV2;
 
-		@JsonProperty("vip")
-		private Boolean vip;
+		@JsonProperty("assetV2")
+		private List<AssetV2> assetV2;
 
-		@JsonProperty("tokenPriceInTrx")
-		private Double tokenPriceInTrx;
-
-		@JsonProperty("amount")
-		private BigDecimal amount;
-
-	}
-
-	@NoArgsConstructor
-	@Data
-	public static class TokenBalances {
-
-		@JsonProperty("amount")
-		private BigDecimal amount;
-
-		@JsonProperty("tokenPriceInTrx")
-		private Integer tokenPriceInTrx;
-
-		@JsonProperty("tokenId")
-		private String tokenId;
-
-		@JsonProperty("balance")
-		private BigDecimal balance;
-
-		@JsonProperty("tokenName")
-		private String tokenName;
-
-		@JsonProperty("tokenDecimal")
-		private Integer tokenDecimal;
-
-		@JsonProperty("tokenAbbr")
-		private String tokenAbbr;
-
-		@JsonProperty("tokenCanShow")
-		private Integer tokenCanShow;
-
-		@JsonProperty("tokenType")
-		private String tokenType;
-
-		@JsonProperty("vip")
-		private Boolean vip;
-
-		@JsonProperty("tokenLogo")
-		private String tokenLogo;
-
-		@JsonProperty("owner_address")
-		private String ownerAddress;
-
-	}
-
-	@NoArgsConstructor
-	@Data
-	public static class Balances {
-
-		@JsonProperty("amount")
-		private BigDecimal amount;
-
-		@JsonProperty("tokenPriceInTrx")
-		private Integer tokenPriceInTrx;
-
-		@JsonProperty("tokenId")
-		private String tokenId;
-
-		@JsonProperty("balance")
-		private BigDecimal balance;
-
-		@JsonProperty("tokenName")
-		private String tokenName;
-
-		@JsonProperty("tokenDecimal")
-		private Integer tokenDecimal;
-
-		@JsonProperty("tokenAbbr")
-		private String tokenAbbr;
-
-		@JsonProperty("tokenCanShow")
-		private Integer tokenCanShow;
-
-		@JsonProperty("tokenType")
-		private String tokenType;
-
-		@JsonProperty("vip")
-		private Boolean vip;
-
-		@JsonProperty("tokenLogo")
-		private String tokenLogo;
-
-		@JsonProperty("owner_address")
-		private String ownerAddress;
-
-	}
-
-	@NoArgsConstructor
-	@Data
-	public static class Tokens {
-
-		@JsonProperty("amount")
-		private BigDecimal amount;
-
-		@JsonProperty("tokenPriceInTrx")
-		private Integer tokenPriceInTrx;
-
-		@JsonProperty("tokenId")
-		private String tokenId;
-
-		@JsonProperty("balance")
-		private BigDecimal balance;
-
-		@JsonProperty("tokenName")
-		private String tokenName;
-
-		@JsonProperty("tokenDecimal")
-		private Integer tokenDecimal;
-
-		@JsonProperty("tokenAbbr")
-		private String tokenAbbr;
-
-		@JsonProperty("tokenCanShow")
-		private Integer tokenCanShow;
-
-		@JsonProperty("tokenType")
-		private String tokenType;
-
-		@JsonProperty("vip")
-		private Boolean vip;
-
-		@JsonProperty("tokenLogo")
-		private String tokenLogo;
-
-		@JsonProperty("owner_address")
-		private String ownerAddress;
-
-	}
-
-	@NoArgsConstructor
-	@Data
-	public static class ActivePermissions {
-
-		@JsonProperty("operations")
-		private String operations;
-
-		@JsonProperty("threshold")
-		private Integer threshold;
-
-		@JsonProperty("id")
-		private Integer id;
-
-		@JsonProperty("type")
-		private String type;
-
-		@JsonProperty("permission_name")
-		private String permissionName;
-
-		@JsonProperty("keys")
-		private List<Keys> keys;
+		@JsonProperty("trc20")
+		private List<Map<String, BigInteger>> trc20;
 
 		@NoArgsConstructor
-		@Data
-		public static class Keys {
+		@lombok.Data
+		public static class OwnerPermission {
 
-			/**
-			 * address : TBAbX6ezwTRLEoYW2DUhQQjQ2aA3KWxFkp weight : 1
-			 */
+			@JsonProperty("threshold")
+			private Long threshold;
 
-			@JsonProperty("address")
-			private String address;
+			@JsonProperty("permission_name")
+			private String permissionName;
 
-			@JsonProperty("weight")
-			private Integer weight;
+			@JsonProperty("keys")
+			private List<Keys> keys;
+
+			@NoArgsConstructor
+			@lombok.Data
+			public static class Keys {
+
+				@JsonProperty("address")
+				private String address;
+
+				@JsonProperty("weight")
+				private Integer weight;
+
+			}
+
+		}
+
+		@NoArgsConstructor
+		@lombok.Data
+		public static class AccountResource {
+
+			@JsonProperty("acquired_delegated_frozen_balance_for_energy")
+			private Long acquiredDelegatedFrozenBalanceForEnergy;
+
+		}
+
+		@NoArgsConstructor
+		@lombok.Data
+		public static class WitnessPermission {
+
+			@JsonProperty("threshold")
+			private Integer threshold;
+
+			@JsonProperty("id")
+			private Integer id;
+
+			@JsonProperty("type")
+			private String type;
+
+			@JsonProperty("permission_name")
+			private String permissionName;
+
+			@JsonProperty("keys")
+			private List<Keys> keys;
+
+			@NoArgsConstructor
+			@lombok.Data
+			public static class Keys {
+
+				@JsonProperty("address")
+				private String address;
+
+				@JsonProperty("weight")
+				private Integer weight;
+
+			}
+
+		}
+
+		@NoArgsConstructor
+		@lombok.Data
+		public static class ActivePermission {
+
+			@JsonProperty("operations")
+			private String operations;
+
+			@JsonProperty("threshold")
+			private Long threshold;
+
+			@JsonProperty("id")
+			private Long id;
+
+			@JsonProperty("type")
+			private String type;
+
+			@JsonProperty("permission_name")
+			private String permissionName;
+
+			@JsonProperty("keys")
+			private List<Keys> keys;
+
+			@NoArgsConstructor
+			@lombok.Data
+			public static class Keys {
+
+				@JsonProperty("address")
+				private String address;
+
+				@JsonProperty("weight")
+				private Integer weight;
+
+			}
+
+		}
+
+		@NoArgsConstructor
+		@lombok.Data
+		public static class FreeAssetNetUsageV2 {
+
+			@JsonProperty("value")
+			private BigInteger value;
+
+			@JsonProperty("key")
+			private String key;
+
+		}
+
+		@NoArgsConstructor
+		@lombok.Data
+		public static class AssetV2 {
+
+			@JsonProperty("value")
+			private BigInteger value;
+
+			@JsonProperty("key")
+			private String key;
 
 		}
 
