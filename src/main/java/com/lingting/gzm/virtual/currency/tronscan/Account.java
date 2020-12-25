@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.lingting.gzm.virtual.currency.endpoints.Endpoints;
 import com.lingting.gzm.virtual.currency.util.JsonUtil;
-import java.math.BigInteger;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import lombok.NoArgsConstructor;
@@ -63,7 +63,7 @@ public class Account {
 		private Long latestConsumeTime;
 
 		@JsonProperty("allowance")
-		private BigInteger allowance;
+		private BigDecimal allowance;
 
 		@JsonProperty("latest_opration_time")
 		private Long latestOprationTime;
@@ -72,10 +72,10 @@ public class Account {
 		private Boolean isWitness;
 
 		@JsonProperty("free_net_usage")
-		private BigInteger freeNetUsage;
+		private BigDecimal freeNetUsage;
 
 		@JsonProperty("balance")
-		private BigInteger balance;
+		private BigDecimal balance;
 
 		@JsonProperty("latest_consume_free_time")
 		private Long latestConsumeFreeTime;
@@ -99,7 +99,7 @@ public class Account {
 		private List<AssetV2> assetV2;
 
 		@JsonProperty("trc20")
-		private List<Map<String, BigInteger>> trc20;
+		private List<Map<String, BigDecimal>> trc20;
 
 		@NoArgsConstructor
 		@lombok.Data
@@ -211,7 +211,7 @@ public class Account {
 		public static class FreeAssetNetUsageV2 {
 
 			@JsonProperty("value")
-			private BigInteger value;
+			private BigDecimal value;
 
 			@JsonProperty("key")
 			private String key;
@@ -223,7 +223,7 @@ public class Account {
 		public static class AssetV2 {
 
 			@JsonProperty("value")
-			private BigInteger value;
+			private BigDecimal value;
 
 			@JsonProperty("key")
 			private String key;

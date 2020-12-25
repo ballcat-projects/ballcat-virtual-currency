@@ -25,7 +25,6 @@ import com.lingting.gzm.virtual.currency.tronscan.Trc10;
 import com.lingting.gzm.virtual.currency.tronscan.Trc20Data;
 import com.lingting.gzm.virtual.currency.util.TronscanUtil;
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.math.MathContext;
 import java.util.List;
 import java.util.Map;
@@ -201,21 +200,25 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 	public BigDecimal getBalanceByAddressAndContract(String address,
 			com.lingting.gzm.virtual.currency.contract.Contract contract) throws JsonProcessingException {
 		Account account = Account.of(accountRequest, endpoints, address);
-		// 搜索拥有的token
-		List<Account.Data> data = account.getData();
 
-		if (data.size() == 0) {
+		// 搜索拥有的数据
+		if (account.getData().size() == 0) {
 			return BigDecimal.ZERO;
+		}
+
+		Account.Data data = account.getData().get(0);
+		if (contract == TronscanContract.TRX) {
+			return data.getBalance();
 		}
 
 		// trc20
 		if (isTrc20(contract.getHash())) {
 			// 从trc20中寻找
-			for (Map<String, BigInteger> map : data.get(0).getTrc20()) {
-				for (Map.Entry<String, BigInteger> entry : map.entrySet()) {
+			for (Map<String, BigDecimal> map : data.getTrc20()) {
+				for (Map.Entry<String, BigDecimal> entry : map.entrySet()) {
 					// 如果指定合约的hash 与当前trc20 key相同
 					if (entry.getKey().equals(contract.getHash())) {
-						return new BigDecimal(entry.getValue());
+						return entry.getValue();
 					}
 				}
 			}
@@ -223,10 +226,10 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 		// 非 trc20
 		else {
 			// 从assetV2中寻找
-			for (Account.Data.AssetV2 v2 : data.get(0).getAssetV2()) {
+			for (Account.Data.AssetV2 v2 : data.getAssetV2()) {
 				// 如果指定合约的hash 与当前v2数据相同
 				if (v2.getKey().equals(contract.getHash())) {
-					return new BigDecimal(v2.getValue());
+					return v2.getValue();
 				}
 			}
 		}
