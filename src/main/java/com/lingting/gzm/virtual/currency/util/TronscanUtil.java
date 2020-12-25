@@ -5,7 +5,6 @@ import static com.lingting.gzm.virtual.currency.util.ResolveUtil.removePreZero;
 import static com.lingting.gzm.virtual.currency.util.ResolveUtil.stringToArrayBy64;
 
 import cn.hutool.core.util.ArrayUtil;
-import cn.hutool.http.HttpRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.lingting.gzm.virtual.currency.VirtualCurrencyAccount;
 import com.lingting.gzm.virtual.currency.contract.Contract;
@@ -13,6 +12,7 @@ import com.lingting.gzm.virtual.currency.endpoints.Endpoints;
 import com.lingting.gzm.virtual.currency.exception.VirtualCurrencyException;
 import com.lingting.gzm.virtual.currency.tronscan.Method;
 import com.lingting.gzm.virtual.currency.tronscan.Trc20Data;
+import com.lingting.gzm.virtual.currency.tronscan.TriggerRequest;
 import com.lingting.gzm.virtual.currency.tronscan.TriggerResult;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -153,12 +153,7 @@ public class TronscanUtil {
 	 * @author lingting 2020-12-25 19:36
 	 */
 	public static Integer getDecimalByTrc20(Endpoints endpoints, Contract contract) throws JsonProcessingException {
-		// 新建request请求
-		HttpRequest post = HttpRequest.post(endpoints.getHttpUrl("wallet/triggerconstantcontract"));
-		// 处理参数
-		post.body("{\"contract_address\":\"" + contract.getHash()
-				+ "\",\"owner_address\":\"T9yD14Nj9j7xAB4dbGeiX9h8unkKHxuWwb\",\"function_selector\":\"decimals()\",\"visible\":true}");
-		TriggerResult result = JsonUtil.toObj(post.execute().body(), TriggerResult.class);
+		TriggerResult result = TriggerRequest.decimals(endpoints, contract).exec();
 		return Integer.valueOf(result.getConstantResult().get(0), 16);
 	}
 
