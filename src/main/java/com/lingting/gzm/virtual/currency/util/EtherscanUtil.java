@@ -147,10 +147,9 @@ public class EtherscanUtil {
 		// 私钥不能为空
 		Assert.isFalse(StrUtil.isBlank(privateKey));
 		VirtualCurrencyAccount account = new VirtualCurrencyAccount(address, publicKey, privateKey);
-		ECKeyPair keyPair;
 		// 公钥不存在
 		if (StrUtil.isBlank(publicKey)) {
-			keyPair = ECKeyPair.create(keySerialization(privateKey));
+			ECKeyPair keyPair = ECKeyPair.create(keySerialization(privateKey));
 			// 计算公钥
 			publicKey = keyDeserialization(keyPair.getPublicKey());
 		}
