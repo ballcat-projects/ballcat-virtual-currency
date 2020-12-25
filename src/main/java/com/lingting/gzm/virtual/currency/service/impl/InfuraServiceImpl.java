@@ -71,13 +71,7 @@ public class InfuraServiceImpl implements VirtualCurrencyService {
 	private static final String EMPTY_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 	@Getter
-	private static final Map<Contract, Integer> CONTRACT_DECIMAL_CACHE;
-
-	static {
-		CONTRACT_DECIMAL_CACHE = new ConcurrentHashMap<>(EtherscanContract.values().length + 1);
-		CONTRACT_DECIMAL_CACHE.put(EtherscanContract.ETH, 18);
-		CONTRACT_DECIMAL_CACHE.put(EtherscanContract.USDT, 6);
-	}
+	private static final Map<String, Integer> CONTRACT_DECIMAL_CACHE = new ConcurrentHashMap<>();
 
 	public InfuraServiceImpl(InfuraProperties properties) {
 		this.properties = properties;
@@ -110,7 +104,7 @@ public class InfuraServiceImpl implements VirtualCurrencyService {
 		Transaction transaction = optional.get();
 
 		// 获取合约代币
-		EtherscanContract contract = EtherscanContract.getByHash(transaction.getTo());
+		Contract contract = EtherscanContract.getByHash(transaction.getTo());
 		// 合约地址
 		String contractAddress = contract == null ? StrUtil.EMPTY : contract.getHash();
 		// 解析input数据
@@ -128,6 +122,21 @@ public class InfuraServiceImpl implements VirtualCurrencyService {
 			contract = input.getContract();
 			contractAddress = contract.getHash();
 		}
+
+		if (contract == null) {
+			String finalContractAddress = contractAddress;
+			contract = new Contract() {
+				@Override
+				public String getHash() {
+					return finalContractAddress;
+				}
+
+				@Override
+				public Integer getDecimals() {
+					return null;
+				}
+			};
+		}
 		VirtualCurrencyTransaction virtualCurrencyTransaction = new VirtualCurrencyTransaction()
 
 				.setVcPlatform(VcPlatform.ETHERSCAN)
@@ -137,8 +146,6 @@ public class InfuraServiceImpl implements VirtualCurrencyService {
 				.setTo(input.getTo())
 				// 设置合约类型, input 中的优先
 				.setContract(contract)
-				// 设置合约地址
-				.setContractAddress(contractAddress)
 				// 设置金额
 				.setValue(getNumberByBalanceAndContract(input.getValue(), contract))
 				// 设置 input data
@@ -170,9 +177,15 @@ public class InfuraServiceImpl implements VirtualCurrencyService {
 		if (contract == null) {
 			return 0;
 		}
-		// 缓存合约精度, 且已存在指定合约的精度缓存
-		if (CONTRACT_DECIMAL_CACHE.containsKey(contract)) {
-			return CONTRACT_DECIMAL_CACHE.get(contract);
+
+		// 已知合约精度
+		if (contract.getDecimals() != null) {
+			return contract.getDecimals();
+		}
+
+		// 已缓存合约精度, 且已存在指定合约的精度缓存
+		if (CONTRACT_DECIMAL_CACHE.containsKey(contract.getHash())) {
+			return CONTRACT_DECIMAL_CACHE.get(contract.getHash());
 		}
 
 		Integer decimals = 0;
@@ -183,7 +196,8 @@ public class InfuraServiceImpl implements VirtualCurrencyService {
 		if (!CollectionUtil.isEmpty(types)) {
 			decimals = Convert.toInt(types.get(0).getValue().toString(), 0);
 		}
-		// 缓存合约精度 CONTRACT_DECIMAL_CACHE.put(contract, decimals);
+		// 缓存合约精度
+		CONTRACT_DECIMAL_CACHE.put(contract.getHash(), decimals);
 		return decimals;
 	}
 

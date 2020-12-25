@@ -16,23 +16,23 @@ public enum TronscanContract implements Contract {
 	/**
 	 * trx
 	 */
-	TRX("_"),
+	TRX("_", 6),
 	/**
 	 * USDT
 	 */
-	USDT("TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"),
+	USDT("TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t", 6),
 	/**
 	 * JUST
 	 */
-	JUST("TCFLL5dx5ZJdKnWuesXxi1VPwjLVmWZZy9"),
+	JUST("TCFLL5dx5ZJdKnWuesXxi1VPwjLVmWZZy9", 18),
 	/**
 	 * PEER
 	 */
-	PEER("1003406"),
+	PEER("1003406", 6),
 	/**
 	 * PW
 	 */
-	PW("1002263"),
+	PW("1002263", 0),
 
 	;
 
@@ -40,6 +40,11 @@ public enum TronscanContract implements Contract {
 	 * 比特合约地址, 仅提供正式服
 	 */
 	private final String hash;
+
+	/**
+	 * 精度
+	 */
+	private final Integer decimals;
 
 	/**
 	 * 通过合约hash获取属于哪个 比特合约

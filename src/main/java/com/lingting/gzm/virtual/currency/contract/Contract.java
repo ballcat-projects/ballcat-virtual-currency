@@ -14,4 +14,11 @@ public interface Contract {
 	 */
 	String getHash();
 
+	/**
+	 * 获取合约精度
+	 * @return java.lang.Integer
+	 * @author lingting 2020-12-25 19:51
+	 */
+	Integer getDecimals();
+
 }

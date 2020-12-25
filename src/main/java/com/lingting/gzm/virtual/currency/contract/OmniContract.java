@@ -16,13 +16,13 @@ public enum OmniContract implements Contract {
 	/**
 	 * 代币名称
 	 */
-	USDT("31"),
+	USDT("31",8),
 
-	BTC("0"),
+	BTC("0", 0),
 
-	OMNI("1"),
+	OMNI("1",8),
 
-	MAID_SAFE_COIN("3"),
+	MAID_SAFE_COIN("3" ,0),
 
 	;
 
@@ -30,6 +30,11 @@ public enum OmniContract implements Contract {
 	 * 比特合约地址, 仅提供正式服
 	 */
 	private final String hash;
+
+	/**
+	 * 合约精度
+	 */
+	private final Integer decimals;
 
 	/**
 	 * 通过合约hash获取属于哪个 比特合约

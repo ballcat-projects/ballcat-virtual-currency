@@ -53,22 +53,9 @@ public class VirtualCurrencyTransaction {
 	private TransactionStatus status;
 
 	/**
-	 * 合约类型，可能为空
+	 * 合约类型
 	 */
 	private Contract contract;
-
-	/**
-	 * 合约地址, 可能为空
-	 */
-	private String contractAddress;
-
-	/**
-	 * 获取合约地址
-	 * @author lingting 2020-12-11 16:11
-	 */
-	public String getContractAddress() {
-		return contract == null ? contractAddress : contract.getHash();
-	}
 
 	/**
 	 * 虚拟货币平台

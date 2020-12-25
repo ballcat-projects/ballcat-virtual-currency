@@ -7,7 +7,6 @@ import com.lingting.gzm.virtual.currency.VirtualCurrencyAccount;
 import com.lingting.gzm.virtual.currency.VirtualCurrencyTransaction;
 import com.lingting.gzm.virtual.currency.VirtualCurrencyTransferResult;
 import com.lingting.gzm.virtual.currency.contract.Contract;
-import com.lingting.gzm.virtual.currency.contract.EtherscanContract;
 import com.lingting.gzm.virtual.currency.contract.OmniContract;
 import com.lingting.gzm.virtual.currency.endpoints.Endpoints;
 import com.lingting.gzm.virtual.currency.endpoints.OmniEndpoints;
@@ -50,7 +49,7 @@ public class OmniServiceImpl implements VirtualCurrencyService {
 	private final HttpRequest balanceRequest = HttpRequest.post(OmniEndpoints.MAINNET.getHttp());
 
 	@Getter
-	private static final Map<Contract, Integer> CONTRACT_DECIMAL_CACHE;
+	private static final Map<String, Integer> CONTRACT_DECIMAL_CACHE = new ConcurrentHashMap<>();
 
 	/**
 	 * 用于调用of方法生成新对象
@@ -67,14 +66,6 @@ public class OmniServiceImpl implements VirtualCurrencyService {
 	 */
 	private static final TokenHistory STATIC_TOKEN_HISTORY = new TokenHistory();
 
-	static {
-		CONTRACT_DECIMAL_CACHE = new ConcurrentHashMap<>(EtherscanContract.values().length + 1);
-		CONTRACT_DECIMAL_CACHE.put(OmniContract.BTC, 0);
-		CONTRACT_DECIMAL_CACHE.put(OmniContract.OMNI, 8);
-		CONTRACT_DECIMAL_CACHE.put(OmniContract.USDT, 8);
-		CONTRACT_DECIMAL_CACHE.put(OmniContract.MAID_SAFE_COIN, 0);
-	}
-
 	@Override
 	public Optional<VirtualCurrencyTransaction> getTransactionByHash(String hash) throws JsonProcessingException {
 		TransactionByHash response = request(STATIC_TRANSACTION_HASH, transactionByHashRequest,
@@ -84,11 +75,20 @@ public class OmniServiceImpl implements VirtualCurrencyService {
 			return Optional.empty();
 		}
 
+		OmniContract contract = OmniContract.getById(response.getPropertyId());
 		VirtualCurrencyTransaction transaction = new VirtualCurrencyTransaction()
 
-				.setContract(OmniContract.getById(response.getPropertyId()))
+				.setContract(contract != null ? contract : new Contract() {
+					@Override
+					public String getHash() {
+						return response.getPropertyId().toString();
+					}
 
-				.setContractAddress(response.getPropertyId().toString())
+					@Override
+					public Integer getDecimals() {
+						return null;
+					}
+				})
 
 				.setBlock(response.getBlock())
 
@@ -111,14 +111,22 @@ public class OmniServiceImpl implements VirtualCurrencyService {
 
 	@Override
 	public Integer getDecimalsByContract(Contract contract) throws JsonProcessingException {
-		if (CONTRACT_DECIMAL_CACHE.containsKey(contract)) {
-			return CONTRACT_DECIMAL_CACHE.get(contract);
+		if (contract == null) {
+			return 0;
+		}
+
+		if (contract.getDecimals() != null) {
+			return contract.getDecimals();
+		}
+
+		if (CONTRACT_DECIMAL_CACHE.containsKey(contract.getHash())) {
+			return CONTRACT_DECIMAL_CACHE.get(contract.getHash());
 		}
 
 		TokenHistory history = request(STATIC_TOKEN_HISTORY, tokenHistoryRequest, properties.getEndpoints(),
 				contract.getHash());
 		int decimals = getDecimalsByString(history.getTransactions().get(0).getAmount());
-		CONTRACT_DECIMAL_CACHE.put(contract, decimals);
+		CONTRACT_DECIMAL_CACHE.put(contract.getHash(), decimals);
 		return decimals;
 	}
 
@@ -127,8 +135,9 @@ public class OmniServiceImpl implements VirtualCurrencyService {
 		Balances balances = request(STATIC_BALANCES, balanceRequest, properties.getEndpoints(), address);
 		for (Balances.Balance balance : balances.getBalance()) {
 			// 协助缓存精度
-			if (!CONTRACT_DECIMAL_CACHE.containsKey(contract)) {
-				CONTRACT_DECIMAL_CACHE.put(contract, getDecimalsByString(balance.getPropertyInfo().getTotalTokens()));
+			if (!CONTRACT_DECIMAL_CACHE.containsKey(contract.getHash())) {
+				CONTRACT_DECIMAL_CACHE.put(contract.getHash(),
+						getDecimalsByString(balance.getPropertyInfo().getTotalTokens()));
 			}
 
 			if (balance.getId().equals(contract.getHash())) {

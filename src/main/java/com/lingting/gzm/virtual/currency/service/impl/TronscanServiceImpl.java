@@ -44,8 +44,6 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 
 	private final Endpoints endpoints;
 
-	private final HttpRequest tokenRequest;
-
 	private final HttpRequest accountRequest;
 
 	private final HttpRequest transactionRequest;
@@ -55,17 +53,11 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 	private final HttpRequest trc10Request;
 
 	@Getter
-	private static final Map<com.lingting.gzm.virtual.currency.contract.Contract, Integer> CONTRACT_DECIMAL_CACHE;
-
-	static {
-		CONTRACT_DECIMAL_CACHE = new ConcurrentHashMap<>(TronscanContract.values().length + 1);
-		CONTRACT_DECIMAL_CACHE.put(TronscanContract.TRX, 6);
-	}
+	private static final Map<String, Integer> CONTRACT_DECIMAL_CACHE = new ConcurrentHashMap<>();
 
 	public TronscanServiceImpl(TronscanProperties properties) throws VirtualCurrencyException {
 		this.properties = properties;
 		this.endpoints = properties.getEndpoints();
-		tokenRequest = HttpRequest.get(endpoints.getHttp());
 
 		accountRequest = HttpRequest.get(endpoints.getHttp());
 		transactionRequest = HttpRequest.post(endpoints.getHttp());
@@ -105,7 +97,17 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 				vcTransaction.setContract(TronscanContract.getByHash(data.getAssetName()));
 				// 如果合约未找到
 				if (vcTransaction.getContract() == null) {
-					vcTransaction.setContract(data::getAssetName);
+					vcTransaction.setContract(new Contract() {
+						@Override
+						public String getHash() {
+							return data.getAssetName();
+						}
+
+						@Override
+						public Integer getDecimals() {
+							return null;
+						}
+					});
 				}
 			}
 
@@ -123,7 +125,17 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 			vcTransaction.setContract(TronscanContract.getByHash(data.getContractAddress()));
 			// 如果合约未找到
 			if (vcTransaction.getContract() == null) {
-				vcTransaction.setContract(data::getContractAddress);
+				vcTransaction.setContract(new Contract() {
+					@Override
+					public String getHash() {
+						return data.getContractAddress();
+					}
+
+					@Override
+					public Integer getDecimals() {
+						return null;
+					}
+				});
 			}
 			// 解析数据
 			Trc20Data resolve = resolve(data.getData());
@@ -163,10 +175,13 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 		if (contract == null) {
 			return 0;
 		}
-		if (CONTRACT_DECIMAL_CACHE.containsKey(contract)) {
-			return CONTRACT_DECIMAL_CACHE.get(contract);
+		if (contract.getDecimals() != null) {
+			return contract.getDecimals();
 		}
-		Integer decimals = 0;
+		if (CONTRACT_DECIMAL_CACHE.containsKey(contract.getHash())) {
+			return CONTRACT_DECIMAL_CACHE.get(contract.getHash());
+		}
+		int decimals;
 
 		// trc20 查询
 		if (isTrc20(contract.getHash())) {
@@ -175,10 +190,10 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 		// trc10 查询
 		else {
 			Trc10 trc10 = Trc10.of(trc10Request, endpoints, contract.getHash());
-			decimals = trc10.getPrecision();
+			decimals = trc10.getPrecision() == null ? 0 : trc10.getPrecision();
 		}
 
-		CONTRACT_DECIMAL_CACHE.put(contract, decimals);
+		CONTRACT_DECIMAL_CACHE.put(contract.getHash(), decimals);
 		return decimals;
 	}
 
