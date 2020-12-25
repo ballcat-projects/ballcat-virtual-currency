@@ -6,11 +6,11 @@ import static com.lingting.gzm.virtual.currency.util.ResolveUtil.stringToArrayBy
 
 import cn.hutool.core.util.ArrayUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.lingting.gzm.virtual.currency.AbiMethod;
 import com.lingting.gzm.virtual.currency.VirtualCurrencyAccount;
 import com.lingting.gzm.virtual.currency.contract.Contract;
 import com.lingting.gzm.virtual.currency.endpoints.Endpoints;
 import com.lingting.gzm.virtual.currency.exception.VirtualCurrencyException;
-import com.lingting.gzm.virtual.currency.tronscan.Method;
 import com.lingting.gzm.virtual.currency.tronscan.Trc20Data;
 import com.lingting.gzm.virtual.currency.tronscan.TriggerRequest;
 import com.lingting.gzm.virtual.currency.tronscan.TriggerResult;
@@ -43,10 +43,10 @@ public class TronscanUtil {
 
 	static {
 		// 合约函数数据解析方法
-		METHOD_HANDLER = new ConcurrentHashMap<>(Method.values().length);
-		METHOD_HANDLER.put(Method.TRANSFER.getMethodId(), str -> {
-			if (str.startsWith(Method.TRANSFER.getMethodId())) {
-				str = str.substring(Method.TRANSFER.getMethodId().length());
+		METHOD_HANDLER = new ConcurrentHashMap<>(AbiMethod.values().length);
+		METHOD_HANDLER.put(AbiMethod.TRANSFER.getMethodId(), str -> {
+			if (str.startsWith(AbiMethod.TRANSFER.getMethodId())) {
+				str = str.substring(AbiMethod.TRANSFER.getMethodId().length());
 			}
 			String[] array = stringToArrayBy64(str);
 			// 收款人
@@ -94,6 +94,10 @@ public class TronscanUtil {
 		return !NUMBER_PATTERN.matcher(hash).find();
 	}
 
+	/**
+	 * 新增账号
+	 * @author lingting 2020-12-25 20:35
+	 */
 	public static VirtualCurrencyAccount create()
 			throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException {
 		// 生成密钥对
@@ -120,6 +124,29 @@ public class TronscanUtil {
 
 		return new VirtualCurrencyAccount(address, keyDeserialization(publicKey),
 				keyDeserialization(keyPair.getPrivateKey()));
+	}
+
+	/**
+	 * 根据私钥获取账户
+	 * @param address 地址
+	 * @param privateKey 私钥
+	 * @return com.lingting.gzm.virtual.currency.VirtualCurrencyAccount
+	 * @author lingting 2020-12-23 14:04
+	 */
+	public static VirtualCurrencyAccount getAccountOfKey(String address, String privateKey) {
+		return getAccountOfKey(address, null, privateKey);
+	}
+
+	/**
+	 * 根据公私钥获取账户
+	 * @param address 地址
+	 * @param publicKey 公钥, 忘记了可以留空
+	 * @param privateKey 私钥
+	 * @return com.lingting.gzm.virtual.currency.VirtualCurrencyAccount
+	 * @author lingting 2020-12-23 14:05
+	 */
+	public static VirtualCurrencyAccount getAccountOfKey(String address, String publicKey, String privateKey) {
+		return EtherscanUtil.getAccountOfKey(address, publicKey, privateKey);
 	}
 
 	/**

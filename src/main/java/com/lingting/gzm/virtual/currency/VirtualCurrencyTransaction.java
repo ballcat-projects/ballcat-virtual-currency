@@ -3,7 +3,6 @@ package com.lingting.gzm.virtual.currency;
 import com.lingting.gzm.virtual.currency.contract.Contract;
 import com.lingting.gzm.virtual.currency.enums.TransactionStatus;
 import com.lingting.gzm.virtual.currency.enums.VcPlatform;
-import com.lingting.gzm.virtual.currency.etherscan.EtherscanInputDecode;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.LocalDateTime;
@@ -61,11 +60,6 @@ public class VirtualCurrencyTransaction {
 	 * 虚拟货币平台
 	 */
 	private VcPlatform vcPlatform;
-
-	/**
-	 * 如果 protocol 为 {@link VcPlatform#ETHERSCAN} 则本值不为空, 其他值则为空
-	 */
-	private EtherscanInputDecode.Input input;
 
 	/**
 	 * 交易时间, 时区 UTC

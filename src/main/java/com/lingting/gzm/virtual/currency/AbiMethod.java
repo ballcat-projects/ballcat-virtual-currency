@@ -1,4 +1,4 @@
-package com.lingting.gzm.virtual.currency.tronscan;
+package com.lingting.gzm.virtual.currency;
 
 import com.lingting.gzm.virtual.currency.exception.VirtualCurrencyException;
 import lombok.AllArgsConstructor;
@@ -11,7 +11,7 @@ import lombok.Getter;
  */
 @Getter
 @AllArgsConstructor
-public enum Method {
+public enum AbiMethod {
 
 	/**
 	 * 普通转账 transfer(address _to,uint256 _value)
@@ -19,9 +19,20 @@ public enum Method {
 	TRANSFER("a9059cbb"),
 
 	/**
-	 *  获取合约精度 decimals
+	 * 获取合约精度 decimals
 	 */
 	DECIMALS("313ce567"),
+
+	/**
+	 * SEND_MULTI_SIG_TOKEN
+	 */
+	SEND_MULTI_SIG_TOKEN("0dcd7a6c"),
+
+	/**
+	 * SEND_MULTI_SIG
+	 */
+	SEND_MULTI_SIG("39125215"),
+
 	;
 
 	/**
@@ -29,8 +40,8 @@ public enum Method {
 	 */
 	private final String methodId;
 
-	public static Method getById(String data) throws VirtualCurrencyException {
-		for (Method e : Method.values()) {
+	public static AbiMethod getById(String data) throws VirtualCurrencyException {
+		for (AbiMethod e : AbiMethod.values()) {
 			if (data.startsWith(e.getMethodId())) {
 				return e;
 			}

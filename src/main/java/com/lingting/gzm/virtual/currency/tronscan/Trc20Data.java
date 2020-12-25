@@ -1,5 +1,6 @@
 package com.lingting.gzm.virtual.currency.tronscan;
 
+import com.lingting.gzm.virtual.currency.AbiMethod;
 import com.lingting.gzm.virtual.currency.contract.Contract;
 import java.math.BigDecimal;
 import lombok.experimental.Accessors;
@@ -19,7 +20,7 @@ public class Trc20Data {
 	/**
 	 * 调用方法
 	 */
-	private Method method;
+	private AbiMethod method;
 
 	/**
 	 * 来源

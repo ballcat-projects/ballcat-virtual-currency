@@ -13,9 +13,10 @@ import com.lingting.gzm.virtual.currency.contract.EtherscanContract;
 import com.lingting.gzm.virtual.currency.enums.EtherscanReceiptStatus;
 import com.lingting.gzm.virtual.currency.enums.TransactionStatus;
 import com.lingting.gzm.virtual.currency.enums.VcPlatform;
-import com.lingting.gzm.virtual.currency.etherscan.EtherscanInputDecode;
+import com.lingting.gzm.virtual.currency.etherscan.Input;
 import com.lingting.gzm.virtual.currency.properties.InfuraProperties;
 import com.lingting.gzm.virtual.currency.service.VirtualCurrencyService;
+import com.lingting.gzm.virtual.currency.util.EtherscanUtil;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -108,14 +109,14 @@ public class InfuraServiceImpl implements VirtualCurrencyService {
 		// 合约地址
 		String contractAddress = contract == null ? StrUtil.EMPTY : contract.getHash();
 		// 解析input数据
-		EtherscanInputDecode.Input input;
+		Input input;
 		// 不是使用代币交易，而是直接使用eth交易
 		if (INPUT_EMPTY.equals(transaction.getInput())) {
-			input = new EtherscanInputDecode.Input().setTo(transaction.getTo())
-					.setValue(new BigDecimal(transaction.getValue())).setContract(EtherscanContract.ETH);
+			input = new Input().setTo(transaction.getTo()).setValue(new BigDecimal(transaction.getValue()))
+					.setContract(EtherscanContract.ETH);
 		}
 		else {
-			input = EtherscanInputDecode.resolveInput(transaction.getInput());
+			input = EtherscanUtil.resolve(transaction.getInput());
 		}
 
 		if (input.getContract() != null) {
@@ -147,9 +148,7 @@ public class InfuraServiceImpl implements VirtualCurrencyService {
 				// 设置合约类型, input 中的优先
 				.setContract(contract)
 				// 设置金额
-				.setValue(getNumberByBalanceAndContract(input.getValue(), contract))
-				// 设置 input data
-				.setInput(input);
+				.setValue(getNumberByBalanceAndContract(input.getValue(), contract));
 
 		// 获取交易状态
 		Optional<TransactionReceipt> receiptOptional = web3j.ethGetTransactionReceipt(hash).send()

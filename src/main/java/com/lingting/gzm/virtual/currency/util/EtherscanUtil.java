@@ -2,17 +2,25 @@ package com.lingting.gzm.virtual.currency.util;
 
 import static com.lingting.gzm.virtual.currency.util.KeyUtil.keyDeserialization;
 import static com.lingting.gzm.virtual.currency.util.KeyUtil.keySerialization;
+import static com.lingting.gzm.virtual.currency.util.ResolveUtil.removePreZero;
+import static com.lingting.gzm.virtual.currency.util.ResolveUtil.stringToArrayBy64;
 
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.lingting.gzm.virtual.currency.AbiMethod;
 import com.lingting.gzm.virtual.currency.VirtualCurrencyAccount;
+import com.lingting.gzm.virtual.currency.contract.EtherscanContract;
+import com.lingting.gzm.virtual.currency.etherscan.Input;
 import com.lingting.gzm.virtual.currency.exception.VirtualCurrencyException;
 import java.io.IOException;
-import java.math.BigInteger;
+import java.math.BigDecimal;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 import org.web3j.crypto.CipherException;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.ECKeyPair;
@@ -25,6 +33,65 @@ import org.web3j.crypto.WalletUtils;
  * @author lingting 2020/12/23 20:14
  */
 public class EtherscanUtil {
+
+	public static final String START = "0x";
+
+	public static final Map<String, Consumer<Input>> METHOD_HANDLER;
+
+	static {
+		// 合约函数数据解析方法
+		METHOD_HANDLER = new ConcurrentHashMap<>(AbiMethod.values().length);
+		METHOD_HANDLER.put(AbiMethod.TRANSFER.getMethodId(), input -> {
+			String str = input.getData();
+			if (str.startsWith(START + AbiMethod.TRANSFER.getMethodId())) {
+				str = str.substring((START + AbiMethod.TRANSFER.getMethodId()).length());
+			}
+			String[] array = stringToArrayBy64(str);
+			input.setTo(array[0]);
+			input.setValue(new BigDecimal(Long.parseLong(array[1], 16)));
+		});
+
+		METHOD_HANDLER.put(AbiMethod.SEND_MULTI_SIG_TOKEN.getMethodId(), input -> {
+			String str = input.getData();
+			if (str.startsWith(START + AbiMethod.SEND_MULTI_SIG_TOKEN.getMethodId())) {
+				str = str.substring((START + AbiMethod.SEND_MULTI_SIG_TOKEN.getMethodId()).length());
+			}
+			String[] array = stringToArrayBy64(str);
+			input.setTo(array[0]);
+			input.setValue(new BigDecimal(Long.parseLong(array[1], 16)));
+			String address = START + removePreZero(array[2]);
+			input.setContract(EtherscanContract.getByHash(address));
+			input.setContractAddress(address);
+		});
+
+		METHOD_HANDLER.put(AbiMethod.SEND_MULTI_SIG.getMethodId(), input -> {
+			String str = input.getData();
+			if (str.startsWith(START + AbiMethod.SEND_MULTI_SIG.getMethodId())) {
+				str = str.substring((START + AbiMethod.SEND_MULTI_SIG.getMethodId()).length());
+			}
+			String[] array = stringToArrayBy64(str);
+			input.setTo(array[0]);
+			input.setValue(new BigDecimal(Long.parseLong(array[1], 16)));
+		});
+	}
+
+	/**
+	 * 解析input数据
+	 *
+	 * @author lingting 2020-09-02 14:23
+	 */
+	public static Input resolve(String inputString) throws VirtualCurrencyException {
+		// 获取方法id
+		String methodId = inputString.substring(2, 10);
+		Input input = new Input().setMethod(AbiMethod.getById(methodId)).setData(inputString);
+
+		if (!METHOD_HANDLER.containsKey(methodId)) {
+			throw new VirtualCurrencyException("无法正确解析input data 请额外开发支持");
+		}
+		// 处理
+		METHOD_HANDLER.get(methodId).accept(input);
+		return input;
+	}
 
 	/**
 	 * 创建eth账号
