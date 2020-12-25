@@ -13,6 +13,7 @@ import com.lingting.gzm.virtual.currency.endpoints.Endpoints;
 import com.lingting.gzm.virtual.currency.exception.VirtualCurrencyException;
 import com.lingting.gzm.virtual.currency.tronscan.Method;
 import com.lingting.gzm.virtual.currency.tronscan.Trc20Data;
+import com.lingting.gzm.virtual.currency.tronscan.TriggerResult;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.security.InvalidAlgorithmParameterException;

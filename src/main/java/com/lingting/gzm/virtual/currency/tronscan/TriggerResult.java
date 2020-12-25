@@ -1,4 +1,4 @@
-package com.lingting.gzm.virtual.currency.util;
+package com.lingting.gzm.virtual.currency.tronscan;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.lingting.gzm.virtual.currency.tronscan.Transaction;
