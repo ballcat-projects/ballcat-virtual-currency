@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
 public class Account {
 
 	public static Account of(HttpRequest request, Endpoints endpoints, String address) throws JsonProcessingException {
-		return JsonUtil.toObj(request.setUrl(endpoints.getHttpUrl("accounts/" + address)).execute().body(),
+		return JsonUtil.toObj(request.setUrl(endpoints.getHttpUrl("v1/accounts/" + address)).execute().body(),
 				Account.class);
 	}
 

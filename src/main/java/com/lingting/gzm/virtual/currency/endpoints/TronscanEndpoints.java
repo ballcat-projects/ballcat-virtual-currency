@@ -16,11 +16,10 @@ public enum TronscanEndpoints implements Endpoints {
 	 * 主节点 https://tronscan.org/#/
 	 */
 	MAINNET("https://api.trongrid.io/", "主节点"),
-	//MAINNET("https://apilist.tronscan.org/api/", "主节点"),
 	/**
 	 * 测试节点 https://nile.tronscan.org/#/
 	 */
-	NILE(" https://nile.trongrid.io/", "nile测试节点"),
+	NILE("https://nile.trongrid.io/", "nile测试节点"),
 	/**
 	 * 测试节点 https://shasta.tronscan.org/#/
 	 */
