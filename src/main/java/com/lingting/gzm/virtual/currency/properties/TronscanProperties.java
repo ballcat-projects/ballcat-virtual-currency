@@ -18,4 +18,9 @@ public class TronscanProperties implements PlatformProperties {
 	 */
 	private Endpoints endpoints;
 
+	@Override
+	public Integer getConfirmationsMin() {
+		return 19;
+	}
+
 }

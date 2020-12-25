@@ -43,4 +43,9 @@ public class InfuraProperties implements PlatformProperties {
 		return new HttpService(getEndpoints().getHttpUrl(getProjectId()));
 	}
 
+	@Override
+	public Integer getConfirmationsMin() {
+		return 0;
+	}
+
 }

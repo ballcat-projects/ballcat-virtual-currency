@@ -20,11 +20,6 @@ public class OmniProperties implements PlatformProperties {
 	private Endpoints endpoints;
 
 	/**
-	 * 多少确认数以上才认为交易成功
-	 */
-	private Integer confirmationsMin = 6;
-
-	/**
 	 * 获取锁, 成功则允许发送请求, 手动实现限制, 限制请求在 5-10s 一次
 	 */
 	private Supplier<Boolean> lock = () -> true;
@@ -41,6 +36,11 @@ public class OmniProperties implements PlatformProperties {
 	 */
 	public String getTransactionUrlByHash(String hash) {
 		return endpoints.getHttpUrl("v1/transaction/tx/") + hash;
+	}
+
+	@Override
+	public Integer getConfirmationsMin() {
+		return 6;
 	}
 
 }

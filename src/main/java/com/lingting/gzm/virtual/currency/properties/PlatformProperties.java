@@ -7,4 +7,11 @@ package com.lingting.gzm.virtual.currency.properties;
  */
 public interface PlatformProperties {
 
+	/**
+	 * 表示交易被确认的最小确认数
+	 * @return java.lang.Integer
+	 * @author lingting 2020-12-25 14:18
+	 */
+	Integer getConfirmationsMin();
+
 }
