@@ -235,8 +235,8 @@ public class InfuraServiceImpl implements VirtualCurrencyService {
 		// 合约地址
 		String cHash = contract.getHash();
 		// 获取账户信息
-		Credentials credentials = Credentials.create(from.getPrivateKey());
-		// 转换转账金额
+		Credentials credentials = from.getCredentials();
+		// 计算转账数量
 		BigInteger amount = value.multiply(BigDecimal.TEN.pow(getDecimalsByContract(contract))).toBigInteger();
 		// nonce, 由于要保证每笔交易递增, 所以直接使用eth数量
 		BigInteger nonce = web3j.ethGetTransactionCount(from.getAddress(), DefaultBlockParameterName.PENDING).send()
