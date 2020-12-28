@@ -86,6 +86,30 @@ public class TronscanUtil {
 	}
 
 	/**
+	 * 将地址转换为abi方法的参数
+	 * @author lingting 2020-12-25 22:04
+	 */
+	public static String encodeAddressParam(String address) {
+		// 是否为16进制地址
+		if (address.startsWith(HEX_ADDRESS_PREFIX)) {
+			// 移除 开头的41
+			address = address.substring(HEX_ADDRESS_PREFIX.length());
+		}
+		// base58编码地址
+		else {
+			// base58反序列化
+			byte[] bytes = Base58.decode(address);
+			// 需要 移除后4个字节 以及 第一个字节
+			byte[] initAddress = new byte[bytes.length - 5];
+			// 复制除 后4个字节 以及 第一个字节 以外的字符
+			System.arraycopy(bytes, 1, initAddress, 0, initAddress.length);
+			// 转十六进制
+			address = Hex.toHexString(initAddress);
+		}
+		return AbiUtil.addZeroTo64InPre(address);
+	}
+
+	/**
 	 * 判断合约是否为 trc20, hash 纯数字为trc10
 	 *
 	 * @author lingting 2020-12-13 15:19

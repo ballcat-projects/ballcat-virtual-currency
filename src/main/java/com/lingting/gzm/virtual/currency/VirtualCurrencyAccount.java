@@ -49,14 +49,4 @@ public class VirtualCurrencyAccount {
 		this.privateKey = privateKey;
 	}
 
-	public static void main(String[] args) throws Exception, NoSuchAlgorithmException, NoSuchProviderException {
-		String address = "TBQa122mEvNbodaPTh5DXaEU7wFv7W1rci";
-		BigInteger puk = new BigInteger(
-				"11000596618619890266307000516051655786791179796812746525940076457923205604394743799148631690783918389896733950100947769348937479534074020295038042277012876");
-		String publicKey = "d209cbd454acd5646ecebb4260640c9f823a9ea811c1d65699717e27e8ce9a4cd9bd4c9dd21dabd55661074a98f0aeaf8c64c73630745f26154444f4e535e58c";
-		BigInteger prk = new BigInteger(
-				"46822688035448557556500695090962843376668094829526065091284564440306236109333");
-		String privateKey = "6784b3c8872db612adc0fac098440689f52e18b37f995eedb8db489374edb215";
-	}
-
 }

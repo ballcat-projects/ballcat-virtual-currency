@@ -34,6 +34,16 @@ public enum TronscanContract implements Contract {
 	 */
 	PW("1002263", 0),
 
+	/**
+	 * 测试网用, 测完删除
+	 */
+	USDJ("TLBaRhANQoJFTqre9Nf1mjuwNWjCJeYqUL", 18),
+
+	/**
+	 * 测试网用, 测完删除
+	 */
+	TRZ("1000016", 6),
+
 	;
 
 	/**

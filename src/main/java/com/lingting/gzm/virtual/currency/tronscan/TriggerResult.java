@@ -1,19 +1,29 @@
 package com.lingting.gzm.virtual.currency.tronscan;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.lingting.gzm.virtual.currency.tronscan.Transaction;
 import java.util.List;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 
 /**
  * 触发合约返回
  *
  * @author lingting 2020/12/25 19:20
  */
-@NoArgsConstructor
 @Data
+@NoArgsConstructor
+@Accessors(chain = true)
 public class TriggerResult {
+
+	private String response;
+
+	private String code;
+
+	@JsonProperty("txid")
+	private String txId;
+
+	private String message;
 
 	@JsonProperty("result")
 	private Result result;

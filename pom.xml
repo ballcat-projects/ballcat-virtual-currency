@@ -76,7 +76,33 @@
             <artifactId>bitcoinj-core</artifactId>
             <version>${bitcoinj.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.tron.tronj</groupId>
+            <artifactId>utils</artifactId>
+            <version>0.1.1</version>
+        </dependency>
     </dependencies>
+
+    <repositories>
+        <repository>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <id>bintray-maven</id>
+            <name>bintray</name>
+            <url>https://dl.bintray.com/tronj/tronj</url>
+        </repository>
+    </repositories>
+    <pluginRepositories>
+        <pluginRepository>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <id>bintray-maven</id>
+            <name>bintray-plugins</name>
+            <url>https://dl.bintray.com/tronj/tronj</url>
+        </pluginRepository>
+    </pluginRepositories>
 
     <build>
         <plugins>

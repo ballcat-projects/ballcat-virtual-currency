@@ -23,15 +23,21 @@ import com.lingting.gzm.virtual.currency.tronscan.Transaction;
 import com.lingting.gzm.virtual.currency.tronscan.TransactionInfo;
 import com.lingting.gzm.virtual.currency.tronscan.Trc10;
 import com.lingting.gzm.virtual.currency.tronscan.Trc20Data;
+import com.lingting.gzm.virtual.currency.tronscan.TriggerRequest;
+import com.lingting.gzm.virtual.currency.tronscan.TriggerResult;
 import com.lingting.gzm.virtual.currency.util.TronscanUtil;
 import java.math.BigDecimal;
 import java.math.MathContext;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.bouncycastle.util.encoders.Hex;
+import org.tron.tronj.crypto.SECP256K1;
+import org.tron.tronj.crypto.tuweniTypes.Bytes32;
 
 /**
  * @author lingting 2020-09-01 17:16
@@ -252,7 +258,34 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 
 	@Override
 	public VirtualCurrencyTransferResult transfer(VirtualCurrencyAccount from, String to, Contract contract,
-			BigDecimal value) {
+			BigDecimal value) throws JsonProcessingException, NoSuchAlgorithmException {
+		// 计算转账数量
+		BigDecimal amount = value.multiply(BigDecimal.TEN.pow(getDecimalsByContract(contract)));
+		// trx 转账
+		if (contract == TronscanContract.TRX) {
+			return null;
+		}
+		// trc10 转账
+		if (!isTrc20(contract.getHash())) {
+			return null;
+		}
+		// 触发trc20 转账合约
+		TriggerResult generateResult = TriggerRequest.transferGenerate(endpoints, from, to, amount, contract).exec();
+
+		Transaction transaction = generateResult.getTransaction();
+
+		// 获取交易hash的字节数组
+		byte[] txIdBytes = Hex.decode(transaction.getTxId());
+
+		SECP256K1.KeyPair keyPair = SECP256K1.KeyPair.create(SECP256K1.PrivateKey.create(from.getPrivateKey()));
+
+		SECP256K1.Signature sign = SECP256K1.sign(Bytes32.wrap(txIdBytes), keyPair);
+
+		String signature = sign.encodedBytes().toHexString();
+		// 移除 0x
+		String signatureDel0x = signature.substring(2);
+		// 广播交易
+		TriggerResult broadcastResult = TriggerRequest.transferBroadcast(endpoints, generateResult, signatureDel0x).exec();
 		return null;
 	}
 

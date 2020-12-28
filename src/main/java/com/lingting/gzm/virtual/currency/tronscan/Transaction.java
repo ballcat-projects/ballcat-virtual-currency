@@ -35,6 +35,8 @@ public class Transaction {
 	@JsonProperty("raw_data_hex")
 	private String rawDataHex;
 
+	private Boolean visible;
+
 	@JsonProperty("ret")
 	private List<Ret> ret;
 

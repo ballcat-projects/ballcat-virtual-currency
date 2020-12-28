@@ -13,6 +13,7 @@ import com.lingting.gzm.virtual.currency.service.impl.InfuraServiceImpl;
 import com.lingting.gzm.virtual.currency.service.impl.OmniServiceImpl;
 import com.lingting.gzm.virtual.currency.service.impl.TronscanServiceImpl;
 import com.lingting.gzm.virtual.currency.util.EtherscanUtil;
+import com.lingting.gzm.virtual.currency.util.TronscanUtil;
 import java.math.BigDecimal;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -82,11 +83,54 @@ public class TransferTest {
 	@Test
 	@SneakyThrows
 	public void tronscanTest() {
-		service = new TronscanServiceImpl(new TronscanProperties().setEndpoints(TronscanEndpoints.MAINNET));
+		service = new TronscanServiceImpl(new TronscanProperties().setEndpoints(TronscanEndpoints.NILE));
 		String a1 = "TBQa122mEvNbodaPTh5DXaEU7wFv7W1rci";
 		String puk1 = "d209cbd454acd5646ecebb4260640c9f823a9ea811c1d65699717e27e8ce9a4cd9bd4c9dd21dabd55661074a98f0aeaf8c64c73630745f26154444f4e535e58c";
 		String prk1 = "6784b3c8872db612adc0fac098440689f52e18b37f995eedb8db489374edb215";
+		VirtualCurrencyAccount ac1 = TronscanUtil.getAccountOfKey(a1, prk1);
+
 		BigDecimal b1 = service.getNumberByAddressAndContract(a1, TronscanContract.TRX);
+		System.out.println("a1 TRX余额: " + b1.toPlainString());
+		b1 = service.getNumberByAddressAndContract(a1, TronscanContract.TRZ);
+		System.out.println("a1 TRZ余额: " + b1.toPlainString());
+		b1 = service.getNumberByAddressAndContract(a1, TronscanContract.USDJ);
+		System.out.println("a1 USDJ余额: " + b1.toPlainString());
+
+		String a2 = "TTteWxGuyP3vSkpQLoayYYRLV1dk1pFnr8";
+		String puk2 = "2c7189385fb2f685d1bd5f4d4c63bc904603fa04b6b2b72396e986ab35f361ca4effb5f70f4cf830e339b628df77b215ec99eabcb3ed7d2f11fcddfe515f616d";
+		String prk2 = "cab1ba4d469a9d7168ee2c1f6627a585342f576d6129f2b7a751556e6847e1c8";
+		VirtualCurrencyAccount ac2 = TronscanUtil.getAccountOfKey(a2, prk2);
+
+		BigDecimal b2 = service.getNumberByAddressAndContract(a2, TronscanContract.TRX);
+		System.out.println("a2 TRX余额: " + b2.toPlainString());
+		b2 = service.getNumberByAddressAndContract(a2, TronscanContract.TRZ);
+		System.out.println("a2 TRZ余额: " + b2.toPlainString());
+		b2 = service.getNumberByAddressAndContract(a2, TronscanContract.USDJ);
+		System.out.println("a2 USDJ余额: " + b2.toPlainString());
+
+		System.out.println("a1 向 a2 转 1 USDJ");
+		VirtualCurrencyTransferResult transfer = service.transfer(ac1, a2, TronscanContract.USDJ, new BigDecimal("1"));
+		//VirtualCurrencyTransferResult transfer = new VirtualCurrencyTransferResult().setSuccess(false);
+
+		if (!transfer.getSuccess()) {
+			System.out.println("转账失败");
+			return;
+		}
+		System.out.println("转账成功, 查询交易数据");
+
+		b1 = service.getNumberByAddressAndContract(a1, TronscanContract.TRX);
+		System.out.println("a1 TRX余额: " + b1.toPlainString());
+		b1 = service.getNumberByAddressAndContract(a1, TronscanContract.TRZ);
+		System.out.println("a1 TRZ余额: " + b1.toPlainString());
+		b1 = service.getNumberByAddressAndContract(a1, TronscanContract.USDJ);
+		System.out.println("a1 USDJ余额: " + b1.toPlainString());
+
+		b2 = service.getNumberByAddressAndContract(a2, TronscanContract.TRX);
+		System.out.println("a2 TRX余额: " + b2.toPlainString());
+		b2 = service.getNumberByAddressAndContract(a2, TronscanContract.TRZ);
+		System.out.println("a2 TRZ余额: " + b2.toPlainString());
+		b2 = service.getNumberByAddressAndContract(a2, TronscanContract.USDJ);
+		System.out.println("a2 USDJ余额: " + b2.toPlainString());
 	}
 
 }
