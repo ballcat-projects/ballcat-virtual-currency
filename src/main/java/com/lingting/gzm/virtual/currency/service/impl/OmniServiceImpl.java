@@ -1,7 +1,6 @@
 package com.lingting.gzm.virtual.currency.service.impl;
 
 import cn.hutool.core.thread.ThreadUtil;
-import cn.hutool.http.HttpRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.lingting.gzm.virtual.currency.VirtualCurrencyAccount;
 import com.lingting.gzm.virtual.currency.VirtualCurrencyTransaction;
@@ -9,7 +8,6 @@ import com.lingting.gzm.virtual.currency.VirtualCurrencyTransferResult;
 import com.lingting.gzm.virtual.currency.contract.Contract;
 import com.lingting.gzm.virtual.currency.contract.OmniContract;
 import com.lingting.gzm.virtual.currency.endpoints.Endpoints;
-import com.lingting.gzm.virtual.currency.endpoints.OmniEndpoints;
 import com.lingting.gzm.virtual.currency.enums.TransactionStatus;
 import com.lingting.gzm.virtual.currency.enums.VcPlatform;
 import com.lingting.gzm.virtual.currency.omni.Balances;
@@ -42,12 +40,6 @@ public class OmniServiceImpl implements VirtualCurrencyService {
 
 	private final OmniProperties properties;
 
-	private final HttpRequest transactionByHashRequest = HttpRequest.get(OmniEndpoints.MAINNET.getHttp());
-
-	private final HttpRequest tokenHistoryRequest = HttpRequest.post(OmniEndpoints.MAINNET.getHttp()).form("page", 0);
-
-	private final HttpRequest balanceRequest = HttpRequest.post(OmniEndpoints.MAINNET.getHttp());
-
 	@Getter
 	private static final Map<String, Integer> CONTRACT_DECIMAL_CACHE = new ConcurrentHashMap<>();
 
@@ -68,8 +60,7 @@ public class OmniServiceImpl implements VirtualCurrencyService {
 
 	@Override
 	public Optional<VirtualCurrencyTransaction> getTransactionByHash(String hash) throws JsonProcessingException {
-		TransactionByHash response = request(STATIC_TRANSACTION_HASH, transactionByHashRequest,
-				properties.getEndpoints(), hash);
+		TransactionByHash response = request(STATIC_TRANSACTION_HASH, properties.getEndpoints(), hash);
 		// 交易查询不到 或者 valid 为 false
 		if (response.getAmount() == null || !response.getValid()) {
 			return Optional.empty();
@@ -123,8 +114,7 @@ public class OmniServiceImpl implements VirtualCurrencyService {
 			return CONTRACT_DECIMAL_CACHE.get(contract.getHash());
 		}
 
-		TokenHistory history = request(STATIC_TOKEN_HISTORY, tokenHistoryRequest, properties.getEndpoints(),
-				contract.getHash());
+		TokenHistory history = request(STATIC_TOKEN_HISTORY, properties.getEndpoints(), contract.getHash());
 		int decimals = getDecimalsByString(history.getTransactions().get(0).getAmount());
 		CONTRACT_DECIMAL_CACHE.put(contract.getHash(), decimals);
 		return decimals;
@@ -132,7 +122,7 @@ public class OmniServiceImpl implements VirtualCurrencyService {
 
 	@Override
 	public BigDecimal getBalanceByAddressAndContract(String address, Contract contract) throws JsonProcessingException {
-		Balances balances = request(STATIC_BALANCES, balanceRequest, properties.getEndpoints(), address);
+		Balances balances = request(STATIC_BALANCES, properties.getEndpoints(), address);
 		for (Balances.Balance balance : balances.getBalance()) {
 			// 协助缓存精度
 			if (!CONTRACT_DECIMAL_CACHE.containsKey(contract.getHash())) {
@@ -192,19 +182,18 @@ public class OmniServiceImpl implements VirtualCurrencyService {
 	 *
 	 * @author lingting 2020-12-14 16:46
 	 */
-	private <T> T request(Domain<T> domain, HttpRequest request, Endpoints endpoints, Object params)
-			throws JsonProcessingException {
+	private <T> T request(Domain<T> domain, Endpoints endpoints, Object params) throws JsonProcessingException {
 		// 获取锁
 		if (properties.getLock().get()) {
 			// 执行请求方法
-			T t = domain.of(request, endpoints, params);
+			T t = domain.of(endpoints, params);
 			// 释放锁
 			properties.getUnlock().get();
 			return t;
 		}
 		// 休眠, 然后调用自身
 		ThreadUtil.sleep(sleepTime());
-		return request(domain, request, endpoints, params);
+		return request(domain, endpoints, params);
 	}
 
 }

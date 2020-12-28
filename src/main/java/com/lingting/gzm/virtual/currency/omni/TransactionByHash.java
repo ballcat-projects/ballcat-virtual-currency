@@ -18,10 +18,9 @@ import lombok.NoArgsConstructor;
 public class TransactionByHash implements Domain<TransactionByHash> {
 
 	@Override
-	public TransactionByHash of(HttpRequest request, Endpoints endpoints, Object params)
-			throws JsonProcessingException {
-		return JsonUtil.toObj(request.setUrl(endpoints.getHttpUrl("v1/transaction/tx/" + params)).execute().body(),
-				TransactionByHash.class);
+	public TransactionByHash of(Endpoints endpoints, Object params) throws JsonProcessingException {
+		HttpRequest request = HttpRequest.get(endpoints.getHttpUrl("v1/transaction/tx/" + params));
+		return JsonUtil.toObj(request.execute().body(), TransactionByHash.class);
 	}
 
 	@JsonProperty("amount")
