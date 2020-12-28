@@ -224,6 +224,9 @@ public class InfuraServiceImpl implements VirtualCurrencyService {
 		if (contract == null) {
 			return balance;
 		}
+		if (balance==null){
+			return BigDecimal.ZERO;
+		}
 		// 计算返回值
 		return balance.divide(BigDecimal.TEN.pow(getDecimalsByContract(contract)), mathContext);
 	}
