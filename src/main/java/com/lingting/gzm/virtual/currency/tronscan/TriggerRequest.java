@@ -1,17 +1,23 @@
 package com.lingting.gzm.virtual.currency.tronscan;
 
 import cn.hutool.http.HttpRequest;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.lingting.gzm.virtual.currency.VirtualCurrencyAccount;
 import com.lingting.gzm.virtual.currency.contract.Contract;
 import com.lingting.gzm.virtual.currency.endpoints.Endpoints;
+import com.lingting.gzm.virtual.currency.tronscan.Transaction.RawData;
+import com.lingting.gzm.virtual.currency.tronscan.TriggerResult.TransferBroadcastResult;
+import com.lingting.gzm.virtual.currency.tronscan.TriggerResult.Trc10TransferGenerateResult;
+import com.lingting.gzm.virtual.currency.tronscan.TriggerResult.Trc20DecimalsResult;
+import com.lingting.gzm.virtual.currency.tronscan.TriggerResult.Trc20TransferGenerateResult;
+import com.lingting.gzm.virtual.currency.tronscan.TriggerResult.TrxTransferGenerateResult;
 import com.lingting.gzm.virtual.currency.util.AbiUtil;
 import com.lingting.gzm.virtual.currency.util.JsonUtil;
 import com.lingting.gzm.virtual.currency.util.TronscanUtil;
 import java.math.BigDecimal;
-import java.net.InetSocketAddress;
-import java.net.Proxy;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;
@@ -27,10 +33,12 @@ import lombok.experimental.Accessors;
 @Getter
 @Setter
 @Accessors(chain = true)
-public class TriggerRequest {
+public class TriggerRequest<T extends TriggerResult> {
 
-	public static TriggerRequest decimals(Endpoints endpoints, Contract contract) {
-		return new TriggerRequest()
+	public static TriggerRequest<Trc20DecimalsResult> decimals(Endpoints endpoints, Contract contract) {
+		return new TriggerRequest<Trc20DecimalsResult>()
+				// 目标类型
+				.setTarget(Trc20DecimalsResult.class)
 				// url
 				.setUrl(endpoints.getHttpUrl("wallet/triggerconstantcontract"))
 				// owner_address
@@ -49,10 +57,12 @@ public class TriggerRequest {
 	 * @param contract 触发合约
 	 * @author lingting 2020-12-25 20:50
 	 */
-	public static TriggerRequest transferGenerate(Endpoints endpoints, VirtualCurrencyAccount from, String to,
-			BigDecimal amount, Contract contract) {
+	public static TriggerRequest<Trc20TransferGenerateResult> trc20TransferGenerate(Endpoints endpoints,
+			VirtualCurrencyAccount from, String to, BigInteger amount, Contract contract) {
 
-		return new TriggerRequest()
+		return new TriggerRequest<Trc20TransferGenerateResult>()
+				// 目标
+				.setTarget(Trc20TransferGenerateResult.class)
 				// url
 				.setUrl(endpoints.getHttpUrl("wallet/triggersmartcontract"))
 				// 合约地址
@@ -70,36 +80,97 @@ public class TriggerRequest {
 						// 收款人
 						TronscanUtil.encodeAddressParam(to)
 								// 转账金额
-								+ AbiUtil.encodeUint256Params(amount.toBigInteger()));
+								+ AbiUtil.encodeUint256Params(amount));
 	}
 
 	/**
 	 * 广播交易
 	 * @param endpoints 节点
-	 * @param result 转账数据生成 的返回值
+	 * @param txId txId
+	 * @param rawData rawData
+	 * @param rawDataHex rawDataHex
 	 * @param signature 签名
 	 * @return com.lingting.gzm.virtual.currency.tronscan.TriggerRequest
 	 * @author lingting 2020-12-25 22:57
 	 */
-	public static TriggerRequest transferBroadcast(Endpoints endpoints, TriggerResult result, String signature) {
-		Transaction transaction = result.getTransaction();
-		return new TriggerRequest()
+	public static TriggerRequest<TransferBroadcastResult> trc10TransferBroadcast(Endpoints endpoints, String txId,
+			RawData rawData, String rawDataHex, String signature) {
+		return new TriggerRequest<TransferBroadcastResult>()
+				// 目标
+				.setTarget(TransferBroadcastResult.class)
 				// url
 				.setUrl(endpoints.getHttpUrl("wallet/broadcasttransaction"))
 				// tx id
-				.setTxId(transaction.getTxId())
+				.setTxId(txId)
 				// raw data
-				.setRawData(transaction.getRawData())
+				.setRawData(rawData)
 				// raw data hex
-				.setRawDataHex(transaction.getRawDataHex())
+				.setRawDataHex(rawDataHex)
 				// 签名
 				.addSignature(signature);
 	}
 
 	/**
+	 * 触发trc10合约转账函数, 生成转账数据
+	 * @param from 转出地址
+	 * @param to 收款人
+	 * @param amount 转出数量
+	 * @param contract 触发合约
+	 * @author lingting 2020-12-25 20:50
+	 */
+	public static TriggerRequest<Trc10TransferGenerateResult> trc10TransferGenerate(Endpoints endpoints,
+			VirtualCurrencyAccount from, String to, BigInteger amount, Contract contract) {
+
+		return new TriggerRequest<Trc10TransferGenerateResult>()
+				// 目标
+				.setTarget(Trc10TransferGenerateResult.class)
+				// url
+				.setUrl(endpoints.getHttpUrl("wallet/transferasset"))
+				// 合约地址
+				.setAssetName(contract.getHash())
+				// 转账人
+				.setOwnerAddress(from.getAddress())
+				// 收款人
+				.setToAddress(to)
+				// 转账数量
+				.setAmount(amount);
+	}
+
+	/**
+	 * 触发trx合约转账函数, 生成转账数据
+	 * @param from 转出地址
+	 * @param to 收款人
+	 * @param amount 转出数量
+	 * @param contract 触发合约
+	 * @author lingting 2020-12-25 20:50
+	 */
+	public static TriggerRequest<TrxTransferGenerateResult> trxTransferGenerate(Endpoints endpoints,
+			VirtualCurrencyAccount from, String to, BigInteger amount, Contract contract) {
+
+		return new TriggerRequest<TrxTransferGenerateResult>()
+				// 目标
+				.setTarget(TrxTransferGenerateResult.class)
+				// url
+				.setUrl(endpoints.getHttpUrl("wallet/createtransaction"))
+				// 转账人
+				.setOwnerAddress(from.getAddress())
+				// 收款人
+				.setToAddress(to)
+				// 转账数量
+				.setAmount(amount);
+	}
+
+	/**
 	 * 请求的url
 	 */
+	@JsonIgnore
 	private String url;
+
+	/**
+	 * 返回值转换的类
+	 */
+	@JsonIgnore
+	private Class<T> target;
 
 	@JsonProperty("owner_address")
 	private String ownerAddress;
@@ -121,6 +192,21 @@ public class TriggerRequest {
 	@JsonProperty("call_value")
 	private BigDecimal callValue;
 
+	/**
+	 * trc10 合约地址
+	 */
+	@JsonProperty("asset_name")
+	private String assetName;
+
+	@JsonProperty("to_address")
+	private String toAddress;
+
+	/**
+	 * 转账数量
+	 */
+	@JsonProperty("amount")
+	private BigInteger amount;
+
 	@JsonProperty("permission_id")
 	private BigDecimal permissionId;
 
@@ -139,7 +225,7 @@ public class TriggerRequest {
 	 * 用于广播交易,
 	 */
 	@JsonProperty("raw_data")
-	private Transaction.RawData rawData;
+	private RawData rawData;
 
 	/**
 	 * 用于广播交易
@@ -153,7 +239,7 @@ public class TriggerRequest {
 	@JsonProperty("signature")
 	private List<String> signature = null;
 
-	public TriggerRequest addSignature(String s) {
+	public TriggerRequest<T> addSignature(String s) {
 		if (signature == null) {
 			signature = new ArrayList<>();
 		}
@@ -165,8 +251,14 @@ public class TriggerRequest {
 	 * 执行请求
 	 * @author lingting 2020-12-25 21:04
 	 */
-	public TriggerResult exec() throws JsonProcessingException {
-		return JsonUtil.toObj(HttpRequest.post(url).body(JsonUtil.toJson(this)).execute().body(), TriggerResult.class);
+	public T exec() throws JsonProcessingException {
+		// 执行请求
+		HttpRequest request = HttpRequest.post(url).body(JsonUtil.toJson(this));
+		String response = request.execute().body();
+
+		T obj = JsonUtil.toObj(response, target);
+		obj.setResponse(response);
+		return obj;
 	}
 
 }

@@ -25,6 +25,9 @@ import com.lingting.gzm.virtual.currency.tronscan.Trc10;
 import com.lingting.gzm.virtual.currency.tronscan.Trc20Data;
 import com.lingting.gzm.virtual.currency.tronscan.TriggerRequest;
 import com.lingting.gzm.virtual.currency.tronscan.TriggerResult;
+import com.lingting.gzm.virtual.currency.tronscan.TriggerResult.TransferBroadcastResult;
+import com.lingting.gzm.virtual.currency.tronscan.TriggerResult.Trc10TransferGenerateResult;
+import com.lingting.gzm.virtual.currency.tronscan.TriggerResult.Trc20TransferGenerateResult;
 import com.lingting.gzm.virtual.currency.util.TronscanUtil;
 import java.math.BigDecimal;
 import java.math.MathContext;
@@ -252,6 +255,9 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 		if (contract == null) {
 			return balance;
 		}
+		if (balance == null) {
+			return BigDecimal.ZERO;
+		}
 		// 计算返回值
 		return balance.divide(BigDecimal.TEN.pow(getDecimalsByContract(contract)), mathContext);
 	}
@@ -261,32 +267,72 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 			BigDecimal value) throws JsonProcessingException, NoSuchAlgorithmException {
 		// 计算转账数量
 		BigDecimal amount = value.multiply(BigDecimal.TEN.pow(getDecimalsByContract(contract)));
+		String txId;
+		Transaction.RawData rawData;
+		String rawDataHex;
 		// trx 转账
 		if (contract == TronscanContract.TRX) {
-			return null;
+			TriggerResult.TrxTransferGenerateResult generateResult = TriggerRequest
+					.trxTransferGenerate(endpoints, from, to, amount.toBigInteger(), contract).exec();
+
+			if (StrUtil.isNotBlank(generateResult.getError())) {
+				return new VirtualCurrencyTransferResult()
+						// 错误信息
+						.setMessage(generateResult.getError())
+						// 失败
+						.setSuccess(false);
+			}
+			txId = generateResult.getTxId();
+			rawData = generateResult.getRawData();
+			rawDataHex = generateResult.getRawDataHex();
 		}
 		// trc10 转账
-		if (!isTrc20(contract.getHash())) {
-			return null;
+		else if (!isTrc20(contract.getHash())) {
+			Trc10TransferGenerateResult generateResult = TriggerRequest
+					.trc10TransferGenerate(endpoints, from, to, amount.toBigInteger(), contract).exec();
+			if (StrUtil.isNotBlank(generateResult.getError())) {
+				return new VirtualCurrencyTransferResult()
+						// 错误信息
+						.setMessage(generateResult.getError())
+						// 失败
+						.setSuccess(false);
+			}
+			txId = generateResult.getTxId();
+			rawData = generateResult.getRawData();
+			rawDataHex = generateResult.getRawDataHex();
 		}
 		// 触发trc20 转账合约
-		TriggerResult generateResult = TriggerRequest.transferGenerate(endpoints, from, to, amount, contract).exec();
+		else {
+			Trc20TransferGenerateResult generateResult = TriggerRequest
+					.trc20TransferGenerate(endpoints, from, to, amount.toBigInteger(), contract).exec();
 
-		Transaction transaction = generateResult.getTransaction();
+			Transaction transaction = generateResult.getTransaction();
+			txId = transaction.getTxId();
+			rawData = transaction.getRawData();
+			rawDataHex = transaction.getRawDataHex();
+		}
 
-		// 获取交易hash的字节数组
-		byte[] txIdBytes = Hex.decode(transaction.getTxId());
-
+		// 创建密钥对
 		SECP256K1.KeyPair keyPair = SECP256K1.KeyPair.create(SECP256K1.PrivateKey.create(from.getPrivateKey()));
+		// 对 txId 进行签名
+		SECP256K1.Signature sign = SECP256K1.sign(Bytes32.wrap(Hex.decode(txId)), keyPair);
 
-		SECP256K1.Signature sign = SECP256K1.sign(Bytes32.wrap(txIdBytes), keyPair);
-
-		String signature = sign.encodedBytes().toHexString();
-		// 移除 0x
-		String signatureDel0x = signature.substring(2);
 		// 广播交易
-		TriggerResult broadcastResult = TriggerRequest.transferBroadcast(endpoints, generateResult, signatureDel0x).exec();
-		return null;
+		TransferBroadcastResult broadcastResult = TriggerRequest
+				.trc10TransferBroadcast(endpoints, txId, rawData, rawDataHex, sign.encodedBytes().toHexString()).exec();
+
+		// 设置返回结果
+		VirtualCurrencyTransferResult result = new VirtualCurrencyTransferResult().setHash(txId);
+
+		// 成功
+		if (broadcastResult.getResult() != null && broadcastResult.getResult()) {
+			result.setSuccess(true);
+		}
+		// 失败
+		else {
+			result.setCode(broadcastResult.getCode()).setMessage(broadcastResult.getMessage()).setSuccess(false);
+		}
+		return result;
 	}
 
 }
