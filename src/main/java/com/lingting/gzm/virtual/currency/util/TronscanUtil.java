@@ -1,6 +1,5 @@
 package com.lingting.gzm.virtual.currency.util;
 
-import static com.lingting.gzm.virtual.currency.util.KeyUtil.keyDeserialization;
 import static com.lingting.gzm.virtual.currency.util.ResolveUtil.removePreZero;
 import static com.lingting.gzm.virtual.currency.util.ResolveUtil.stringToArrayBy64;
 
@@ -26,9 +25,10 @@ import java.util.function.Function;
 import java.util.regex.Pattern;
 import lombok.SneakyThrows;
 import org.bitcoinj.core.Base58;
+import org.bouncycastle.jcajce.provider.digest.Keccak;
 import org.bouncycastle.util.encoders.Hex;
-import org.web3j.crypto.ECKeyPair;
-import org.web3j.crypto.Keys;
+import org.tron.tronj.crypto.SECP256K1;
+import org.tron.tronj.utils.Base58Check;
 
 /**
  * @author lingting 2020/12/23 20:37
@@ -125,29 +125,29 @@ public class TronscanUtil {
 	public static VirtualCurrencyAccount create()
 			throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException {
 		// 生成密钥对
-		ECKeyPair keyPair = Keys.createEcKeyPair();
-		// 公钥
-		BigInteger publicKey = keyPair.getPublicKey();
-		// 获取公钥 byte[]
-		byte[] publicKeyByte = publicKey.toByteArray();
+		SECP256K1.KeyPair keyPair = SECP256K1.KeyPair.generate();
 
-		// 获取 sha3-256
-		MessageDigest digest = MessageDigest.getInstance("SHA3-256");
+		// 公钥
+		SECP256K1.PublicKey publicKey = keyPair.getPublicKey();
+		String pubKey = publicKey.toString().substring(2);
+		// 私钥
+		SECP256K1.PrivateKey privateKey = keyPair.getPrivateKey();
+		String priKey = privateKey.toString().substring(2);
+
+		Keccak.Digest256 digest = new Keccak.Digest256();
 		// 对公钥进行hash
-		byte[] hash = digest.digest(publicKeyByte);
-		// 提取结果的最后20个字节
+		byte[] hash = digest.digest(publicKey.getEncoded());
+		// 提取最后20个字节
 		byte[] hash20 = ArrayUtil.sub(hash, hash.length - 20, hash.length);
-		// 开始初始化地址
+		// 初识地址
 		byte[] initAddress = new byte[21];
 		// 将 0x41 添加到字节数组开头
 		initAddress[0] = 0x41;
 		// 添加其他数据
-		System.arraycopy(hash20, 0, initAddress, 1, hash20.length);
+		System.arraycopy(hash20, 0, initAddress, 1, 20);
 		// 生成地址
-		String address = addressByteToString(initAddress);
-
-		return new VirtualCurrencyAccount(address, keyDeserialization(publicKey),
-				keyDeserialization(keyPair.getPrivateKey()));
+		String address = Base58Check.bytesToBase58(initAddress);
+		return new VirtualCurrencyAccount(address, pubKey,priKey);
 	}
 
 	/**
@@ -204,7 +204,7 @@ public class TronscanUtil {
 	 * @author lingting 2020-12-25 19:36
 	 */
 	public static Integer getDecimalByTrc20(Endpoints endpoints, Contract contract) throws JsonProcessingException {
-		TriggerResult result = TriggerRequest.decimals(endpoints, contract).exec();
+		TriggerResult.Trc20DecimalsResult result = TriggerRequest.decimals(endpoints, contract).exec();
 		return Integer.valueOf(result.getConstantResult().get(0), 16);
 	}
 
