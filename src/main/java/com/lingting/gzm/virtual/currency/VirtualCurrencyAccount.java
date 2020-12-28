@@ -34,11 +34,6 @@ public class VirtualCurrencyAccount {
 	private String privateKey;
 
 	/**
-	 * 证书
-	 */
-	private Credentials credentials;
-
-	/**
 	 * keystore 内容
 	 */
 	private String keystore;

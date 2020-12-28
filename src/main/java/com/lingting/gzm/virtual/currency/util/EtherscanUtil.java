@@ -155,8 +155,6 @@ public class EtherscanUtil {
 		}
 		// 设置公钥
 		account.setPublicKey(publicKey);
-		// 设置证书
-		account.setCredentials(Credentials.create(privateKey, publicKey));
 		return account;
 	}
 
@@ -178,8 +176,6 @@ public class EtherscanUtil {
 		return new VirtualCurrencyAccount()
 				// 地址
 				.setAddress(address)
-				// 证书
-				.setCredentials(credentials)
 				// 私钥
 				.setPrivateKey(keyDeserialization(keyPair.getPrivateKey()))
 				// 公钥

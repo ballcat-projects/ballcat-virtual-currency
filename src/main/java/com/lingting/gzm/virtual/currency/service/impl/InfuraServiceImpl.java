@@ -224,7 +224,7 @@ public class InfuraServiceImpl implements VirtualCurrencyService {
 		if (contract == null) {
 			return balance;
 		}
-		if (balance==null){
+		if (balance == null) {
 			return BigDecimal.ZERO;
 		}
 		// 计算返回值
@@ -237,7 +237,7 @@ public class InfuraServiceImpl implements VirtualCurrencyService {
 		// 合约地址
 		String cHash = contract.getHash();
 		// 获取账户信息
-		Credentials credentials = from.getCredentials();
+		Credentials credentials = Credentials.create(from.getPrivateKey(), from.getPublicKey());
 		// 计算转账数量
 		BigInteger amount = value.multiply(BigDecimal.TEN.pow(getDecimalsByContract(contract))).toBigInteger();
 		// nonce, 由于要保证每笔交易递增, 所以直接使用eth数量
