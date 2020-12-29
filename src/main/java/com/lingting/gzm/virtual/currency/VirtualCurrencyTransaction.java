@@ -66,15 +66,6 @@ public class VirtualCurrencyTransaction {
 	 */
 	private LocalDateTime time;
 
-	public VirtualCurrencyTransaction setTime(LocalDateTime time) {
-		this.time = time;
-		return this;
-	}
-
-	public VirtualCurrencyTransaction setTime(long time) {
-		return setTime(LocalDateTime.ofEpochSecond(time, 0, ZoneOffset.UTC));
-	}
-
 	/**
 	 * 返回系统默认时区的交易时间
 	 *
@@ -83,6 +74,15 @@ public class VirtualCurrencyTransaction {
 	public LocalDateTime getTime() {
 		// 计算当前时区的偏移量 单位: 秒， 然后让时间偏移
 		return getTimeByZone(ZoneId.systemDefault());
+	}
+
+	public VirtualCurrencyTransaction setTime(LocalDateTime time) {
+		this.time = time;
+		return this;
+	}
+
+	public VirtualCurrencyTransaction setTime(long time) {
+		return setTime(LocalDateTime.ofEpochSecond(time, 0, ZoneOffset.UTC));
 	}
 
 	/**

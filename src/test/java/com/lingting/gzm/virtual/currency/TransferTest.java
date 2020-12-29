@@ -1,5 +1,6 @@
 package com.lingting.gzm.virtual.currency;
 
+import com.lingting.gzm.virtual.currency.contract.Contract;
 import com.lingting.gzm.virtual.currency.contract.EtherscanContract;
 import com.lingting.gzm.virtual.currency.contract.TronscanContract;
 import com.lingting.gzm.virtual.currency.endpoints.InfuraEndpoints;
@@ -83,6 +84,30 @@ public class TransferTest {
 	@Test
 	@SneakyThrows
 	public void tronscanTest() {
+		Contract USDJ = new Contract() {
+			@Override
+			public String getHash() {
+				return "TLBaRhANQoJFTqre9Nf1mjuwNWjCJeYqUL";
+			}
+
+			@Override
+			public Integer getDecimals() {
+				return 18;
+			}
+		};
+
+		Contract TRZ = new Contract() {
+			@Override
+			public String getHash() {
+				return "1000016";
+			}
+
+			@Override
+			public Integer getDecimals() {
+				return 6;
+			}
+		};
+
 		service = new TronscanServiceImpl(new TronscanProperties().setEndpoints(TronscanEndpoints.NILE));
 		String a1 = "TNg89VezqMAZkcdsBnMeXFzoprQDHTqEzy";
 		String puk1 = "5ec6a30cedc4f66c1f0af7571918a7416e6c9787b85b15e5543e1fd374b2eacff564e7bd42dadaa21219ce4872c0e3f1ab1095832719e58d58bcf873cd0ffa4e";
@@ -91,9 +116,9 @@ public class TransferTest {
 
 		BigDecimal b1 = service.getNumberByAddressAndContract(a1, TronscanContract.TRX);
 		System.out.println("a1 TRX余额: " + b1.toPlainString());
-		b1 = service.getNumberByAddressAndContract(a1, TronscanContract.TRZ);
+		b1 = service.getNumberByAddressAndContract(a1, TRZ);
 		System.out.println("a1 TRZ余额: " + b1.toPlainString());
-		b1 = service.getNumberByAddressAndContract(a1, TronscanContract.USDJ);
+		b1 = service.getNumberByAddressAndContract(a1, USDJ);
 		System.out.println("a1 USDJ余额: " + b1.toPlainString());
 
 		String a2 = "TUWHqz3daZjodAZGyfDSrbzuSoE3RLwRUA";
@@ -103,9 +128,9 @@ public class TransferTest {
 
 		BigDecimal b2 = service.getNumberByAddressAndContract(a2, TronscanContract.TRX);
 		System.out.println("a2 TRX余额: " + b2.toPlainString());
-		b2 = service.getNumberByAddressAndContract(a2, TronscanContract.TRZ);
+		b2 = service.getNumberByAddressAndContract(a2, TRZ);
 		System.out.println("a2 TRZ余额: " + b2.toPlainString());
-		b2 = service.getNumberByAddressAndContract(a2, TronscanContract.USDJ);
+		b2 = service.getNumberByAddressAndContract(a2, USDJ);
 		System.out.println("a2 USDJ余额: " + b2.toPlainString());
 
 		// System.out.println("a1 向 a2 转 1 USDJ");
@@ -126,16 +151,16 @@ public class TransferTest {
 
 		b1 = service.getNumberByAddressAndContract(a1, TronscanContract.TRX);
 		System.out.println("a1 TRX余额: " + b1.toPlainString());
-		b1 = service.getNumberByAddressAndContract(a1, TronscanContract.TRZ);
+		b1 = service.getNumberByAddressAndContract(a1, TRZ);
 		System.out.println("a1 TRZ余额: " + b1.toPlainString());
-		b1 = service.getNumberByAddressAndContract(a1, TronscanContract.USDJ);
+		b1 = service.getNumberByAddressAndContract(a1, USDJ);
 		System.out.println("a1 USDJ余额: " + b1.toPlainString());
 
 		b2 = service.getNumberByAddressAndContract(a2, TronscanContract.TRX);
 		System.out.println("a2 TRX余额: " + b2.toPlainString());
-		b2 = service.getNumberByAddressAndContract(a2, TronscanContract.TRZ);
+		b2 = service.getNumberByAddressAndContract(a2, TRZ);
 		System.out.println("a2 TRZ余额: " + b2.toPlainString());
-		b2 = service.getNumberByAddressAndContract(a2, TronscanContract.USDJ);
+		b2 = service.getNumberByAddressAndContract(a2, USDJ);
 		System.out.println("a2 USDJ余额: " + b2.toPlainString());
 	}
 

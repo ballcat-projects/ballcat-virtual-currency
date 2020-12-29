@@ -22,7 +22,7 @@
         <jackson.version>2.11.2</jackson.version>
         <spring-javaformat-checkstyle.version>0.0.26</spring-javaformat-checkstyle.version>
         <web3j.version>5.0.0</web3j.version>
-        <bitcoinj.version>0.15.9</bitcoinj.version>
+        <bitcoinj.version>0.14.7</bitcoinj.version>
     </properties>
 
     <dependencies>
@@ -81,6 +81,11 @@
             <artifactId>utils</artifactId>
             <version>0.1.1</version>
         </dependency>
+        <!--        <dependency>-->
+        <!--            <groupId>org.bitcoinj</groupId>-->
+        <!--            <artifactId>bitcoinj-tools</artifactId>-->
+        <!--            <version>${bitcoinj.version}</version>-->
+        <!--        </dependency>-->
     </dependencies>
 
     <repositories>

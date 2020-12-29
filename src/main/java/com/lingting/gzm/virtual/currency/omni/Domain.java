@@ -1,6 +1,5 @@
 package com.lingting.gzm.virtual.currency.omni;
 
-import cn.hutool.http.HttpRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.lingting.gzm.virtual.currency.endpoints.Endpoints;
 

@@ -112,7 +112,7 @@ public class TriggerResult {
 
 	@Getter
 	@Setter
-	public static class  TrxTransferGenerateResult extends TriggerResult{
+	public static class TrxTransferGenerateResult extends TriggerResult {
 
 		@JsonProperty("Error")
 		private String error;
@@ -127,5 +127,7 @@ public class TriggerResult {
 		private String rawDataHex;
 
 		private Boolean visible;
+
 	}
+
 }

@@ -37,9 +37,9 @@ public class TronscanUtil {
 
 	public static final String HEX_ADDRESS_PREFIX = "41";
 
-	private static final Pattern NUMBER_PATTERN = Pattern.compile("^\\d+$");
-
 	public static final Map<String, Function<String, Trc20Data>> METHOD_HANDLER;
+
+	private static final Pattern NUMBER_PATTERN = Pattern.compile("^\\d+$");
 
 	static {
 		// 合约函数数据解析方法
@@ -147,7 +147,7 @@ public class TronscanUtil {
 		System.arraycopy(hash20, 0, initAddress, 1, 20);
 		// 生成地址
 		String address = Base58Check.bytesToBase58(initAddress);
-		return new VirtualCurrencyAccount(address, pubKey,priKey);
+		return new VirtualCurrencyAccount(address, pubKey, priKey);
 	}
 
 	/**

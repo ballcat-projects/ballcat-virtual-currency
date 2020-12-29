@@ -2,6 +2,7 @@ package com.lingting.gzm.virtual.currency.service.impl;
 
 import cn.hutool.core.thread.ThreadUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.lingting.gzm.virtual.currency.TransferParams;
 import com.lingting.gzm.virtual.currency.VirtualCurrencyAccount;
 import com.lingting.gzm.virtual.currency.VirtualCurrencyTransaction;
 import com.lingting.gzm.virtual.currency.VirtualCurrencyTransferResult;
@@ -38,8 +39,6 @@ public class OmniServiceImpl implements VirtualCurrencyService {
 	 */
 	public static final String FLAG = ".";
 
-	private final OmniProperties properties;
-
 	@Getter
 	private static final Map<String, Integer> CONTRACT_DECIMAL_CACHE = new ConcurrentHashMap<>();
 
@@ -57,6 +56,8 @@ public class OmniServiceImpl implements VirtualCurrencyService {
 	 * 用于调用of方法生成新对象
 	 */
 	private static final TokenHistory STATIC_TOKEN_HISTORY = new TokenHistory();
+
+	private final OmniProperties properties;
 
 	@Override
 	public Optional<VirtualCurrencyTransaction> getTransactionByHash(String hash) throws JsonProcessingException {
@@ -152,7 +153,7 @@ public class OmniServiceImpl implements VirtualCurrencyService {
 
 	@Override
 	public VirtualCurrencyTransferResult transfer(VirtualCurrencyAccount from, String to, Contract contract,
-			BigDecimal value) {
+			BigDecimal value, TransferParams params) {
 		return null;
 	}
 

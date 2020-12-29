@@ -1,5 +1,6 @@
 package com.lingting.gzm.virtual.currency.service;
 
+import com.lingting.gzm.virtual.currency.TransferParams;
 import com.lingting.gzm.virtual.currency.VirtualCurrencyAccount;
 import com.lingting.gzm.virtual.currency.VirtualCurrencyTransaction;
 import com.lingting.gzm.virtual.currency.VirtualCurrencyTransferResult;
@@ -36,10 +37,8 @@ public interface VirtualCurrencyService {
 	Integer getDecimalsByContract(Contract contract) throws Exception;
 
 	/**
-	 * 查询指定地址, 指定合约余额. 不同平台请使用不同平台对应的 contract . eth
-	 * {@link EtherscanContract}. omni
-	 * {@link OmniContract}. tronscan
-	 * {@link TronscanContract}.
+	 * 查询指定地址, 指定合约余额. 不同平台请使用不同平台对应的 contract . eth {@link EtherscanContract}. omni
+	 * {@link OmniContract}. tronscan {@link TronscanContract}.
 	 * @param address 账号地址
 	 * @param contract 合约
 	 * @return java.math.BigDecimal
@@ -94,11 +93,27 @@ public interface VirtualCurrencyService {
 	 * @param to 转入地址
 	 * @param contract 合约
 	 * @param value 转账金额, 单位 个
+	 * @exception Exception 异常
 	 * @return boolean
 	 * @author lingting 2020-12-22 16:14
-	 * @exception Exception 可能抛出的异常
 	 */
-	VirtualCurrencyTransferResult transfer(VirtualCurrencyAccount from, String to, Contract contract, BigDecimal value)
-			throws Exception;
+	default VirtualCurrencyTransferResult transfer(VirtualCurrencyAccount from, String to, Contract contract,
+			BigDecimal value) throws Exception {
+		return transfer(from, to, contract, value, new TransferParams());
+	}
+
+	/**
+	 * 转账
+	 * @param from 转出账号
+	 * @param to 转入地址
+	 * @param contract 合约
+	 * @param value 转账金额, 单位 个
+	 * @param params 转账参数
+	 * @exception Exception 异常
+	 * @return boolean
+	 * @author lingting 2020-12-22 16:14
+	 */
+	VirtualCurrencyTransferResult transfer(VirtualCurrencyAccount from, String to, Contract contract, BigDecimal value,
+			TransferParams params) throws Exception;
 
 }

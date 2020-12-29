@@ -17,12 +17,6 @@ import lombok.NoArgsConstructor;
 @Data
 public class TokenHistory implements Domain<TokenHistory> {
 
-	@Override
-	public TokenHistory of(Endpoints endpoints, Object params) throws JsonProcessingException {
-		HttpRequest request = HttpRequest.post(endpoints.getHttpUrl("v1/properties/gethistory/" + params));
-		return JsonUtil.toObj(request.execute().body(), TokenHistory.class);
-	}
-
 	@JsonProperty("pages")
 	private Integer pages;
 
@@ -31,6 +25,12 @@ public class TokenHistory implements Domain<TokenHistory> {
 
 	@JsonProperty("transactions")
 	private List<Transaction> transactions;
+
+	@Override
+	public TokenHistory of(Endpoints endpoints, Object params) throws JsonProcessingException {
+		HttpRequest request = HttpRequest.post(endpoints.getHttpUrl("v1/properties/gethistory/" + params));
+		return JsonUtil.toObj(request.execute().body(), TokenHistory.class);
+	}
 
 	@NoArgsConstructor
 	@Data

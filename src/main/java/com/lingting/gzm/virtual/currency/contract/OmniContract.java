@@ -16,13 +16,13 @@ public enum OmniContract implements Contract {
 	/**
 	 * 代币名称
 	 */
-	USDT("31",8),
+	USDT("31", 8),
 
 	BTC("0", 0),
 
-	OMNI("1",8),
+	OMNI("1", 8),
 
-	MAID_SAFE_COIN("3" ,0),
+	MAID_SAFE_COIN("3", 0),
 
 	;
 

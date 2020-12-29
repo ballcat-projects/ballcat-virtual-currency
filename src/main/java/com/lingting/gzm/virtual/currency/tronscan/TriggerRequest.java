@@ -35,6 +35,85 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 public class TriggerRequest<T extends TriggerResult> {
 
+	/**
+	 * 请求的url
+	 */
+	@JsonIgnore
+	private String url;
+
+	/**
+	 * 返回值转换的类
+	 */
+	@JsonIgnore
+	private Class<T> target;
+
+	@JsonProperty("owner_address")
+	private String ownerAddress;
+
+	@JsonProperty("contract_address")
+	private String contractAddress;
+
+	@JsonProperty("function_selector")
+	private String functionSelector;
+
+	private String parameter;
+
+	/**
+	 * 最大消耗的 TRX 数量, 以 SUN 为单位
+	 */
+	@JsonProperty("fee_limit")
+	private BigInteger feeLimit;
+
+	@JsonProperty("call_value")
+	private BigInteger callValue;
+
+	/**
+	 * trc10 合约地址
+	 */
+	@JsonProperty("asset_name")
+	private String assetName;
+
+	@JsonProperty("to_address")
+	private String toAddress;
+
+	/**
+	 * 转账数量
+	 */
+	@JsonProperty("amount")
+	private BigInteger amount;
+
+	@JsonProperty("permission_id")
+	private BigDecimal permissionId;
+
+	/**
+	 * 账户地址是否为 Base58check 格式, 为 false, 使用 HEX 地址
+	 */
+	private Boolean visible = true;
+
+	/**
+	 * 用于广播交易,
+	 */
+	@JsonProperty("txID")
+	private String txId;
+
+	/**
+	 * 用于广播交易,
+	 */
+	@JsonProperty("raw_data")
+	private RawData rawData;
+
+	/**
+	 * 用于广播交易
+	 */
+	@JsonProperty("raw_data_hex")
+	private String rawDataHex;
+
+	/**
+	 * 用于广播交易
+	 */
+	@JsonProperty("signature")
+	private List<String> signature = null;
+
 	public static TriggerRequest<Trc20DecimalsResult> decimals(Endpoints endpoints, Contract contract) {
 		return new TriggerRequest<Trc20DecimalsResult>()
 				// 目标类型
@@ -55,10 +134,13 @@ public class TriggerRequest<T extends TriggerResult> {
 	 * @param to 收款人
 	 * @param amount 转出数量
 	 * @param contract 触发合约
+	 * @param feeLimit 费用
+	 * @param callValue 支付给合约的费用
 	 * @author lingting 2020-12-25 20:50
 	 */
 	public static TriggerRequest<Trc20TransferGenerateResult> trc20TransferGenerate(Endpoints endpoints,
-			VirtualCurrencyAccount from, String to, BigInteger amount, Contract contract) {
+			VirtualCurrencyAccount from, String to, BigInteger amount, Contract contract, BigInteger feeLimit,
+			BigInteger callValue) {
 
 		return new TriggerRequest<Trc20TransferGenerateResult>()
 				// 目标
@@ -70,9 +152,9 @@ public class TriggerRequest<T extends TriggerResult> {
 				// 方法
 				.setFunctionSelector("transfer(address,uint256)")
 				// 费用, 以 sun 为单位 1trx = 10^6 sun, 最大值为 10^sun 即 1000TRX
-				.setFeeLimit(BigDecimal.TEN.pow(9))
+				.setFeeLimit(feeLimit)
 				// call_value
-				.setCallValue(BigDecimal.ZERO)
+				.setCallValue(callValue)
 				// 转账人
 				.setOwnerAddress(from.getAddress())
 				// 参数, 里面 有 转账金额 收款人
@@ -159,85 +241,6 @@ public class TriggerRequest<T extends TriggerResult> {
 				// 转账数量
 				.setAmount(amount);
 	}
-
-	/**
-	 * 请求的url
-	 */
-	@JsonIgnore
-	private String url;
-
-	/**
-	 * 返回值转换的类
-	 */
-	@JsonIgnore
-	private Class<T> target;
-
-	@JsonProperty("owner_address")
-	private String ownerAddress;
-
-	@JsonProperty("contract_address")
-	private String contractAddress;
-
-	@JsonProperty("function_selector")
-	private String functionSelector;
-
-	private String parameter;
-
-	/**
-	 * 最大消耗的 TRX 数量, 以 SUN 为单位
-	 */
-	@JsonProperty("fee_limit")
-	private BigDecimal feeLimit;
-
-	@JsonProperty("call_value")
-	private BigDecimal callValue;
-
-	/**
-	 * trc10 合约地址
-	 */
-	@JsonProperty("asset_name")
-	private String assetName;
-
-	@JsonProperty("to_address")
-	private String toAddress;
-
-	/**
-	 * 转账数量
-	 */
-	@JsonProperty("amount")
-	private BigInteger amount;
-
-	@JsonProperty("permission_id")
-	private BigDecimal permissionId;
-
-	/**
-	 * 账户地址是否为 Base58check 格式, 为 false, 使用 HEX 地址
-	 */
-	private Boolean visible = true;
-
-	/**
-	 * 用于广播交易,
-	 */
-	@JsonProperty("txID")
-	private String txId;
-
-	/**
-	 * 用于广播交易,
-	 */
-	@JsonProperty("raw_data")
-	private RawData rawData;
-
-	/**
-	 * 用于广播交易
-	 */
-	@JsonProperty("raw_data_hex")
-	private String rawDataHex;
-
-	/**
-	 * 用于广播交易
-	 */
-	@JsonProperty("signature")
-	private List<String> signature = null;
 
 	public TriggerRequest<T> addSignature(String s) {
 		if (signature == null) {

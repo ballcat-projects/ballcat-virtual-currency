@@ -1,12 +1,8 @@
 package com.lingting.gzm.virtual.currency;
 
-import java.math.BigInteger;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
-import org.web3j.crypto.Credentials;
 
 /**
  * 虚拟货币账号

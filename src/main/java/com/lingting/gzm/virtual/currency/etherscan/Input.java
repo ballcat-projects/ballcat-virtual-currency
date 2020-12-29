@@ -5,7 +5,6 @@ import static com.lingting.gzm.virtual.currency.util.ResolveUtil.removePreZero;
 
 import com.lingting.gzm.virtual.currency.AbiMethod;
 import com.lingting.gzm.virtual.currency.contract.EtherscanContract;
-import com.lingting.gzm.virtual.currency.exception.VirtualCurrencyException;
 import java.math.BigDecimal;
 import lombok.Data;
 import lombok.experimental.Accessors;

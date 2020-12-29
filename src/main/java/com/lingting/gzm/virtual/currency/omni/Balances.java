@@ -17,6 +17,9 @@ import lombok.NoArgsConstructor;
 @Data
 public class Balances implements Domain<Balances> {
 
+	@JsonProperty("balance")
+	private List<Balance> balance;
+
 	@Override
 	public Balances of(Endpoints endpoints, Object params) throws JsonProcessingException {
 		HttpRequest request = HttpRequest.post(endpoints.getHttpUrl("v1/address/addr/"));
@@ -24,9 +27,6 @@ public class Balances implements Domain<Balances> {
 		String response = request.execute().body();
 		return JsonUtil.toObj(response, Balances.class);
 	}
-
-	@JsonProperty("balance")
-	private List<Balance> balance;
 
 	@NoArgsConstructor
 	@Data

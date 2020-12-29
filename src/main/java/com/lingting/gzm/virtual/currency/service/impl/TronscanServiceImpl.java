@@ -7,6 +7,7 @@ import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.lingting.gzm.virtual.currency.TransferParams;
 import com.lingting.gzm.virtual.currency.VirtualCurrencyAccount;
 import com.lingting.gzm.virtual.currency.VirtualCurrencyTransaction;
 import com.lingting.gzm.virtual.currency.VirtualCurrencyTransferResult;
@@ -30,6 +31,7 @@ import com.lingting.gzm.virtual.currency.tronscan.TriggerResult.Trc10TransferGen
 import com.lingting.gzm.virtual.currency.tronscan.TriggerResult.Trc20TransferGenerateResult;
 import com.lingting.gzm.virtual.currency.util.TronscanUtil;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.math.MathContext;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
@@ -48,6 +50,9 @@ import org.tron.tronj.crypto.tuweniTypes.Bytes32;
 @Slf4j
 public class TronscanServiceImpl implements VirtualCurrencyService {
 
+	@Getter
+	private static final Map<String, Integer> CONTRACT_DECIMAL_CACHE = new ConcurrentHashMap<>();
+
 	private final TronscanProperties properties;
 
 	private final Endpoints endpoints;
@@ -59,9 +64,6 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 	private final HttpRequest transactionInfoRequest;
 
 	private final HttpRequest trc10Request;
-
-	@Getter
-	private static final Map<String, Integer> CONTRACT_DECIMAL_CACHE = new ConcurrentHashMap<>();
 
 	public TronscanServiceImpl(TronscanProperties properties) throws VirtualCurrencyException {
 		this.properties = properties;
@@ -264,7 +266,7 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 
 	@Override
 	public VirtualCurrencyTransferResult transfer(VirtualCurrencyAccount from, String to, Contract contract,
-			BigDecimal value) throws JsonProcessingException, NoSuchAlgorithmException {
+			BigDecimal value, TransferParams params) throws JsonProcessingException, NoSuchAlgorithmException {
 		// 计算转账数量
 		BigDecimal amount = value.multiply(BigDecimal.TEN.pow(getDecimalsByContract(contract)));
 		String txId;
@@ -303,8 +305,11 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 		}
 		// 触发trc20 转账合约
 		else {
+			BigInteger feeLimit = params.getFeeLimit() != null ? params.getFeeLimit() : BigInteger.TEN.pow(9);
+			BigInteger callValue = params.getCallValue() != null ? params.getCallValue() : BigInteger.ZERO;
 			Trc20TransferGenerateResult generateResult = TriggerRequest
-					.trc20TransferGenerate(endpoints, from, to, amount.toBigInteger(), contract).exec();
+					.trc20TransferGenerate(endpoints, from, to, amount.toBigInteger(), contract, feeLimit, callValue)
+					.exec();
 
 			Transaction transaction = generateResult.getTransaction();
 			txId = transaction.getTxId();

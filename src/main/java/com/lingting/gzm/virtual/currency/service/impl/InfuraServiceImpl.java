@@ -5,6 +5,7 @@ import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.convert.Convert;
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.StrUtil;
+import com.lingting.gzm.virtual.currency.TransferParams;
 import com.lingting.gzm.virtual.currency.VirtualCurrencyAccount;
 import com.lingting.gzm.virtual.currency.VirtualCurrencyTransaction;
 import com.lingting.gzm.virtual.currency.VirtualCurrencyTransferResult;
@@ -62,17 +63,15 @@ import org.web3j.utils.Numeric;
 @Slf4j
 public class InfuraServiceImpl implements VirtualCurrencyService {
 
-	private static final String INPUT_EMPTY = "0x";
+	private static final String EMPTY_ADDRESS = "0x0000000000000000000000000000000000000000";
+
+	@Getter
+	private static final Map<String, Integer> CONTRACT_DECIMAL_CACHE = new ConcurrentHashMap<>();
 
 	@Getter
 	private final Web3j web3j;
 
 	private final InfuraProperties properties;
-
-	private static final String EMPTY_ADDRESS = "0x0000000000000000000000000000000000000000";
-
-	@Getter
-	private static final Map<String, Integer> CONTRACT_DECIMAL_CACHE = new ConcurrentHashMap<>();
 
 	public InfuraServiceImpl(InfuraProperties properties) {
 		this.properties = properties;
@@ -96,9 +95,7 @@ public class InfuraServiceImpl implements VirtualCurrencyService {
 			optional = ethTransaction.getTransaction();
 		}
 
-		/*
-		 * 订单信息为空 如果交易还没有被打包，就查询不到交易信息
-		 */
+		// 订单信息为空 如果交易还没有被打包，就查询不到交易信息
 		if (!optional.isPresent()) {
 			return Optional.empty();
 		}
@@ -111,7 +108,7 @@ public class InfuraServiceImpl implements VirtualCurrencyService {
 		// 解析input数据
 		Input input;
 		// 不是使用代币交易，而是直接使用eth交易
-		if (INPUT_EMPTY.equals(transaction.getInput())) {
+		if (EtherscanUtil.START.equals(transaction.getInput())) {
 			input = new Input().setTo(transaction.getTo()).setValue(new BigDecimal(transaction.getValue()))
 					.setContract(EtherscanContract.ETH);
 		}
@@ -233,7 +230,7 @@ public class InfuraServiceImpl implements VirtualCurrencyService {
 
 	@Override
 	public VirtualCurrencyTransferResult transfer(VirtualCurrencyAccount from, String to, Contract contract,
-			BigDecimal value) throws IOException {
+			BigDecimal value, TransferParams params) throws IOException {
 		// 合约地址
 		String cHash = contract.getHash();
 		// 获取账户信息
@@ -243,8 +240,9 @@ public class InfuraServiceImpl implements VirtualCurrencyService {
 		// nonce, 由于要保证每笔交易递增, 所以直接使用eth数量
 		BigInteger nonce = web3j.ethGetTransactionCount(from.getAddress(), DefaultBlockParameterName.PENDING).send()
 				.getTransactionCount();
-		BigInteger gasPrice = DefaultGasProvider.GAS_PRICE;
-		BigInteger gasLimit = DefaultGasProvider.GAS_LIMIT;
+		BigInteger gasPrice = params.getGasPrice() != null ? params.getGasPrice() : DefaultGasProvider.GAS_PRICE;
+		BigInteger gasLimit = params.getGasLimit() != null ? params.getGasLimit() : DefaultGasProvider.GAS_LIMIT;
+
 		// 交易原始数据
 		RawTransaction rawTransaction;
 		// 构造数据- eth
@@ -259,26 +257,30 @@ public class InfuraServiceImpl implements VirtualCurrencyService {
 					Collections.emptyList());
 			// 编码
 			String fData = FunctionEncoder.encode(function);
-			// 创建 gas 查询交易
-			org.web3j.protocol.core.methods.request.Transaction callTransaction = org.web3j.protocol.core.methods.request.Transaction
-					.createFunctionCallTransaction(from.getAddress(), nonce, gasPrice, null, cHash, fData);
-			// 发送查询请求
-			EthEstimateGas estimateGas = web3j.ethEstimateGas(callTransaction).send();
-			// 处理返回值
-			if (estimateGas.hasError()) {
-				return new VirtualCurrencyTransferResult()
-						// 失败
-						.setSuccess(false)
-						// 错误信息
-						.setMessage(estimateGas.getError().getMessage())
-						// 错误码
-						.setCode(Convert.toStr(estimateGas.getError().getCode()));
+
+			// 未指定 gasLimit , 自动配置
+			if (params.getGasLimit() == null) {
+				// 创建 gas 查询交易
+				org.web3j.protocol.core.methods.request.Transaction callTransaction = org.web3j.protocol.core.methods.request.Transaction
+						.createFunctionCallTransaction(from.getAddress(), nonce, gasPrice, null, cHash, fData);
+				// 发送查询请求
+				EthEstimateGas estimateGas = web3j.ethEstimateGas(callTransaction).send();
+				// 处理返回值
+				if (estimateGas.hasError()) {
+					return new VirtualCurrencyTransferResult()
+							// 失败
+							.setSuccess(false)
+							// 错误信息
+							.setMessage(estimateGas.getError().getMessage())
+							// 错误码
+							.setCode(Convert.toStr(estimateGas.getError().getCode()));
+				}
+				// 获取 gasLimit
+				gasLimit = estimateGas.getAmountUsed();
 			}
-			// 获取 gasLimit
-			gasLimit = estimateGas.getAmountUsed();
+
 			// 获取交易原始数据
 			rawTransaction = RawTransaction.createTransaction(nonce, gasPrice, gasLimit, cHash, fData);
-
 		}
 		// 签名
 		byte[] sign = TransactionEncoder.signMessage(rawTransaction, credentials);

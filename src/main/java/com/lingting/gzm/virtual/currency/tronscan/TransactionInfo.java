@@ -17,13 +17,6 @@ import lombok.NoArgsConstructor;
 @Data
 public class TransactionInfo {
 
-	public static TransactionInfo of(HttpRequest request, Endpoints endpoints, String address)
-			throws JsonProcessingException {
-		request.setUrl(endpoints.getHttpUrl("wallet/gettransactioninfobyid"));
-		request.body("{\"value\":\"" + address + "\",\"visible\":true}");
-		return JsonUtil.toObj(request.execute().body(), TransactionInfo.class);
-	}
-
 	@JsonProperty("id")
 	private String id;
 
@@ -47,6 +40,13 @@ public class TransactionInfo {
 
 	@JsonProperty("log")
 	private List<Log> log;
+
+	public static TransactionInfo of(HttpRequest request, Endpoints endpoints, String address)
+			throws JsonProcessingException {
+		request.setUrl(endpoints.getHttpUrl("wallet/gettransactioninfobyid"));
+		request.body("{\"value\":\"" + address + "\",\"visible\":true}");
+		return JsonUtil.toObj(request.execute().body(), TransactionInfo.class);
+	}
 
 	@NoArgsConstructor
 	@Data

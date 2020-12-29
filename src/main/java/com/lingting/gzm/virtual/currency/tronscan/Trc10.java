@@ -16,12 +16,6 @@ import lombok.NoArgsConstructor;
 @Data
 public class Trc10 {
 
-	public static Trc10 of(HttpRequest request, Endpoints endpoints, String address) throws JsonProcessingException {
-		request.setUrl(endpoints.getHttpUrl("wallet/getassetissuebyid"));
-		request.body("{\"value\":\"" + address + "\",\"visible\":true}");
-		return JsonUtil.toObj(request.execute().body(), Trc10.class);
-	}
-
 	@JsonProperty("owner_address")
 	private String ownerAddress;
 
@@ -57,5 +51,11 @@ public class Trc10 {
 
 	@JsonProperty("id")
 	private String id;
+
+	public static Trc10 of(HttpRequest request, Endpoints endpoints, String address) throws JsonProcessingException {
+		request.setUrl(endpoints.getHttpUrl("wallet/getassetissuebyid"));
+		request.body("{\"value\":\"" + address + "\",\"visible\":true}");
+		return JsonUtil.toObj(request.execute().body(), Trc10.class);
+	}
 
 }

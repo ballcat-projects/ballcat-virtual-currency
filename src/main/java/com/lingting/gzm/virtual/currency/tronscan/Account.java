@@ -17,11 +17,6 @@ import lombok.NoArgsConstructor;
 @lombok.Data
 public class Account {
 
-	public static Account of(HttpRequest request, Endpoints endpoints, String address) throws JsonProcessingException {
-		return JsonUtil.toObj(request.setUrl(endpoints.getHttpUrl("v1/accounts/" + address)).execute().body(),
-				Account.class);
-	}
-
 	@JsonProperty("success")
 	private Boolean success;
 
@@ -30,6 +25,11 @@ public class Account {
 
 	@JsonProperty("data")
 	private List<Data> data;
+
+	public static Account of(HttpRequest request, Endpoints endpoints, String address) throws JsonProcessingException {
+		return JsonUtil.toObj(request.setUrl(endpoints.getHttpUrl("v1/accounts/" + address)).execute().body(),
+				Account.class);
+	}
 
 	@NoArgsConstructor
 	@lombok.Data
