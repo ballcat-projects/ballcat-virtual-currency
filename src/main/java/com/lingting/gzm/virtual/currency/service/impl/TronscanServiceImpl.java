@@ -131,8 +131,17 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 		}
 		// trc20 交易
 		else {
-			// 合约
-			vcTransaction.setContract(TronscanContract.getByHash(data.getContractAddress()));
+			// 解析数据
+			Trc20Data resolve = resolve(data.getData());
+
+			// 解析数据中有合约
+			if (resolve.getContract() != null) {
+				vcTransaction.setContract(resolve.getContract());
+			}
+			// 没有合约
+			else {
+				vcTransaction.setContract(TronscanContract.getByHash(data.getContractAddress()));
+			}
 			// 如果合约未找到
 			if (vcTransaction.getContract() == null) {
 				vcTransaction.setContract(new Contract() {
@@ -147,14 +156,12 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 					}
 				});
 			}
-			// 解析数据
-			Trc20Data resolve = resolve(data.getData());
 
 			vcTransaction
 					// 转账金额
 					.setValue(getNumberByBalanceAndContract(resolve.getAmount(), vcTransaction.getContract()))
 					// 转账人
-					.setFrom(data.getOwnerAddress())
+					.setFrom(StrUtil.isNotBlank(resolve.getFrom()) ? resolve.getFrom() : data.getOwnerAddress())
 					// 收款人
 					.setTo(resolve.getTo());
 		}

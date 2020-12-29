@@ -32,6 +32,11 @@ public class Input {
 	private String to;
 
 	/**
+	 * 转账人
+	 */
+	private String from;
+
+	/**
 	 * 单位 个
 	 */
 	private BigDecimal value;
@@ -52,6 +57,16 @@ public class Input {
 		}
 		else {
 			this.to = START + removePreZero(to);
+		}
+		return this;
+	}
+
+	public Input setFrom(String from) {
+		if (from.startsWith(START)) {
+			this.from = from;
+		}
+		else {
+			this.from = START + removePreZero(from);
 		}
 		return this;
 	}

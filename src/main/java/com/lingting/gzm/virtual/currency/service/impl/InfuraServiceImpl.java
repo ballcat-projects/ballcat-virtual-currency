@@ -138,9 +138,13 @@ public class InfuraServiceImpl implements VirtualCurrencyService {
 		VirtualCurrencyTransaction virtualCurrencyTransaction = new VirtualCurrencyTransaction()
 
 				.setVcPlatform(VcPlatform.ETHERSCAN)
-
-				.setBlock(transaction.getBlockNumber()).setHash(transaction.getHash()).setFrom(transaction.getFrom())
-
+				// 块
+				.setBlock(transaction.getBlockNumber())
+				// 交易hash
+				.setHash(transaction.getHash())
+				// 转账人
+				.setFrom(StrUtil.isNotBlank(input.getFrom()) ? input.getFrom() : transaction.getFrom())
+				// 收款人
 				.setTo(input.getTo())
 				// 设置合约类型, input 中的优先
 				.setContract(contract)

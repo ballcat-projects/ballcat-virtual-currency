@@ -19,7 +19,7 @@ public enum AbiMethod {
 	TRANSFER("a9059cbb"),
 
 	/**
-	 * 获取合约精度 decimals
+	 * 获取合约精度 decimals()
 	 */
 	DECIMALS("313ce567"),
 
@@ -32,6 +32,10 @@ public enum AbiMethod {
 	 * SEND_MULTI_SIG
 	 */
 	SEND_MULTI_SIG("39125215"),
+	/**
+	 * 转账 transferFrom(address _from, address _to, uint256 _value)
+	 */
+	TRANSFER_FROM("23b872dd"),
 
 	;
 

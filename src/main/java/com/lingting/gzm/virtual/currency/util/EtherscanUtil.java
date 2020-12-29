@@ -73,6 +73,17 @@ public class EtherscanUtil {
 			input.setTo(array[0]);
 			input.setValue(new BigDecimal(Long.parseLong(array[1], 16)));
 		});
+
+		METHOD_HANDLER.put(AbiMethod.TRANSFER_FROM.getMethodId(), input -> {
+			String str = input.getData();
+			if (str.startsWith(START + AbiMethod.TRANSFER_FROM.getMethodId())) {
+				str = str.substring((START + AbiMethod.TRANSFER_FROM.getMethodId()).length());
+			}
+			String[] array = stringToArrayBy64(str);
+			input.setFrom(array[0]);
+			input.setTo(array[1]);
+			input.setValue(new BigDecimal(Long.parseLong(array[2], 16)));
+		});
 	}
 
 	/**

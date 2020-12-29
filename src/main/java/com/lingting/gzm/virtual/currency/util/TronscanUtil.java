@@ -8,6 +8,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.lingting.gzm.virtual.currency.AbiMethod;
 import com.lingting.gzm.virtual.currency.VirtualCurrencyAccount;
 import com.lingting.gzm.virtual.currency.contract.Contract;
+import com.lingting.gzm.virtual.currency.contract.TronscanContract;
 import com.lingting.gzm.virtual.currency.endpoints.Endpoints;
 import com.lingting.gzm.virtual.currency.exception.VirtualCurrencyException;
 import com.lingting.gzm.virtual.currency.tronscan.Trc20Data;
@@ -54,6 +55,59 @@ public class TronscanUtil {
 			// 数量
 			BigDecimal amount = new BigDecimal(new BigInteger(removePreZero(array[1]), 16));
 			return new Trc20Data().setAmount(amount).setTo(to);
+		});
+
+		METHOD_HANDLER.put(AbiMethod.SEND_MULTI_SIG_TOKEN.getMethodId(), str -> {
+			if (str.startsWith(AbiMethod.SEND_MULTI_SIG_TOKEN.getMethodId())) {
+				str = str.substring((AbiMethod.SEND_MULTI_SIG_TOKEN.getMethodId()).length());
+			}
+			String[] array = stringToArrayBy64(str);
+			String contractHash = removePreZero(array[2]);
+
+			Contract contract = TronscanContract.getByHash(contractHash);
+			if (contract == null) {
+				contract = new Contract() {
+					@Override
+					public String getHash() {
+						return contractHash;
+					}
+
+					@Override
+					public Integer getDecimals() {
+						return null;
+					}
+				};
+			}
+			return new Trc20Data()
+					// 收款人
+					.setTo(decodeAddressParam(array[0]))
+					// 数量
+					.setAmount(new BigDecimal(Long.parseLong(array[1], 16)))
+					// 合约地址
+					.setContract(contract);
+		});
+
+		METHOD_HANDLER.put(AbiMethod.SEND_MULTI_SIG.getMethodId(), str -> {
+			if (str.startsWith(AbiMethod.SEND_MULTI_SIG.getMethodId())) {
+				str = str.substring((AbiMethod.SEND_MULTI_SIG.getMethodId()).length());
+			}
+			String[] array = stringToArrayBy64(str);
+			return new Trc20Data().setTo(decodeAddressParam(array[0]))
+					.setAmount(new BigDecimal(Long.parseLong(array[1], 16)));
+		});
+
+		METHOD_HANDLER.put(AbiMethod.TRANSFER_FROM.getMethodId(), str -> {
+			if (str.startsWith(AbiMethod.TRANSFER_FROM.getMethodId())) {
+				str = str.substring((AbiMethod.TRANSFER_FROM.getMethodId()).length());
+			}
+			String[] array = stringToArrayBy64(str);
+			return new Trc20Data()
+					// 转账人
+					.setFrom(decodeAddressParam(array[0]))
+					// 收款人
+					.setTo(decodeAddressParam(array[1]))
+					// 数量
+					.setAmount(new BigDecimal(Long.parseLong(array[2], 16)));
 		});
 	}
 

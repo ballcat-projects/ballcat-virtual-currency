@@ -29,7 +29,7 @@ public class GetTransactionByHashTest {
 	public void ethTest() {
 		service = new InfuraServiceImpl(new InfuraProperties().setEndpoints(InfuraEndpoints.MAINNET)
 				.setProjectId("b6066b4cfce54e7384ea38d52f9260ac"));
-		String txnHash = "0xcce82c876641d6cab25f71c9f2287ef662e47ba8a5bbfc3d15b9e0054db4af9c";
+		String txnHash = "0x82c5a9bfd6e7d786451388b62bf9f728b07beee9e0ba1cdfe8c203c2448f9fa6";
 
 		Numeric.decodeQuantity(txnHash);
 		Optional<VirtualCurrencyTransaction> optional = service.getTransactionByHash(txnHash.trim());

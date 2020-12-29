@@ -81,11 +81,6 @@
             <artifactId>utils</artifactId>
             <version>0.1.1</version>
         </dependency>
-        <!--        <dependency>-->
-        <!--            <groupId>org.bitcoinj</groupId>-->
-        <!--            <artifactId>bitcoinj-tools</artifactId>-->
-        <!--            <version>${bitcoinj.version}</version>-->
-        <!--        </dependency>-->
     </dependencies>
 
     <repositories>
