@@ -5,7 +5,6 @@ import static com.lingting.gzm.virtual.currency.util.TronscanUtil.resolve;
 
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.http.HttpRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.lingting.gzm.virtual.currency.TransferParams;
 import com.lingting.gzm.virtual.currency.VirtualCurrencyAccount;
@@ -16,7 +15,6 @@ import com.lingting.gzm.virtual.currency.contract.TronscanContract;
 import com.lingting.gzm.virtual.currency.endpoints.Endpoints;
 import com.lingting.gzm.virtual.currency.enums.TransactionStatus;
 import com.lingting.gzm.virtual.currency.enums.VcPlatform;
-import com.lingting.gzm.virtual.currency.exception.VirtualCurrencyException;
 import com.lingting.gzm.virtual.currency.properties.TronscanProperties;
 import com.lingting.gzm.virtual.currency.service.VirtualCurrencyService;
 import com.lingting.gzm.virtual.currency.tronscan.Account;
@@ -57,27 +55,14 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 
 	private final Endpoints endpoints;
 
-	private final HttpRequest accountRequest;
-
-	private final HttpRequest transactionRequest;
-
-	private final HttpRequest transactionInfoRequest;
-
-	private final HttpRequest trc10Request;
-
-	public TronscanServiceImpl(TronscanProperties properties) throws VirtualCurrencyException {
+	public TronscanServiceImpl(TronscanProperties properties) {
 		this.properties = properties;
 		this.endpoints = properties.getEndpoints();
-
-		accountRequest = HttpRequest.get(endpoints.getHttp());
-		transactionRequest = HttpRequest.post(endpoints.getHttp());
-		transactionInfoRequest = HttpRequest.post(endpoints.getHttp());
-		trc10Request = HttpRequest.post(endpoints.getHttp());
 	}
 
 	@Override
 	public Optional<VirtualCurrencyTransaction> getTransactionByHash(String hash) throws Exception {
-		Transaction transaction = Transaction.of(transactionRequest, endpoints, hash);
+		Transaction transaction = Transaction.of(endpoints, hash);
 
 		// 没有返回txId 表示此交易未被确认 或 不存在
 		if (StrUtil.isBlank(transaction.getTxId())) {
@@ -167,7 +152,7 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 		}
 
 		// 获取交易详细信息
-		TransactionInfo info = TransactionInfo.of(transactionInfoRequest, endpoints, hash);
+		TransactionInfo info = TransactionInfo.of(endpoints, hash);
 		vcTransaction
 				// 块高度
 				.setBlock(info.getBlockNumber())
@@ -206,7 +191,7 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 		}
 		// trc10 查询
 		else {
-			Trc10 trc10 = Trc10.of(trc10Request, endpoints, contract.getHash());
+			Trc10 trc10 = Trc10.of(endpoints, contract.getHash());
 			decimals = trc10.getPrecision() == null ? 0 : trc10.getPrecision();
 		}
 
@@ -217,7 +202,7 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 	@Override
 	public BigDecimal getBalanceByAddressAndContract(String address,
 			com.lingting.gzm.virtual.currency.contract.Contract contract) throws JsonProcessingException {
-		Account account = Account.of(accountRequest, endpoints, address);
+		Account account = Account.of(endpoints, address);
 
 		// 搜索拥有的数据
 		if (account.getData().size() == 0) {

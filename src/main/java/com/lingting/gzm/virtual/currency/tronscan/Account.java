@@ -26,9 +26,9 @@ public class Account {
 	@JsonProperty("data")
 	private List<Data> data;
 
-	public static Account of(HttpRequest request, Endpoints endpoints, String address) throws JsonProcessingException {
-		return JsonUtil.toObj(request.setUrl(endpoints.getHttpUrl("v1/accounts/" + address)).execute().body(),
-				Account.class);
+	public static Account of(Endpoints endpoints, String address) throws JsonProcessingException {
+		HttpRequest request = HttpRequest.get(endpoints.getHttpUrl("v1/accounts/" + address));
+		return JsonUtil.toObj(request.execute().body(), Account.class);
 	}
 
 	@NoArgsConstructor

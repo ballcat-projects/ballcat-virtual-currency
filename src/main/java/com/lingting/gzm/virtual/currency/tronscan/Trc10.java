@@ -52,8 +52,8 @@ public class Trc10 {
 	@JsonProperty("id")
 	private String id;
 
-	public static Trc10 of(HttpRequest request, Endpoints endpoints, String address) throws JsonProcessingException {
-		request.setUrl(endpoints.getHttpUrl("wallet/getassetissuebyid"));
+	public static Trc10 of(Endpoints endpoints, String address) throws JsonProcessingException {
+		HttpRequest request = HttpRequest.post(endpoints.getHttpUrl("wallet/getassetissuebyid"));
 		request.body("{\"value\":\"" + address + "\",\"visible\":true}");
 		return JsonUtil.toObj(request.execute().body(), Trc10.class);
 	}

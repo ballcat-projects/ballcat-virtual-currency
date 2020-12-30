@@ -41,9 +41,9 @@ public class TransactionInfo {
 	@JsonProperty("log")
 	private List<Log> log;
 
-	public static TransactionInfo of(HttpRequest request, Endpoints endpoints, String address)
+	public static TransactionInfo of(Endpoints endpoints, String address)
 			throws JsonProcessingException {
-		request.setUrl(endpoints.getHttpUrl("wallet/gettransactioninfobyid"));
+		HttpRequest request = HttpRequest.post(endpoints.getHttpUrl("wallet/gettransactioninfobyid"));
 		request.body("{\"value\":\"" + address + "\",\"visible\":true}");
 		return JsonUtil.toObj(request.execute().body(), TransactionInfo.class);
 	}

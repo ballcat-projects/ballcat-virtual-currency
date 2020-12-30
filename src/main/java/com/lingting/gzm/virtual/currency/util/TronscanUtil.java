@@ -176,8 +176,7 @@ public class TronscanUtil {
 	 * 新增账号
 	 * @author lingting 2020-12-25 20:35
 	 */
-	public static VirtualCurrencyAccount create()
-			throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException {
+	public static VirtualCurrencyAccount create() {
 		// 生成密钥对
 		SECP256K1.KeyPair keyPair = SECP256K1.KeyPair.generate();
 
