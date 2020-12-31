@@ -22,7 +22,7 @@
         <jackson.version>2.11.2</jackson.version>
         <spring-javaformat-checkstyle.version>0.0.26</spring-javaformat-checkstyle.version>
         <web3j.version>5.0.0</web3j.version>
-        <bitcoinj.version>0.14.7</bitcoinj.version>
+        <bitcoinj.version>0.15.9</bitcoinj.version>
     </properties>
 
     <dependencies>
@@ -75,6 +75,12 @@
             <groupId>org.bitcoinj</groupId>
             <artifactId>bitcoinj-core</artifactId>
             <version>${bitcoinj.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.google.guava</groupId>
+                    <artifactId>guava</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.tron.tronj</groupId>
@@ -88,21 +94,11 @@
             <snapshots>
                 <enabled>false</enabled>
             </snapshots>
-            <id>bintray-maven</id>
-            <name>bintray</name>
+            <id>tron-maven</id>
+            <name>tron</name>
             <url>https://dl.bintray.com/tronj/tronj</url>
         </repository>
     </repositories>
-    <pluginRepositories>
-        <pluginRepository>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-            <id>bintray-maven</id>
-            <name>bintray-plugins</name>
-            <url>https://dl.bintray.com/tronj/tronj</url>
-        </pluginRepository>
-    </pluginRepositories>
 
     <build>
         <plugins>
