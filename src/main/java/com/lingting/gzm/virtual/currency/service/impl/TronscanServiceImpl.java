@@ -216,6 +216,9 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 
 		// trc20
 		if (isTrc20(contract.getHash())) {
+			if (CollectionUtil.isEmpty(data.getTrc20())){
+				return BigDecimal.ZERO;
+			}
 			// 从trc20中寻找
 			for (Map<String, BigDecimal> map : data.getTrc20()) {
 				for (Map.Entry<String, BigDecimal> entry : map.entrySet()) {
@@ -228,6 +231,9 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 		}
 		// 非 trc20
 		else {
+			if (CollectionUtil.isEmpty(data.getAssetV2())){
+				return BigDecimal.ZERO;
+			}
 			// 从assetV2中寻找
 			for (Account.Data.AssetV2 v2 : data.getAssetV2()) {
 				// 如果指定合约的hash 与当前v2数据相同

@@ -1,5 +1,6 @@
 package com.lingting.gzm.virtual.currency.service.impl;
 
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.thread.ThreadUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.lingting.gzm.virtual.currency.TransferParams;
@@ -124,6 +125,9 @@ public class OmniServiceImpl implements VirtualCurrencyService {
 	@Override
 	public BigDecimal getBalanceByAddressAndContract(String address, Contract contract) throws JsonProcessingException {
 		Balances balances = request(STATIC_BALANCES, properties.getEndpoints(), address);
+		if (CollectionUtil.isEmpty(balances.getBalance())) {
+			return BigDecimal.ZERO;
+		}
 		for (Balances.Balance balance : balances.getBalance()) {
 			// 协助缓存精度
 			if (!CONTRACT_DECIMAL_CACHE.containsKey(contract.getHash())) {
