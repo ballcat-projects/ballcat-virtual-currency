@@ -14,13 +14,11 @@ import live.lingting.virtual.currency.properties.OmniProperties;
 public enum ApiPlatform {
 
 	/**
-	 * 以太坊 https://infura.io/ 请使用
-	 * {@link InfuraProperties} 类进行配置
+	 * 以太坊 https://infura.io/ 请使用 {@link InfuraProperties} 类进行配置
 	 */
 	INFURA(VcPlatform.ETHERSCAN),
 	/**
-	 * 比特 https://omniexplorer.info/ 请使用
-	 * {@link OmniProperties} 类进行配置
+	 * 比特 https://omniexplorer.info/ 请使用 {@link OmniProperties} 类进行配置
 	 */
 	OMNI(VcPlatform.OMNI),
 	/**

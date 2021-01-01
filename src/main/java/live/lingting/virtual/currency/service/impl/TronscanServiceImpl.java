@@ -172,8 +172,7 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 	}
 
 	@Override
-	public Integer getDecimalsByContract(Contract contract)
-			throws JsonProcessingException {
+	public Integer getDecimalsByContract(Contract contract) throws JsonProcessingException {
 		if (contract == null) {
 			return 0;
 		}
@@ -200,8 +199,7 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 	}
 
 	@Override
-	public BigDecimal getBalanceByAddressAndContract(String address,
-			Contract contract) throws JsonProcessingException {
+	public BigDecimal getBalanceByAddressAndContract(String address, Contract contract) throws JsonProcessingException {
 		Account account = Account.of(endpoints, address);
 
 		// 搜索拥有的数据
@@ -216,7 +214,7 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 
 		// trc20
 		if (isTrc20(contract.getHash())) {
-			if (CollectionUtil.isEmpty(data.getTrc20())){
+			if (CollectionUtil.isEmpty(data.getTrc20())) {
 				return BigDecimal.ZERO;
 			}
 			// 从trc20中寻找
@@ -231,7 +229,7 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 		}
 		// 非 trc20
 		else {
-			if (CollectionUtil.isEmpty(data.getAssetV2())){
+			if (CollectionUtil.isEmpty(data.getAssetV2())) {
 				return BigDecimal.ZERO;
 			}
 			// 从assetV2中寻找
@@ -248,8 +246,7 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 	}
 
 	@Override
-	public BigDecimal getNumberByBalanceAndContract(BigDecimal balance,
-			Contract contract, MathContext mathContext)
+	public BigDecimal getNumberByBalanceAndContract(BigDecimal balance, Contract contract, MathContext mathContext)
 			throws JsonProcessingException {
 		// 合约为null 返回原值
 		if (contract == null) {

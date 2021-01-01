@@ -35,8 +35,7 @@ public class Transaction {
 	@JsonProperty("signature")
 	private List<String> signature;
 
-	public static Transaction of(Endpoints endpoints, String address)
-			throws JsonProcessingException {
+	public static Transaction of(Endpoints endpoints, String address) throws JsonProcessingException {
 		// 固化块api, 仅能查询到已确认交易
 		HttpRequest request = HttpRequest.post(endpoints.getHttpUrl("walletsolidity/gettransactionbyid"));
 		request.body("{\"value\":\"" + address + "\",\"visible\":true}");
