@@ -202,7 +202,7 @@ public class TronscanUtil {
 	 * 根据私钥获取账户
 	 * @param address 地址
 	 * @param privateKey 私钥
-	 * @return com.lingting.gzm.virtual.currency.VirtualCurrencyAccount
+	 * @return live.lingting.virtual.currency.VirtualCurrencyAccount
 	 * @author lingting 2020-12-23 14:04
 	 */
 	public static VirtualCurrencyAccount getAccountOfKey(String address, String privateKey) {
@@ -214,7 +214,7 @@ public class TronscanUtil {
 	 * @param address 地址
 	 * @param publicKey 公钥, 忘记了可以留空
 	 * @param privateKey 私钥
-	 * @return com.lingting.gzm.virtual.currency.VirtualCurrencyAccount
+	 * @return live.lingting.virtual.currency.VirtualCurrencyAccount
 	 * @author lingting 2020-12-23 14:05
 	 */
 	public static VirtualCurrencyAccount getAccountOfKey(String address, String publicKey, String privateKey) {

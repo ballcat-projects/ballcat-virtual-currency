@@ -172,7 +172,7 @@ public class TriggerRequest<T extends TriggerResult> {
 	 * @param rawData rawData
 	 * @param rawDataHex rawDataHex
 	 * @param signature 签名
-	 * @return com.lingting.gzm.virtual.currency.tronscan.TriggerRequest
+	 * @return live.lingting.virtual.currency.tronscan.TriggerRequest
 	 * @author lingting 2020-12-25 22:57
 	 */
 	public static TriggerRequest<TransferBroadcastResult> trc10TransferBroadcast(Endpoints endpoints, String txId,
