@@ -3,12 +3,12 @@ package live.lingting.virtual.currency.omni;
 import cn.hutool.http.HttpRequest;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import live.lingting.virtual.currency.endpoints.Endpoints;
-import live.lingting.virtual.currency.util.JsonUtil;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import live.lingting.virtual.currency.endpoints.Endpoints;
+import live.lingting.virtual.currency.util.JsonUtil;
 
 /**
  * @author lingting 2020-12-14 10:13

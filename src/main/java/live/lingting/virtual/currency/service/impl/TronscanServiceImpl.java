@@ -1,33 +1,13 @@
 package live.lingting.virtual.currency.service.impl;
 
+import static live.lingting.virtual.currency.tronscan.Transaction.Ret;
+import static live.lingting.virtual.currency.tronscan.Transaction.of;
 import static live.lingting.virtual.currency.util.TronscanUtil.isTrc20;
 import static live.lingting.virtual.currency.util.TronscanUtil.resolve;
 
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import live.lingting.virtual.currency.TransferParams;
-import live.lingting.virtual.currency.VirtualCurrencyAccount;
-import live.lingting.virtual.currency.VirtualCurrencyTransaction;
-import live.lingting.virtual.currency.VirtualCurrencyTransferResult;
-import live.lingting.virtual.currency.contract.Contract;
-import live.lingting.virtual.currency.contract.TronscanContract;
-import live.lingting.virtual.currency.endpoints.Endpoints;
-import live.lingting.virtual.currency.enums.TransactionStatus;
-import live.lingting.virtual.currency.enums.VcPlatform;
-import live.lingting.virtual.currency.properties.TronscanProperties;
-import live.lingting.virtual.currency.service.VirtualCurrencyService;
-import live.lingting.virtual.currency.tronscan.Account;
-import live.lingting.virtual.currency.tronscan.Transaction;
-import live.lingting.virtual.currency.tronscan.TransactionInfo;
-import live.lingting.virtual.currency.tronscan.Trc10;
-import live.lingting.virtual.currency.tronscan.Trc20Data;
-import live.lingting.virtual.currency.tronscan.TriggerRequest;
-import live.lingting.virtual.currency.tronscan.TriggerResult;
-import live.lingting.virtual.currency.tronscan.TriggerResult.TransferBroadcastResult;
-import live.lingting.virtual.currency.tronscan.TriggerResult.Trc10TransferGenerateResult;
-import live.lingting.virtual.currency.tronscan.TriggerResult.Trc20TransferGenerateResult;
-import live.lingting.virtual.currency.util.TronscanUtil;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.MathContext;
@@ -41,6 +21,28 @@ import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.util.encoders.Hex;
 import org.tron.tronj.crypto.SECP256K1;
 import org.tron.tronj.crypto.tuweniTypes.Bytes32;
+import live.lingting.virtual.currency.Account;
+import live.lingting.virtual.currency.Transaction;
+import live.lingting.virtual.currency.TransferParams;
+import live.lingting.virtual.currency.TransferResult;
+import live.lingting.virtual.currency.contract.Contract;
+import live.lingting.virtual.currency.contract.TronscanContract;
+import live.lingting.virtual.currency.endpoints.Endpoints;
+import live.lingting.virtual.currency.enums.TransactionStatus;
+import live.lingting.virtual.currency.enums.VcPlatform;
+import live.lingting.virtual.currency.properties.TronscanProperties;
+import live.lingting.virtual.currency.service.VirtualCurrencyService;
+import live.lingting.virtual.currency.tronscan.Transaction.RawData;
+import live.lingting.virtual.currency.tronscan.TransactionInfo;
+import live.lingting.virtual.currency.tronscan.Trc10;
+import live.lingting.virtual.currency.tronscan.Trc20Data;
+import live.lingting.virtual.currency.tronscan.TriggerRequest;
+import live.lingting.virtual.currency.tronscan.TriggerResult;
+import live.lingting.virtual.currency.tronscan.TriggerResult.TransferBroadcastResult;
+import live.lingting.virtual.currency.tronscan.TriggerResult.Trc10TransferGenerateResult;
+import live.lingting.virtual.currency.tronscan.TriggerResult.Trc20TransferGenerateResult;
+import live.lingting.virtual.currency.util.AbiUtil;
+import live.lingting.virtual.currency.util.TronscanUtil;
 
 /**
  * @author lingting 2020-09-01 17:16
@@ -61,8 +63,8 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 	}
 
 	@Override
-	public Optional<VirtualCurrencyTransaction> getTransactionByHash(String hash) throws Exception {
-		Transaction transaction = Transaction.of(endpoints, hash);
+	public Optional<Transaction> getTransactionByHash(String hash) throws Throwable {
+		live.lingting.virtual.currency.tronscan.Transaction transaction = of(endpoints, hash);
 
 		// 没有返回txId 表示此交易未被确认 或 不存在
 		if (StrUtil.isBlank(transaction.getTxId())) {
@@ -70,15 +72,15 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 		}
 
 		// 生成返回值
-		VirtualCurrencyTransaction vcTransaction = new VirtualCurrencyTransaction()
+		Transaction vcTransaction = new Transaction()
 				// 平台
 				.setVcPlatform(VcPlatform.TRONSCAN)
 				// hash
 				.setHash(hash);
 		// 原始数据
-		Transaction.RawData rawData = transaction.getRawData();
+		RawData rawData = transaction.getRawData();
 		// 合约参数
-		Transaction.RawData.Contract.Parameter.Value data = rawData.getContract().get(0).getParameter().getValue();
+		RawData.Contract.Parameter.Value data = rawData.getContract().get(0).getParameter().getValue();
 		// trx 或 trc10 交易
 		if (data.getAmount() != null) {
 			// trx 交易
@@ -92,17 +94,7 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 				vcTransaction.setContract(TronscanContract.getByHash(data.getAssetName()));
 				// 如果合约未找到
 				if (vcTransaction.getContract() == null) {
-					vcTransaction.setContract(new Contract() {
-						@Override
-						public String getHash() {
-							return data.getAssetName();
-						}
-
-						@Override
-						public Integer getDecimals() {
-							return null;
-						}
-					});
+					vcTransaction.setContract(AbiUtil.createContract(data.getAssetName()));
 				}
 			}
 
@@ -129,17 +121,7 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 			}
 			// 如果合约未找到
 			if (vcTransaction.getContract() == null) {
-				vcTransaction.setContract(new Contract() {
-					@Override
-					public String getHash() {
-						return data.getContractAddress();
-					}
-
-					@Override
-					public Integer getDecimals() {
-						return null;
-					}
-				});
+				vcTransaction.setContract(AbiUtil.createContract(data.getContractAddress()));
 			}
 
 			vcTransaction
@@ -159,9 +141,9 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 				// 交易时间, 毫秒转秒
 				.setTime(info.getBlockTimeStamp() / 1000);
 		// 交易状态
-		List<Transaction.Ret> rets = transaction.getRet();
+		List<Ret> rets = transaction.getRet();
 		// 失败
-		if (CollectionUtil.isEmpty(rets) || !rets.get(0).getContractRet().equals(Transaction.Ret.SUCCESS)) {
+		if (CollectionUtil.isEmpty(rets) || !rets.get(0).getContractRet().equals(Ret.SUCCESS)) {
 			vcTransaction.setStatus(TransactionStatus.FAIL);
 		}
 		// 成功
@@ -200,14 +182,15 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 
 	@Override
 	public BigDecimal getBalanceByAddressAndContract(String address, Contract contract) throws JsonProcessingException {
-		Account account = Account.of(endpoints, address);
+		live.lingting.virtual.currency.tronscan.Account account = live.lingting.virtual.currency.tronscan.Account
+				.of(endpoints, address);
 
 		// 搜索拥有的数据
 		if (account.getData().size() == 0) {
 			return BigDecimal.ZERO;
 		}
 
-		Account.Data data = account.getData().get(0);
+		live.lingting.virtual.currency.tronscan.Account.Data data = account.getData().get(0);
 		if (contract == TronscanContract.TRX) {
 			return data.getBalance();
 		}
@@ -233,7 +216,7 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 				return BigDecimal.ZERO;
 			}
 			// 从assetV2中寻找
-			for (Account.Data.AssetV2 v2 : data.getAssetV2()) {
+			for (live.lingting.virtual.currency.tronscan.Account.Data.AssetV2 v2 : data.getAssetV2()) {
 				// 如果指定合约的hash 与当前v2数据相同
 				if (v2.getKey().equals(contract.getHash())) {
 					return v2.getValue();
@@ -260,20 +243,20 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 	}
 
 	@Override
-	public VirtualCurrencyTransferResult transfer(VirtualCurrencyAccount from, String to, Contract contract,
-			BigDecimal value, TransferParams params) throws JsonProcessingException, NoSuchAlgorithmException {
+	public TransferResult transfer(Account from, String to, Contract contract, BigDecimal value, TransferParams params)
+			throws JsonProcessingException, NoSuchAlgorithmException {
 		// 计算转账数量
-		BigDecimal amount = value.multiply(BigDecimal.TEN.pow(getDecimalsByContract(contract)));
+		BigInteger amount = value.multiply(BigDecimal.TEN.pow(getDecimalsByContract(contract))).toBigInteger();
 		String txId;
-		Transaction.RawData rawData;
+		RawData rawData;
 		String rawDataHex;
 		// trx 转账
 		if (contract == TronscanContract.TRX) {
 			TriggerResult.TrxTransferGenerateResult generateResult = TriggerRequest
-					.trxTransferGenerate(endpoints, from, to, amount.toBigInteger(), contract).exec();
+					.trxTransferGenerate(endpoints, from, to, amount, contract).exec();
 
 			if (StrUtil.isNotBlank(generateResult.getError())) {
-				return new VirtualCurrencyTransferResult()
+				return new TransferResult()
 						// 错误信息
 						.setMessage(generateResult.getError())
 						// 失败
@@ -286,9 +269,9 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 		// trc10 转账
 		else if (!isTrc20(contract.getHash())) {
 			Trc10TransferGenerateResult generateResult = TriggerRequest
-					.trc10TransferGenerate(endpoints, from, to, amount.toBigInteger(), contract).exec();
+					.trc10TransferGenerate(endpoints, from, to, amount, contract).exec();
 			if (StrUtil.isNotBlank(generateResult.getError())) {
-				return new VirtualCurrencyTransferResult()
+				return new TransferResult()
 						// 错误信息
 						.setMessage(generateResult.getError())
 						// 失败
@@ -303,10 +286,9 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 			BigInteger feeLimit = params.getFeeLimit() != null ? params.getFeeLimit() : BigInteger.TEN.pow(9);
 			BigInteger callValue = params.getCallValue() != null ? params.getCallValue() : BigInteger.ZERO;
 			Trc20TransferGenerateResult generateResult = TriggerRequest
-					.trc20TransferGenerate(endpoints, from, to, amount.toBigInteger(), contract, feeLimit, callValue)
-					.exec();
+					.trc20TransferGenerate(endpoints, from, to, amount, contract, feeLimit, callValue).exec();
 
-			Transaction transaction = generateResult.getTransaction();
+			live.lingting.virtual.currency.tronscan.Transaction transaction = generateResult.getTransaction();
 			txId = transaction.getTxId();
 			rawData = transaction.getRawData();
 			rawDataHex = transaction.getRawDataHex();
@@ -322,7 +304,7 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 				.trc10TransferBroadcast(endpoints, txId, rawData, rawDataHex, sign.encodedBytes().toHexString()).exec();
 
 		// 设置返回结果
-		VirtualCurrencyTransferResult result = new VirtualCurrencyTransferResult().setHash(txId);
+		TransferResult result = new TransferResult().setHash(txId);
 
 		// 成功
 		if (broadcastResult.getResult() != null && broadcastResult.getResult()) {

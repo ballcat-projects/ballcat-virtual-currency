@@ -1,8 +1,8 @@
 package live.lingting.virtual.currency;
 
-import live.lingting.virtual.currency.exception.VirtualCurrencyException;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import live.lingting.virtual.currency.exception.VirtualCurrencyException;
 
 /**
  * abi方法

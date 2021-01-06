@@ -1,13 +1,13 @@
 package live.lingting.virtual.currency.etherscan;
 
+import static live.lingting.virtual.currency.util.AbiUtil.removePreZero;
 import static live.lingting.virtual.currency.util.EtherscanUtil.START;
-import static live.lingting.virtual.currency.util.ResolveUtil.removePreZero;
 
-import live.lingting.virtual.currency.AbiMethod;
-import live.lingting.virtual.currency.contract.EtherscanContract;
 import java.math.BigDecimal;
 import lombok.Data;
 import lombok.experimental.Accessors;
+import live.lingting.virtual.currency.AbiMethod;
+import live.lingting.virtual.currency.contract.EtherscanContract;
 
 /**
  * @author lingting 2020-09-02 14:20

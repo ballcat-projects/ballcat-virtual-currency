@@ -1,8 +1,5 @@
 package live.lingting.virtual.currency;
 
-import live.lingting.virtual.currency.contract.Contract;
-import live.lingting.virtual.currency.enums.TransactionStatus;
-import live.lingting.virtual.currency.enums.VcPlatform;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.LocalDateTime;
@@ -12,6 +9,9 @@ import java.util.TimeZone;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import live.lingting.virtual.currency.contract.Contract;
+import live.lingting.virtual.currency.enums.TransactionStatus;
+import live.lingting.virtual.currency.enums.VcPlatform;
 
 /**
  * @author lingting 2020-09-02 14:02
@@ -19,7 +19,7 @@ import lombok.experimental.Accessors;
 @Getter
 @Setter
 @Accessors(chain = true)
-public class VirtualCurrencyTransaction {
+public class Transaction {
 
 	/**
 	 * 交易号
@@ -76,12 +76,12 @@ public class VirtualCurrencyTransaction {
 		return getTimeByZone(ZoneId.systemDefault());
 	}
 
-	public VirtualCurrencyTransaction setTime(LocalDateTime time) {
+	public Transaction setTime(LocalDateTime time) {
 		this.time = time;
 		return this;
 	}
 
-	public VirtualCurrencyTransaction setTime(long time) {
+	public Transaction setTime(long time) {
 		return setTime(LocalDateTime.ofEpochSecond(time, 0, ZoneOffset.UTC));
 	}
 

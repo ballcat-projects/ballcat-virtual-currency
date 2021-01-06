@@ -1,8 +1,8 @@
 package live.lingting.virtual.currency.properties;
 
-import live.lingting.virtual.currency.enums.ApiPlatform;
 import lombok.Data;
 import lombok.experimental.Accessors;
+import live.lingting.virtual.currency.enums.ApiPlatform;
 
 /**
  * 虚拟货币处理配置

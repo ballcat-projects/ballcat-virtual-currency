@@ -5,25 +5,9 @@ import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.convert.Convert;
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.StrUtil;
-import live.lingting.virtual.currency.TransferParams;
-import live.lingting.virtual.currency.VirtualCurrencyAccount;
-import live.lingting.virtual.currency.VirtualCurrencyTransaction;
-import live.lingting.virtual.currency.VirtualCurrencyTransferResult;
-import live.lingting.virtual.currency.contract.Contract;
-import live.lingting.virtual.currency.contract.EtherscanContract;
-import live.lingting.virtual.currency.enums.EtherscanReceiptStatus;
-import live.lingting.virtual.currency.enums.TransactionStatus;
-import live.lingting.virtual.currency.enums.VcPlatform;
-import live.lingting.virtual.currency.etherscan.Input;
-import live.lingting.virtual.currency.properties.InfuraProperties;
-import live.lingting.virtual.currency.service.VirtualCurrencyService;
-import live.lingting.virtual.currency.util.EtherscanUtil;
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.MathContext;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -44,18 +28,27 @@ import org.web3j.abi.datatypes.generated.Uint8;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.RawTransaction;
 import org.web3j.crypto.TransactionEncoder;
-import org.web3j.protocol.Web3j;
-import org.web3j.protocol.core.DefaultBlockParameter;
-import org.web3j.protocol.core.DefaultBlockParameterName;
-import org.web3j.protocol.core.methods.response.EthBlock;
-import org.web3j.protocol.core.methods.response.EthCall;
-import org.web3j.protocol.core.methods.response.EthEstimateGas;
-import org.web3j.protocol.core.methods.response.EthSendTransaction;
-import org.web3j.protocol.core.methods.response.EthTransaction;
-import org.web3j.protocol.core.methods.response.Transaction;
-import org.web3j.protocol.core.methods.response.TransactionReceipt;
-import org.web3j.tx.gas.DefaultGasProvider;
 import org.web3j.utils.Numeric;
+import live.lingting.virtual.currency.Account;
+import live.lingting.virtual.currency.Transaction;
+import live.lingting.virtual.currency.TransferParams;
+import live.lingting.virtual.currency.TransferResult;
+import live.lingting.virtual.currency.contract.Contract;
+import live.lingting.virtual.currency.contract.EtherscanContract;
+import live.lingting.virtual.currency.core.JsonRpcClient;
+import live.lingting.virtual.currency.enums.EtherscanReceiptStatus;
+import live.lingting.virtual.currency.enums.TransactionStatus;
+import live.lingting.virtual.currency.enums.VcPlatform;
+import live.lingting.virtual.currency.etherscan.Block;
+import live.lingting.virtual.currency.etherscan.BlockEnum;
+import live.lingting.virtual.currency.etherscan.EtherscanTransaction;
+import live.lingting.virtual.currency.etherscan.Input;
+import live.lingting.virtual.currency.etherscan.TransactionByHash;
+import live.lingting.virtual.currency.etherscan.TransactionReceipt;
+import live.lingting.virtual.currency.properties.InfuraProperties;
+import live.lingting.virtual.currency.service.VirtualCurrencyService;
+import live.lingting.virtual.currency.util.AbiUtil;
+import live.lingting.virtual.currency.util.EtherscanUtil;
 
 /**
  * @author lingting 2020-09-01 17:16
@@ -68,52 +61,37 @@ public class InfuraServiceImpl implements VirtualCurrencyService {
 	@Getter
 	private static final Map<String, Integer> CONTRACT_DECIMAL_CACHE = new ConcurrentHashMap<>();
 
-	@Getter
-	private final Web3j web3j;
-
 	private final InfuraProperties properties;
+
+	private final JsonRpcClient client;
 
 	public InfuraServiceImpl(InfuraProperties properties) {
 		this.properties = properties;
-		// 使用web3j连接infura客户端
-		web3j = Web3j.build(properties.getHttpService());
+		client = properties.getHttpClient();
 	}
 
 	@Override
-	public Optional<VirtualCurrencyTransaction> getTransactionByHash(String hash) throws Exception {
-		EthTransaction ethTransaction = web3j.ethGetTransactionByHash(hash).send();
+	public Optional<Transaction> getTransactionByHash(String hash) throws Throwable {
+		TransactionByHash byHash = TransactionByHash.of(client, hash);
 
-		Optional<Transaction> optional;
-		// 订单出错
-		if (ethTransaction.hasError()) {
-			log.error("查询eth订单出错: code: {}, message:{}", ethTransaction.getError().getCode(),
-					ethTransaction.getError().getMessage());
-			optional = Optional.empty();
-		}
-		// 订单没出错
-		else {
-			optional = ethTransaction.getTransaction();
-		}
-
-		// 订单信息为空 如果交易还没有被打包，就查询不到交易信息
-		if (!optional.isPresent()) {
+		// 返回值为null 或者 错误码不为null
+		if (byHash == null || byHash.getCode() != null) {
 			return Optional.empty();
 		}
-		Transaction transaction = optional.get();
 
 		// 获取合约代币
-		Contract contract = EtherscanContract.getByHash(transaction.getTo());
+		Contract contract = EtherscanContract.getByHash(byHash.getTo());
 		// 合约地址
-		String contractAddress = contract == null ? StrUtil.EMPTY : contract.getHash();
+		String contractAddress = contract == null ? byHash.getTo() : contract.getHash();
 		// 解析input数据
 		Input input;
 		// 不是使用代币交易，而是直接使用eth交易
-		if (EtherscanUtil.START.equals(transaction.getInput())) {
-			input = new Input().setTo(transaction.getTo()).setValue(new BigDecimal(transaction.getValue()))
+		if (EtherscanUtil.START.equals(byHash.getInput())) {
+			input = new Input().setTo(byHash.getTo()).setValue(new BigDecimal(byHash.getValue()))
 					.setContract(EtherscanContract.ETH);
 		}
 		else {
-			input = EtherscanUtil.resolve(transaction.getInput());
+			input = EtherscanUtil.resolve(byHash.getInput());
 		}
 
 		if (input.getContract() != null) {
@@ -122,28 +100,16 @@ public class InfuraServiceImpl implements VirtualCurrencyService {
 		}
 
 		if (contract == null) {
-			String finalContractAddress = contractAddress;
-			contract = new Contract() {
-				@Override
-				public String getHash() {
-					return finalContractAddress;
-				}
-
-				@Override
-				public Integer getDecimals() {
-					return null;
-				}
-			};
+			contract = AbiUtil.createContract(contractAddress);
 		}
-		VirtualCurrencyTransaction virtualCurrencyTransaction = new VirtualCurrencyTransaction()
 
+		Transaction transaction = new Transaction()
+				// 平台
 				.setVcPlatform(VcPlatform.ETHERSCAN)
-				// 块
-				.setBlock(transaction.getBlockNumber())
 				// 交易hash
-				.setHash(transaction.getHash())
+				.setHash(byHash.getHash())
 				// 转账人
-				.setFrom(StrUtil.isNotBlank(input.getFrom()) ? input.getFrom() : transaction.getFrom())
+				.setFrom(StrUtil.isNotBlank(input.getFrom()) ? input.getFrom() : byHash.getFrom())
 				// 收款人
 				.setTo(input.getTo())
 				// 设置合约类型, input 中的优先
@@ -151,29 +117,38 @@ public class InfuraServiceImpl implements VirtualCurrencyService {
 				// 设置金额
 				.setValue(getNumberByBalanceAndContract(input.getValue(), contract));
 
-		// 获取交易状态
-		Optional<TransactionReceipt> receiptOptional = web3j.ethGetTransactionReceipt(hash).send()
-				.getTransactionReceipt();
-		if (receiptOptional.isPresent()
-				&& receiptOptional.get().getStatus().equals(EtherscanReceiptStatus.SUCCESS.getValue())) {
-			// 交易成功
-			virtualCurrencyTransaction.setStatus(TransactionStatus.SUCCESS);
+		// 交易不存在块
+		if (byHash.getBlockNumber() == null) {
+			// 继续等待
+			return Optional.of(transaction.setStatus(TransactionStatus.WAIT));
 		}
+
+		// 设置块
+		transaction.setBlock(EtherscanUtil.toBigInteger(byHash.getBlockNumber()));
+		// 查询交易凭证
+		TransactionReceipt receipt = TransactionReceipt.of(client, hash);
+		// 返回值为 null
+		if (receipt == null) {
+			transaction.setStatus(TransactionStatus.WAIT);
+		}
+		// 错误码不为null 或 失败
+		else if (receipt.getCode() != null || !EtherscanReceiptStatus.SUCCESS.getValue().equals(receipt.getStatus())) {
+			transaction.setStatus(TransactionStatus.FAIL);
+		}
+		// 成功
 		else {
-			virtualCurrencyTransaction.setStatus(TransactionStatus.FAIL);
+			transaction.setStatus(TransactionStatus.SUCCESS);
 		}
 
 		// 获取交易时间
-		EthBlock block = web3j.ethGetBlockByHash(transaction.getBlockHash(), false).send();
+		Block block = Block.of(client, byHash.getBlockHash());
 
-		// 从平台获取的交易是属于 UTC 时区的
-		return Optional.of(virtualCurrencyTransaction.setTime(
-				LocalDateTime.ofEpochSecond(Convert.toLong(block.getBlock().getTimestamp()), 0, ZoneOffset.UTC)));
+		return Optional.of(transaction.setTime(EtherscanUtil.toBigInteger(block.getTimestamp()).longValue()));
 	}
 
 	@Override
 	@SuppressWarnings("all")
-	public Integer getDecimalsByContract(Contract contract) throws IOException {
+	public Integer getDecimalsByContract(Contract contract) throws Throwable {
 		if (contract == null) {
 			return 0;
 		}
@@ -203,9 +178,10 @@ public class InfuraServiceImpl implements VirtualCurrencyService {
 
 	@Override
 	@SuppressWarnings("all")
-	public BigDecimal getBalanceByAddressAndContract(String address, Contract contract) throws IOException {
+	public BigDecimal getBalanceByAddressAndContract(String address, Contract contract) throws Throwable {
 		if (contract == EtherscanContract.ETH) {
-			return new BigDecimal(web3j.ethGetBalance(address, DefaultBlockParameterName.LATEST).send().getBalance());
+			return EtherscanUtil
+					.toBigDecimal(client.invoke("eth_getBalance", String.class, address, BlockEnum.LATEST.getVal()));
 		}
 		// 执行方法
 		List<Type> list = ethCall("balanceOf", ListUtil.toList(new Address(address)),
@@ -220,7 +196,7 @@ public class InfuraServiceImpl implements VirtualCurrencyService {
 
 	@Override
 	public BigDecimal getNumberByBalanceAndContract(BigDecimal balance, Contract contract, MathContext mathContext)
-			throws IOException {
+			throws Throwable {
 		// 合约为null 返回原值
 		if (contract == null) {
 			return balance;
@@ -233,8 +209,8 @@ public class InfuraServiceImpl implements VirtualCurrencyService {
 	}
 
 	@Override
-	public VirtualCurrencyTransferResult transfer(VirtualCurrencyAccount from, String to, Contract contract,
-			BigDecimal value, TransferParams params) throws IOException {
+	public TransferResult transfer(Account from, String to, Contract contract, BigDecimal value, TransferParams params)
+			throws Throwable {
 		// 合约地址
 		String cHash = contract.getHash();
 		// 获取账户信息
@@ -242,10 +218,18 @@ public class InfuraServiceImpl implements VirtualCurrencyService {
 		// 计算转账数量
 		BigInteger amount = value.multiply(BigDecimal.TEN.pow(getDecimalsByContract(contract))).toBigInteger();
 		// nonce, 由于要保证每笔交易递增, 所以直接使用eth数量
-		BigInteger nonce = web3j.ethGetTransactionCount(from.getAddress(), DefaultBlockParameterName.PENDING).send()
-				.getTransactionCount();
-		BigInteger gasPrice = params.getGasPrice() != null ? params.getGasPrice() : DefaultGasProvider.GAS_PRICE;
-		BigInteger gasLimit = params.getGasLimit() != null ? params.getGasLimit() : DefaultGasProvider.GAS_LIMIT;
+		BigInteger nonce = EtherscanUtil.toBigInteger(
+				client.invoke("eth_getTransactionCount", String.class, from.getAddress(), BlockEnum.PENDING.getVal()));
+		BigInteger gasPrice = params.getGasPrice();
+		BigInteger gasLimit = params.getGasLimit();
+
+		if (gasPrice == null) {
+			gasPrice = EtherscanUtil.toBigInteger(client.invoke("eth_gasPrice", String.class));
+		}
+
+		if (gasLimit == null) {
+			gasLimit = EtherscanUtil.toBigInteger(Block.of(client, BlockEnum.PENDING).getGasLimit());
+		}
 
 		// 交易原始数据
 		RawTransaction rawTransaction;
@@ -261,52 +245,19 @@ public class InfuraServiceImpl implements VirtualCurrencyService {
 					Collections.emptyList());
 			// 编码
 			String fData = FunctionEncoder.encode(function);
-
-			// 未指定 gasLimit , 自动配置
-			if (params.getGasLimit() == null) {
-				// 创建 gas 查询交易
-				org.web3j.protocol.core.methods.request.Transaction callTransaction = org.web3j.protocol.core.methods.request.Transaction
-						.createFunctionCallTransaction(from.getAddress(), nonce, gasPrice, null, cHash, fData);
-				// 发送查询请求
-				EthEstimateGas estimateGas = web3j.ethEstimateGas(callTransaction).send();
-				// 处理返回值
-				if (estimateGas.hasError()) {
-					return new VirtualCurrencyTransferResult()
-							// 失败
-							.setSuccess(false)
-							// 错误信息
-							.setMessage(estimateGas.getError().getMessage())
-							// 错误码
-							.setCode(Convert.toStr(estimateGas.getError().getCode()));
-				}
-				// 获取 gasLimit
-				gasLimit = estimateGas.getAmountUsed();
-			}
-
 			// 获取交易原始数据
 			rawTransaction = RawTransaction.createTransaction(nonce, gasPrice, gasLimit, cHash, fData);
 		}
+
 		// 签名
 		byte[] sign = TransactionEncoder.signMessage(rawTransaction, credentials);
 		// 转16进制
 		String hex = Numeric.toHexString(sign);
+
 		// 广播交易
-		EthSendTransaction transaction = web3j.ethSendRawTransaction(hex).send();
-		// 结果处理
-		if (transaction.hasError()) {
-			return new VirtualCurrencyTransferResult()
-					// 失败
-					.setSuccess(false)
-					// 错误消息
-					.setMessage(transaction.getError().getMessage())
-					// 错误码
-					.setCode(Convert.toStr(transaction.getError().getCode()));
-		}
-		return new VirtualCurrencyTransferResult()
-				// 交易hash
-				.setHash(transaction.getTransactionHash())
-				// 成功
-				.setSuccess(true);
+		String hash = client.invoke("eth_sendRawTransaction", String.class, hex);
+
+		return TransferResult.success(hash);
 	}
 
 	/**
@@ -321,13 +272,13 @@ public class InfuraServiceImpl implements VirtualCurrencyService {
 	 */
 	@SuppressWarnings("all")
 	private List<Type> ethCall(String method, List<Type> input, List<TypeReference<?>> out, String from, String to)
-			throws IOException {
-		return ethCall(method, input, out, from, to, DefaultBlockParameterName.LATEST);
+			throws Throwable {
+		return ethCall(method, input, out, from, to, BlockEnum.LATEST.getVal());
 	}
 
 	@SuppressWarnings("all")
 	private List<Type> ethCall(String method, List<Type> input, List<TypeReference<?>> out, String from, String to,
-			DefaultBlockParameter block) throws IOException {
+			String block) throws Throwable {
 		Assert.notNull(input);
 		Assert.notNull(out);
 		// 编译方法
@@ -335,12 +286,11 @@ public class InfuraServiceImpl implements VirtualCurrencyService {
 		// 编码
 		String data = FunctionEncoder.encode(function);
 		// 创建交易
-		org.web3j.protocol.core.methods.request.Transaction transaction = org.web3j.protocol.core.methods.request.Transaction
-				.createEthCallTransaction(from, to, data);
+		EtherscanTransaction transaction = EtherscanTransaction.of(from, to, data);
 		// 执行
-		EthCall call = web3j.ethCall(transaction, block).send();
+		String call = client.invoke("eth_call", String.class, transaction, BlockEnum.LATEST.getVal());
 		// 解析返回值
-		return FunctionReturnDecoder.decode(call.getValue(), function.getOutputParameters());
+		return FunctionReturnDecoder.decode(call, function.getOutputParameters());
 	}
 
 }

@@ -3,11 +3,11 @@ package live.lingting.virtual.currency.tronscan;
 import cn.hutool.http.HttpRequest;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import live.lingting.virtual.currency.endpoints.Endpoints;
-import live.lingting.virtual.currency.util.JsonUtil;
 import java.math.BigInteger;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import live.lingting.virtual.currency.endpoints.Endpoints;
+import live.lingting.virtual.currency.util.JsonUtil;
 
 /**
  * @author lingting 2020/12/25 18:44

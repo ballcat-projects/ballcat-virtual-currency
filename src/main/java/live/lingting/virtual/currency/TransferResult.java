@@ -8,7 +8,7 @@ import lombok.experimental.Accessors;
  */
 @Data
 @Accessors(chain = true)
-public class VirtualCurrencyTransferResult {
+public class TransferResult {
 
 	/**
 	 * 是否成功
@@ -34,5 +34,13 @@ public class VirtualCurrencyTransferResult {
 	 * 对应异常数据, 可能为 null
 	 */
 	private Exception exception;
+
+	public static TransferResult success(String hash) {
+		return new TransferResult()
+				// 成功
+				.setSuccess(true)
+				// hash
+				.setHash(hash);
+	}
 
 }

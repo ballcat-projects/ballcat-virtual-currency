@@ -2,27 +2,21 @@ package live.lingting.virtual.currency.util;
 
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.StrUtil;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import live.lingting.virtual.currency.AbiMethod;
-import live.lingting.virtual.currency.VirtualCurrencyAccount;
-import live.lingting.virtual.currency.contract.EtherscanContract;
-import live.lingting.virtual.currency.etherscan.Input;
-import live.lingting.virtual.currency.exception.VirtualCurrencyException;
-import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
-import org.web3j.crypto.CipherException;
-import org.web3j.crypto.Credentials;
 import org.web3j.crypto.ECKeyPair;
 import org.web3j.crypto.Keys;
-import org.web3j.crypto.Wallet;
-import org.web3j.crypto.WalletFile;
-import org.web3j.crypto.WalletUtils;
+import live.lingting.virtual.currency.AbiMethod;
+import live.lingting.virtual.currency.Account;
+import live.lingting.virtual.currency.contract.EtherscanContract;
+import live.lingting.virtual.currency.etherscan.Input;
+import live.lingting.virtual.currency.exception.VirtualCurrencyException;
 
 /**
  * @author lingting 2020/12/23 20:14
@@ -41,7 +35,7 @@ public class EtherscanUtil {
 			if (str.startsWith(START + AbiMethod.TRANSFER.getMethodId())) {
 				str = str.substring((START + AbiMethod.TRANSFER.getMethodId()).length());
 			}
-			String[] array = ResolveUtil.stringToArrayBy64(str);
+			String[] array = AbiUtil.stringToArrayBy64(str);
 			input.setTo(array[0]);
 			input.setValue(new BigDecimal(Long.parseLong(array[1], 16)));
 		});
@@ -51,10 +45,10 @@ public class EtherscanUtil {
 			if (str.startsWith(START + AbiMethod.SEND_MULTI_SIG_TOKEN.getMethodId())) {
 				str = str.substring((START + AbiMethod.SEND_MULTI_SIG_TOKEN.getMethodId()).length());
 			}
-			String[] array = ResolveUtil.stringToArrayBy64(str);
+			String[] array = AbiUtil.stringToArrayBy64(str);
 			input.setTo(array[0]);
 			input.setValue(new BigDecimal(Long.parseLong(array[1], 16)));
-			String address = START + ResolveUtil.removePreZero(array[2]);
+			String address = START + AbiUtil.removePreZero(array[2]);
 			input.setContract(EtherscanContract.getByHash(address));
 			input.setContractAddress(address);
 		});
@@ -64,7 +58,7 @@ public class EtherscanUtil {
 			if (str.startsWith(START + AbiMethod.SEND_MULTI_SIG.getMethodId())) {
 				str = str.substring((START + AbiMethod.SEND_MULTI_SIG.getMethodId()).length());
 			}
-			String[] array = ResolveUtil.stringToArrayBy64(str);
+			String[] array = AbiUtil.stringToArrayBy64(str);
 			input.setTo(array[0]);
 			input.setValue(new BigDecimal(Long.parseLong(array[1], 16)));
 		});
@@ -74,7 +68,7 @@ public class EtherscanUtil {
 			if (str.startsWith(START + AbiMethod.TRANSFER_FROM.getMethodId())) {
 				str = str.substring((START + AbiMethod.TRANSFER_FROM.getMethodId()).length());
 			}
-			String[] array = ResolveUtil.stringToArrayBy64(str);
+			String[] array = AbiUtil.stringToArrayBy64(str);
 			input.setFrom(array[0]);
 			input.setTo(array[1]);
 			input.setValue(new BigDecimal(Long.parseLong(array[2], 16)));
@@ -103,29 +97,18 @@ public class EtherscanUtil {
 	 * 创建eth账号
 	 * @author lingting 2020-12-22 17:32
 	 */
-	public static VirtualCurrencyAccount createAccount() throws InvalidAlgorithmParameterException,
-			NoSuchAlgorithmException, NoSuchProviderException, CipherException, JsonProcessingException {
-		return createAccount(StrUtil.EMPTY);
-	}
-
-	/**
-	 * 创建eth账号
-	 * @param password 密码
-	 * @author lingting 2020-12-22 17:32
-	 */
-	public static VirtualCurrencyAccount createAccount(String password) throws InvalidAlgorithmParameterException,
-			NoSuchAlgorithmException, NoSuchProviderException, CipherException, JsonProcessingException {
+	public static Account createAccount()
+			throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException {
 		ECKeyPair keyPair = Keys.createEcKeyPair();
 		// 私钥
 		String privateKey = KeyUtil.keyDeserialization(keyPair.getPrivateKey());
 		// 公钥
 		String publicKey = KeyUtil.keyDeserialization(keyPair.getPublicKey());
-		// 钱包文件
-		WalletFile walletFile = Wallet.createStandard(password, keyPair);
+
 		// 获取钱包地址
-		String address = walletFile.getAddress();
+		String address = addStart(Keys.getAddress(keyPair));
 		// 生成 account 对象
-		return new VirtualCurrencyAccount(address, publicKey, privateKey).setKeystore(JsonUtil.toJson(walletFile));
+		return new Account(address, publicKey, privateKey);
 	}
 
 	/**
@@ -135,7 +118,7 @@ public class EtherscanUtil {
 	 * @return live.lingting.virtual.currency.VirtualCurrencyAccount
 	 * @author lingting 2020-12-23 14:04
 	 */
-	public static VirtualCurrencyAccount getAccountOfKey(String address, String privateKey) {
+	public static Account getAccountOfKey(String address, String privateKey) {
 		return getAccountOfKey(address, null, privateKey);
 	}
 
@@ -147,12 +130,13 @@ public class EtherscanUtil {
 	 * @return live.lingting.virtual.currency.VirtualCurrencyAccount
 	 * @author lingting 2020-12-23 14:05
 	 */
-	public static VirtualCurrencyAccount getAccountOfKey(String address, String publicKey, String privateKey) {
+	public static Account getAccountOfKey(String address, String publicKey, String privateKey) {
+		address = addStart(address);
 		// 地址不能为空
 		Assert.isFalse(StrUtil.isBlank(address));
 		// 私钥不能为空
 		Assert.isFalse(StrUtil.isBlank(privateKey));
-		VirtualCurrencyAccount account = new VirtualCurrencyAccount(address, publicKey, privateKey);
+		Account account = new Account(address, publicKey, privateKey);
 		// 公钥不存在
 		if (StrUtil.isBlank(publicKey)) {
 			ECKeyPair keyPair = ECKeyPair.create(KeyUtil.keySerialization(privateKey));
@@ -164,30 +148,26 @@ public class EtherscanUtil {
 		return account;
 	}
 
-	/**
-	 * 根据 keystore文件内容获取账号
-	 * @param address 地址
-	 * @param password 密码. 生成keystore时的密码
-	 * @param ketStore keystore 内容
-	 * @return live.lingting.virtual.currency.VirtualCurrencyAccount
-	 * @author lingting 2020-12-23 14:05
-	 */
-	public static VirtualCurrencyAccount getAccountOfKeystore(String address, String password, String ketStore)
-			throws IOException, CipherException, VirtualCurrencyException {
-		Credentials credentials = WalletUtils.loadJsonCredentials(password, ketStore);
-		if (!address.equals(credentials.getAddress())) {
-			throw new VirtualCurrencyException("地址错误!");
+	public static BigInteger toBigInteger(String str) {
+		return new BigInteger(removeStart(str), 16);
+	}
+
+	public static BigDecimal toBigDecimal(String str) {
+		return new BigDecimal(toBigInteger(str));
+	}
+
+	public static String removeStart(String str) {
+		if (str.startsWith(START)) {
+			str = str.substring(START.length());
 		}
-		ECKeyPair keyPair = credentials.getEcKeyPair();
-		return new VirtualCurrencyAccount()
-				// 地址
-				.setAddress(address)
-				// 私钥
-				.setPrivateKey(KeyUtil.keyDeserialization(keyPair.getPrivateKey()))
-				// 公钥
-				.setPublicKey(KeyUtil.keyDeserialization(keyPair.getPublicKey()))
-				// keystore
-				.setKeystore(ketStore);
+		return str;
+	}
+
+	public static String addStart(String str) {
+		if (!str.startsWith(START)) {
+			str = START + str;
+		}
+		return str;
 	}
 
 }
