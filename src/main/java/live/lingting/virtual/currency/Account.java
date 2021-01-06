@@ -12,7 +12,7 @@ import lombok.experimental.Accessors;
 @Data
 @Accessors(chain = true)
 @NoArgsConstructor
-public class VirtualCurrencyAccount {
+public class Account {
 
 	/**
 	 * 地址
@@ -34,7 +34,7 @@ public class VirtualCurrencyAccount {
 	 */
 	private String keystore;
 
-	public VirtualCurrencyAccount(String address, String publicKey, String privateKey) {
+	public Account(String address, String publicKey, String privateKey) {
 		this.address = address;
 		this.publicKey = publicKey;
 		this.privateKey = privateKey;

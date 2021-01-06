@@ -3,10 +3,19 @@ package live.lingting.virtual.currency.service.impl;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.thread.ThreadUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import java.math.BigDecimal;
+import java.math.MathContext;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import live.lingting.virtual.currency.Account;
+import live.lingting.virtual.currency.Transaction;
 import live.lingting.virtual.currency.TransferParams;
-import live.lingting.virtual.currency.VirtualCurrencyAccount;
-import live.lingting.virtual.currency.VirtualCurrencyTransaction;
-import live.lingting.virtual.currency.VirtualCurrencyTransferResult;
+import live.lingting.virtual.currency.TransferResult;
 import live.lingting.virtual.currency.contract.Contract;
 import live.lingting.virtual.currency.contract.OmniContract;
 import live.lingting.virtual.currency.endpoints.Endpoints;
@@ -18,15 +27,7 @@ import live.lingting.virtual.currency.omni.TokenHistory;
 import live.lingting.virtual.currency.omni.TransactionByHash;
 import live.lingting.virtual.currency.properties.OmniProperties;
 import live.lingting.virtual.currency.service.VirtualCurrencyService;
-import java.math.BigDecimal;
-import java.math.MathContext;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import live.lingting.virtual.currency.util.AbiUtil;
 
 /**
  * @author lingting 2020-09-01 17:16
@@ -61,7 +62,7 @@ public class OmniServiceImpl implements VirtualCurrencyService {
 	private final OmniProperties properties;
 
 	@Override
-	public Optional<VirtualCurrencyTransaction> getTransactionByHash(String hash) throws JsonProcessingException {
+	public Optional<Transaction> getTransactionByHash(String hash) throws JsonProcessingException {
 		TransactionByHash response = request(STATIC_TRANSACTION_HASH, properties.getEndpoints(), hash);
 		// 交易查询不到 或者 valid 为 false
 		if (response.getAmount() == null || !response.getValid()) {
@@ -69,19 +70,9 @@ public class OmniServiceImpl implements VirtualCurrencyService {
 		}
 
 		OmniContract contract = OmniContract.getById(response.getPropertyId());
-		VirtualCurrencyTransaction transaction = new VirtualCurrencyTransaction()
+		Transaction transaction = new Transaction()
 
-				.setContract(contract != null ? contract : new Contract() {
-					@Override
-					public String getHash() {
-						return response.getPropertyId().toString();
-					}
-
-					@Override
-					public Integer getDecimals() {
-						return null;
-					}
-				})
+				.setContract(contract != null ? contract : AbiUtil.createContract(response.getPropertyId().toString()))
 
 				.setBlock(response.getBlock())
 
@@ -156,8 +147,8 @@ public class OmniServiceImpl implements VirtualCurrencyService {
 	}
 
 	@Override
-	public VirtualCurrencyTransferResult transfer(VirtualCurrencyAccount from, String to, Contract contract,
-			BigDecimal value, TransferParams params) {
+	public TransferResult transfer(Account from, String to, Contract contract, BigDecimal value,
+			TransferParams params) {
 		return null;
 	}
 

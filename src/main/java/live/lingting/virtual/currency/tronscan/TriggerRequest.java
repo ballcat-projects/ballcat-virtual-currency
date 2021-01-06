@@ -4,7 +4,14 @@ import cn.hutool.http.HttpRequest;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import live.lingting.virtual.currency.VirtualCurrencyAccount;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.Accessors;
+import live.lingting.virtual.currency.Account;
 import live.lingting.virtual.currency.contract.Contract;
 import live.lingting.virtual.currency.endpoints.Endpoints;
 import live.lingting.virtual.currency.tronscan.Transaction.RawData;
@@ -16,13 +23,6 @@ import live.lingting.virtual.currency.tronscan.TriggerResult.TrxTransferGenerate
 import live.lingting.virtual.currency.util.AbiUtil;
 import live.lingting.virtual.currency.util.JsonUtil;
 import live.lingting.virtual.currency.util.TronscanUtil;
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.List;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.experimental.Accessors;
 
 /**
  * 使用请参考 <a href=
@@ -138,9 +138,8 @@ public class TriggerRequest<T extends TriggerResult> {
 	 * @param callValue 支付给合约的费用
 	 * @author lingting 2020-12-25 20:50
 	 */
-	public static TriggerRequest<Trc20TransferGenerateResult> trc20TransferGenerate(Endpoints endpoints,
-			VirtualCurrencyAccount from, String to, BigInteger amount, Contract contract, BigInteger feeLimit,
-			BigInteger callValue) {
+	public static TriggerRequest<Trc20TransferGenerateResult> trc20TransferGenerate(Endpoints endpoints, Account from,
+			String to, BigInteger amount, Contract contract, BigInteger feeLimit, BigInteger callValue) {
 
 		return new TriggerRequest<Trc20TransferGenerateResult>()
 				// 目标
@@ -200,8 +199,8 @@ public class TriggerRequest<T extends TriggerResult> {
 	 * @param contract 触发合约
 	 * @author lingting 2020-12-25 20:50
 	 */
-	public static TriggerRequest<Trc10TransferGenerateResult> trc10TransferGenerate(Endpoints endpoints,
-			VirtualCurrencyAccount from, String to, BigInteger amount, Contract contract) {
+	public static TriggerRequest<Trc10TransferGenerateResult> trc10TransferGenerate(Endpoints endpoints, Account from,
+			String to, BigInteger amount, Contract contract) {
 
 		return new TriggerRequest<Trc10TransferGenerateResult>()
 				// 目标
@@ -226,8 +225,8 @@ public class TriggerRequest<T extends TriggerResult> {
 	 * @param contract 触发合约
 	 * @author lingting 2020-12-25 20:50
 	 */
-	public static TriggerRequest<TrxTransferGenerateResult> trxTransferGenerate(Endpoints endpoints,
-			VirtualCurrencyAccount from, String to, BigInteger amount, Contract contract) {
+	public static TriggerRequest<TrxTransferGenerateResult> trxTransferGenerate(Endpoints endpoints, Account from,
+			String to, BigInteger amount, Contract contract) {
 
 		return new TriggerRequest<TrxTransferGenerateResult>()
 				// 目标

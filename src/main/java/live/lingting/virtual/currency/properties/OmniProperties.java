@@ -1,9 +1,9 @@
 package live.lingting.virtual.currency.properties;
 
-import live.lingting.virtual.currency.endpoints.Endpoints;
 import java.util.function.Supplier;
 import lombok.Data;
 import lombok.experimental.Accessors;
+import live.lingting.virtual.currency.endpoints.Endpoints;
 
 /**
  * omni平台配置

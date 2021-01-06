@@ -1,9 +1,9 @@
 package live.lingting.virtual.currency.enums;
 
-import live.lingting.virtual.currency.properties.TronscanProperties;
 import lombok.AllArgsConstructor;
 import live.lingting.virtual.currency.properties.InfuraProperties;
 import live.lingting.virtual.currency.properties.OmniProperties;
+import live.lingting.virtual.currency.properties.TronscanProperties;
 
 /**
  * api 接口 平台

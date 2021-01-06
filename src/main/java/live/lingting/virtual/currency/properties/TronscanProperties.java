@@ -1,8 +1,8 @@
 package live.lingting.virtual.currency.properties;
 
-import live.lingting.virtual.currency.endpoints.Endpoints;
 import lombok.Data;
 import lombok.experimental.Accessors;
+import live.lingting.virtual.currency.endpoints.Endpoints;
 
 /**
  * tronscan 平台配置

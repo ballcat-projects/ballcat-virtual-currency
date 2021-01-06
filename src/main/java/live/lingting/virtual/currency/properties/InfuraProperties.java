@@ -1,10 +1,11 @@
 package live.lingting.virtual.currency.properties;
 
 import cn.hutool.core.util.StrUtil;
-import live.lingting.virtual.currency.endpoints.Endpoints;
 import lombok.Data;
+import lombok.SneakyThrows;
 import lombok.experimental.Accessors;
-import org.web3j.protocol.http.HttpService;
+import live.lingting.virtual.currency.core.JsonRpcClient;
+import live.lingting.virtual.currency.endpoints.Endpoints;
 
 /**
  * infura平台配置
@@ -35,12 +36,13 @@ public class InfuraProperties implements PlatformProperties {
 	 */
 	private String url;
 
-	public HttpService getHttpService() {
+	@SneakyThrows
+	public JsonRpcClient getHttpClient() {
 		// 是否自定义 web3j url
 		if (StrUtil.isNotBlank(url)) {
-			return new HttpService(url);
+			return JsonRpcClient.of(url);
 		}
-		return new HttpService(getEndpoints().getHttpUrl(getProjectId()));
+		return JsonRpcClient.of(getEndpoints().getHttpUrl(getProjectId()));
 	}
 
 	@Override

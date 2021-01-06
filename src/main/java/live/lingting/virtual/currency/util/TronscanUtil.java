@@ -1,16 +1,9 @@
 package live.lingting.virtual.currency.util;
 
+import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.ArrayUtil;
+import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import live.lingting.virtual.currency.AbiMethod;
-import live.lingting.virtual.currency.VirtualCurrencyAccount;
-import live.lingting.virtual.currency.contract.Contract;
-import live.lingting.virtual.currency.contract.TronscanContract;
-import live.lingting.virtual.currency.endpoints.Endpoints;
-import live.lingting.virtual.currency.exception.VirtualCurrencyException;
-import live.lingting.virtual.currency.tronscan.Trc20Data;
-import live.lingting.virtual.currency.tronscan.TriggerRequest;
-import live.lingting.virtual.currency.tronscan.TriggerResult;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.security.MessageDigest;
@@ -25,6 +18,15 @@ import org.bouncycastle.jcajce.provider.digest.Keccak;
 import org.bouncycastle.util.encoders.Hex;
 import org.tron.tronj.crypto.SECP256K1;
 import org.tron.tronj.utils.Base58Check;
+import live.lingting.virtual.currency.AbiMethod;
+import live.lingting.virtual.currency.Account;
+import live.lingting.virtual.currency.contract.Contract;
+import live.lingting.virtual.currency.contract.TronscanContract;
+import live.lingting.virtual.currency.endpoints.Endpoints;
+import live.lingting.virtual.currency.exception.VirtualCurrencyException;
+import live.lingting.virtual.currency.tronscan.Trc20Data;
+import live.lingting.virtual.currency.tronscan.TriggerRequest;
+import live.lingting.virtual.currency.tronscan.TriggerResult;
 
 /**
  * @author lingting 2020/12/23 20:37
@@ -44,11 +46,11 @@ public class TronscanUtil {
 			if (str.startsWith(AbiMethod.TRANSFER.getMethodId())) {
 				str = str.substring(AbiMethod.TRANSFER.getMethodId().length());
 			}
-			String[] array = ResolveUtil.stringToArrayBy64(str);
+			String[] array = AbiUtil.stringToArrayBy64(str);
 			// 收款人
 			String to = decodeAddressParam(array[0]);
 			// 数量
-			BigDecimal amount = new BigDecimal(new BigInteger(ResolveUtil.removePreZero(array[1]), 16));
+			BigDecimal amount = new BigDecimal(new BigInteger(AbiUtil.removePreZero(array[1]), 16));
 			return new Trc20Data().setAmount(amount).setTo(to);
 		});
 
@@ -56,8 +58,8 @@ public class TronscanUtil {
 			if (str.startsWith(AbiMethod.SEND_MULTI_SIG_TOKEN.getMethodId())) {
 				str = str.substring((AbiMethod.SEND_MULTI_SIG_TOKEN.getMethodId()).length());
 			}
-			String[] array = ResolveUtil.stringToArrayBy64(str);
-			String contractHash = ResolveUtil.removePreZero(array[2]);
+			String[] array = AbiUtil.stringToArrayBy64(str);
+			String contractHash = AbiUtil.removePreZero(array[2]);
 
 			Contract contract = TronscanContract.getByHash(contractHash);
 			if (contract == null) {
@@ -86,7 +88,7 @@ public class TronscanUtil {
 			if (str.startsWith(AbiMethod.SEND_MULTI_SIG.getMethodId())) {
 				str = str.substring((AbiMethod.SEND_MULTI_SIG.getMethodId()).length());
 			}
-			String[] array = ResolveUtil.stringToArrayBy64(str);
+			String[] array = AbiUtil.stringToArrayBy64(str);
 			return new Trc20Data().setTo(decodeAddressParam(array[0]))
 					.setAmount(new BigDecimal(Long.parseLong(array[1], 16)));
 		});
@@ -95,7 +97,7 @@ public class TronscanUtil {
 			if (str.startsWith(AbiMethod.TRANSFER_FROM.getMethodId())) {
 				str = str.substring((AbiMethod.TRANSFER_FROM.getMethodId()).length());
 			}
-			String[] array = ResolveUtil.stringToArrayBy64(str);
+			String[] array = AbiUtil.stringToArrayBy64(str);
 			return new Trc20Data()
 					// 转账人
 					.setFrom(decodeAddressParam(array[0]))
@@ -127,7 +129,7 @@ public class TronscanUtil {
 	 * @author lingting 2020-12-25 17:00
 	 */
 	public static String decodeAddressParam(String param) {
-		String str = ResolveUtil.removePreZero(param);
+		String str = AbiUtil.removePreZero(param);
 		if (!str.startsWith(HEX_ADDRESS_PREFIX)) {
 			str = HEX_ADDRESS_PREFIX + str;
 		}
@@ -171,7 +173,7 @@ public class TronscanUtil {
 	 * 新增账号
 	 * @author lingting 2020-12-25 20:35
 	 */
-	public static VirtualCurrencyAccount create() {
+	public static Account create() {
 		// 生成密钥对
 		SECP256K1.KeyPair keyPair = SECP256K1.KeyPair.generate();
 
@@ -195,7 +197,7 @@ public class TronscanUtil {
 		System.arraycopy(hash20, 0, initAddress, 1, 20);
 		// 生成地址
 		String address = Base58Check.bytesToBase58(initAddress);
-		return new VirtualCurrencyAccount(address, pubKey, priKey);
+		return new Account(address, pubKey, priKey);
 	}
 
 	/**
@@ -205,7 +207,7 @@ public class TronscanUtil {
 	 * @return live.lingting.virtual.currency.VirtualCurrencyAccount
 	 * @author lingting 2020-12-23 14:04
 	 */
-	public static VirtualCurrencyAccount getAccountOfKey(String address, String privateKey) {
+	public static Account getAccountOfKey(String address, String privateKey) {
 		return getAccountOfKey(address, null, privateKey);
 	}
 
@@ -217,8 +219,20 @@ public class TronscanUtil {
 	 * @return live.lingting.virtual.currency.VirtualCurrencyAccount
 	 * @author lingting 2020-12-23 14:05
 	 */
-	public static VirtualCurrencyAccount getAccountOfKey(String address, String publicKey, String privateKey) {
-		return EtherscanUtil.getAccountOfKey(address, publicKey, privateKey);
+	public static Account getAccountOfKey(String address, String publicKey, String privateKey) {
+		// 地址不能为空
+		Assert.isFalse(StrUtil.isBlank(address));
+		// 私钥不能为空
+		Assert.isFalse(StrUtil.isBlank(privateKey));
+		// 公钥不存在
+		if (StrUtil.isBlank(publicKey)) {
+			SECP256K1.KeyPair keyPair = SECP256K1.KeyPair.create(SECP256K1.PrivateKey.create(privateKey));
+
+			// 计算公钥
+			publicKey = keyPair.getPublicKey().toString().substring(2);
+		}
+
+		return new Account(address, publicKey, privateKey);
 	}
 
 	/**

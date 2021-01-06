@@ -1,9 +1,9 @@
 package live.lingting.virtual.currency.tronscan;
 
-import live.lingting.virtual.currency.AbiMethod;
-import live.lingting.virtual.currency.contract.Contract;
 import java.math.BigDecimal;
 import lombok.experimental.Accessors;
+import live.lingting.virtual.currency.AbiMethod;
+import live.lingting.virtual.currency.contract.Contract;
 
 /**
  * @author lingting 2020/12/25 16:06

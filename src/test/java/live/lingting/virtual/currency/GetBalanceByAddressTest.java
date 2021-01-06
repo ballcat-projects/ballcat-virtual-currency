@@ -1,5 +1,9 @@
 package live.lingting.virtual.currency;
 
+import java.math.BigDecimal;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Test;
 import live.lingting.virtual.currency.contract.EtherscanContract;
 import live.lingting.virtual.currency.contract.OmniContract;
 import live.lingting.virtual.currency.contract.TronscanContract;
@@ -13,10 +17,6 @@ import live.lingting.virtual.currency.service.VirtualCurrencyService;
 import live.lingting.virtual.currency.service.impl.InfuraServiceImpl;
 import live.lingting.virtual.currency.service.impl.OmniServiceImpl;
 import live.lingting.virtual.currency.service.impl.TronscanServiceImpl;
-import java.math.BigDecimal;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.Test;
 
 /**
  * @author lingting 2020-09-01 19:56
@@ -32,9 +32,9 @@ public class GetBalanceByAddressTest {
 
 		service = new InfuraServiceImpl(new InfuraProperties().setEndpoints(InfuraEndpoints.MAINNET)
 				.setProjectId("b6066b4cfce54e7384ea38d52f9260ac"));
-		String address = "0xb501E624f65683Ab6ceA24d3Eb82FB1187d690aD";
+		String address = "0x3f5ce5fbfe3e9af3971dd833d26ba9b5c936f0be";
 
-		BigDecimal decimal = service.getNumberByAddressAndContract(address, EtherscanContract.ETH);
+		BigDecimal decimal = service.getNumberByAddressAndContract(address, EtherscanContract.USDT);
 		System.out.println(decimal);
 	}
 
@@ -44,6 +44,8 @@ public class GetBalanceByAddressTest {
 		service = new OmniServiceImpl(new OmniProperties().setEndpoints(OmniEndpoints.MAINNET));
 		BigDecimal decimal = service.getNumberByAddressAndContract("1KN4mnqdUhtERmrZdfke1VUkBQUMcicNHE",
 				OmniContract.MAID_SAFE_COIN);
+		System.out.println(decimal);
+		decimal = service.getNumberByAddressAndContract("35n8BXVSxyZYB1XzW2ttwQ2GXA2wAxBxqt", OmniContract.USDT);
 		System.out.println(decimal);
 	}
 

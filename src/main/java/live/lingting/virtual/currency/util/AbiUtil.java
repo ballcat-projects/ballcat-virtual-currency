@@ -3,11 +3,32 @@ package live.lingting.virtual.currency.util;
 import cn.hutool.core.util.StrUtil;
 import java.math.BigInteger;
 import org.bouncycastle.util.encoders.Hex;
+import live.lingting.virtual.currency.contract.Contract;
 
 /**
  * @author lingting 2020/12/25 22:07
  */
 public class AbiUtil {
+
+	public static final String REMOVE_ZERO_REG_STR = "^(0+)";
+
+	/**
+	 * 字符串以 64 长度分割
+	 *
+	 * @author lingting 2020-11-17 21:40
+	 */
+	public static String[] stringToArrayBy64(String str) {
+		return StrUtil.cut(str, 64);
+	}
+
+	/**
+	 * 移除字符串前的0
+	 *
+	 * @author lingting 2020-11-17 21:44
+	 */
+	public static String removePreZero(String str) {
+		return str.replaceAll(REMOVE_ZERO_REG_STR, "");
+	}
 
 	/**
 	 * 在字符前补0, 使其长度变为64位
@@ -24,6 +45,28 @@ public class AbiUtil {
 	 */
 	public static String encodeUint256Params(BigInteger uint) {
 		return addZeroTo64InPre(Hex.toHexString(uint.toByteArray()));
+	}
+
+	/**
+	 * 创建合约
+	 * @author lingting 2021-01-05 19:48
+	 */
+	public static Contract createContract(String hash) {
+		return createContract(hash, null);
+	}
+
+	public static Contract createContract(String hash, Integer decimals) {
+		return new Contract() {
+			@Override
+			public String getHash() {
+				return hash;
+			}
+
+			@Override
+			public Integer getDecimals() {
+				return decimals;
+			}
+		};
 	}
 
 }
