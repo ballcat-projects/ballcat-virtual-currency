@@ -59,7 +59,14 @@ public class TronscanServiceImpl implements VirtualCurrencyService {
 
 	public TronscanServiceImpl(TronscanProperties properties) {
 		this.properties = properties;
-		this.endpoints = properties.getEndpoints();
+		// 自定义url
+		if (StrUtil.isNotBlank(properties.getUrl())) {
+			endpoints = properties::getUrl;
+		}
+		// 未自定义url
+		else {
+			this.endpoints = properties.getEndpoints();
+		}
 	}
 
 	@Override

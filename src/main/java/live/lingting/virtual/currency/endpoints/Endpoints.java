@@ -34,20 +34,4 @@ public interface Endpoints {
 		return pre + suffix;
 	}
 
-	/**
-	 * 生成 wss 连接
-	 * @param suffix 拼接后面的字符串
-	 * @return 返回 wss 连接
-	 */
-	default String getWssUrl(String suffix) {
-		String pre = getHttp();
-		if (!pre.endsWith(FLAG)) {
-			pre += FLAG;
-		}
-		if (suffix.startsWith(FLAG)) {
-			suffix = suffix.substring(1);
-		}
-		return pre + suffix;
-	}
-
 }

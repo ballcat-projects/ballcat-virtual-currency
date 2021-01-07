@@ -31,6 +31,8 @@ public class InfuraProperties implements PlatformProperties {
 	 */
 	private Endpoints endpoints;
 
+	private Integer confirmationsMin = 0;
+
 	/**
 	 * 自定义url, 可为空
 	 */
@@ -43,11 +45,6 @@ public class InfuraProperties implements PlatformProperties {
 			return JsonRpcClient.of(url);
 		}
 		return JsonRpcClient.of(getEndpoints().getHttpUrl(getProjectId()));
-	}
-
-	@Override
-	public Integer getConfirmationsMin() {
-		return 0;
 	}
 
 }

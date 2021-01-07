@@ -12,7 +12,7 @@ import live.lingting.virtual.currency.properties.OmniProperties;
 import live.lingting.virtual.currency.properties.TronscanProperties;
 import live.lingting.virtual.currency.service.VirtualCurrencyService;
 import live.lingting.virtual.currency.service.impl.InfuraServiceImpl;
-import live.lingting.virtual.currency.service.impl.OmniServiceImpl;
+import live.lingting.virtual.currency.service.impl.OmniHttpServiceImpl;
 import live.lingting.virtual.currency.service.impl.TronscanServiceImpl;
 
 /**
@@ -50,7 +50,7 @@ public class GetTransactionByHashTest {
 	@Test
 	@SneakyThrows
 	public void btcTest() {
-		service = new OmniServiceImpl(new OmniProperties().setEndpoints(OmniEndpoints.MAINNET));
+		service = new OmniHttpServiceImpl(new OmniProperties().setEndpoints(OmniEndpoints.MAINNET));
 		Optional<Transaction> optional = service
 				.getTransactionByHash("3597e8f38ed307a9bf8ff7dab4b6769e6d88067ec95f3e785e404f0b86ff7f74")
 		// .getTransactionByHash("e13e475a613d96f655e6f3c08d5a51a55a5f9d7287e34c60c45c892be39b19b7")

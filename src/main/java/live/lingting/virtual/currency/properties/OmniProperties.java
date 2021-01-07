@@ -29,18 +29,11 @@ public class OmniProperties implements PlatformProperties {
 	 */
 	private Supplier<Boolean> unlock = () -> true;
 
-	/**
-	 * 拼接 根据hash查询交易信息的url
-	 *
-	 * @author lingting 2020-09-02 17:11
-	 */
-	public String getTransactionUrlByHash(String hash) {
-		return endpoints.getHttpUrl("v1/transaction/tx/") + hash;
-	}
+	private Integer confirmationsMin = 6;
 
-	@Override
-	public Integer getConfirmationsMin() {
-		return 6;
-	}
+	/**
+	 * 自定义url, 可为空
+	 */
+	private String url;
 
 }

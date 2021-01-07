@@ -2,12 +2,29 @@ package live.lingting.virtual.currency;
 
 import static live.lingting.virtual.currency.contract.TronscanContract.TRX;
 
+import cn.hutool.core.codec.Base64;
 import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.bitcoinj.core.Address;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionInput;
+import org.bitcoinj.core.TransactionOutput;
+import org.bitcoinj.crypto.TransactionSignature;
+import org.bitcoinj.params.TestNet3Params;
+import org.bitcoinj.script.Script;
+import org.bitcoinj.wallet.KeyBag;
+import org.bitcoinj.wallet.RedeemData;
+import org.bouncycastle.util.encoders.Hex;
 import org.junit.Test;
 import live.lingting.virtual.currency.contract.Contract;
 import live.lingting.virtual.currency.contract.EtherscanContract;
+import live.lingting.virtual.currency.core.JsonRpcClient;
 import live.lingting.virtual.currency.endpoints.InfuraEndpoints;
 import live.lingting.virtual.currency.endpoints.OmniEndpoints;
 import live.lingting.virtual.currency.endpoints.TronscanEndpoints;
@@ -16,10 +33,12 @@ import live.lingting.virtual.currency.properties.OmniProperties;
 import live.lingting.virtual.currency.properties.TronscanProperties;
 import live.lingting.virtual.currency.service.VirtualCurrencyService;
 import live.lingting.virtual.currency.service.impl.InfuraServiceImpl;
-import live.lingting.virtual.currency.service.impl.OmniServiceImpl;
+import live.lingting.virtual.currency.service.impl.OmniHttpServiceImpl;
 import live.lingting.virtual.currency.service.impl.TronscanServiceImpl;
 import live.lingting.virtual.currency.util.AbiUtil;
+import live.lingting.virtual.currency.util.BitcoinUtil;
 import live.lingting.virtual.currency.util.EtherscanUtil;
+import live.lingting.virtual.currency.util.JsonUtil;
 import live.lingting.virtual.currency.util.TronscanUtil;
 
 /**
@@ -83,7 +102,137 @@ public class TransferTest {
 	@Test
 	@SneakyThrows
 	public void btcTest() {
-		service = new OmniServiceImpl(new OmniProperties().setEndpoints(OmniEndpoints.MAINNET));
+		service = new OmniHttpServiceImpl(new OmniProperties().setEndpoints(OmniEndpoints.MAINNET));
+
+		TestNet3Params np = TestNet3Params.get();
+
+		String a1 = "miBEA6o6nZcaLZebR1dsDv4AMHRwJk1mbi";
+		String puk1 = "03a5be350852bb09e24edc83f8e02070a74597a8b775af46e8efbef394ae4fa98e";
+		String prk1 = "27b5bf6853c1730c20c152d67d9f4f85b20b674267f621bd1c88d177b2d56d83";
+		Account ac1 = BitcoinUtil.getAccountOfKey(a1, prk1);
+		ECKey ek1 = ECKey.fromPrivate(Hex.decode(prk1));
+
+		// BigDecimal b1 = service.getNumberByAddressAndContract(a1, OmniContract.BTC);
+		// System.out.println("a1 BTC余额: " + b1.toPlainString());
+
+		// 这个地址是给我发测试币的地址, 直接转回去
+		String a2 = "2MsX74Kyreue6qg8okRtjhnd2yz8zAnLcNi";
+		// 0.01232216
+		String a3 = "mv4rnyY3Su5gjcDNzbMLKBQkBicCtHUtFB";
+
+		BigDecimal value = new BigDecimal("0.000001");
+		System.out.println("a1 向 a2 转 " + value.toPlainString() + " btc");
+
+		Map<String, String> headers = new HashMap<>();
+
+		headers.put("Authorization", "Basic " + Base64.encode("omnicorerpc" + ":" + "5hMTZI9iBGFqKxsWfOUF"));
+
+		JsonRpcClient client = JsonRpcClient.of("http://192.168.1.206:18332", headers);
+		Object omni_getinfo = client.invokeObj("omni_getinfo");
+		System.out.println(omni_getinfo);
+		client.invokeObj("omni_getbalance", a1, 1);
+		client.invokeObj("omni_listproperties");
+		client.invokeObj("omni_listproperties");
+		client.invokeObj("listunspent", 1, 999999999, new String[] { a1 });
+		client.invokeObj("omni_listblocktransactions", 279007);
+		client.invokeObj("omni_listtransactions");
+
+		List<Map<String, Object>> list22 = (List<Map<String, Object>>) client.invokeObj("omni_listproperties");
+		for (Map<String, Object> m : list22) {
+			if (m.get("propertyid").equals(1) || m.get("propertyid").equals(76)) {
+				System.out.println("---------------------------");
+				System.out.println(JsonUtil.toJson(m));
+				System.out.println("===========================");
+				// 查数据属性
+				Object invoke = client.invokeObj("omni_getproperty", m.get("propertyid"));
+				System.out.println(JsonUtil.toJson(invoke));
+			}
+		}
+		System.out.println("---------------------------");
+
+		/*
+		 * 返回值 000000000000004c0000000005f5e100
+		 *
+		 * 长度 32
+		 *
+		 * array[0] -> 长度: 16 ; 意义: 第一个参数(属性id) 转 16进制 补 0 到16位
+		 *
+		 * array[1] -> 长度: 16 ; 意义: 第二个参数 * 属性的精度 转 16进制 补 0 到16位
+		 */
+		Object simplesend = client.invokeObj("omni_createpayload_simplesend", 76, "1");
+		/*
+		 * btc 转账
+		 */
+
+		value = new BigDecimal("0.001");
+		// 获取btc 余额 单位 个
+		BigDecimal over = new BigDecimal("0.01332216");
+		// 1 聪 = 0.00000001 BTC
+		// 1 BTC = 10^8 聪
+		// 余额转为 聪
+		Coin overCoin = Coin.valueOf(over.multiply(BigDecimal.TEN.pow(8)).longValue());
+		// 转账数量 聪
+		Coin valueCoin = Coin.valueOf(value.multiply(BigDecimal.TEN.pow(8)).longValue());
+
+		// 手续费
+		BigDecimal fee = new BigDecimal("0.000124");
+		Coin feeCoin = Coin.valueOf(fee.multiply(BigDecimal.TEN.pow(8)).longValue());
+
+		// 收款人
+		String to = a2;
+		// 转账人
+		Account from = ac1;
+
+		KeyBag keyBag = new KeyBag() {
+
+			@Override
+			public ECKey findKeyFromPubKeyHash(byte[] pubKeyHash, Script.ScriptType scriptType) {
+				return ek1;
+			}
+
+			@Override
+			public ECKey findKeyFromPubKey(byte[] pubKey) {
+				return ek1;
+			}
+
+			@Override
+			public RedeemData findRedeemDataFromScriptHash(byte[] scriptHash) {
+				return null;
+			}
+		};
+
+		Transaction transaction = new Transaction(np);
+
+		// 输出1 , 转账
+		TransactionOutput ou1 = new TransactionOutput(np, transaction, valueCoin, Address.fromString(np, to));
+		transaction.addOutput(ou1);
+
+		// 输出2 , 找零
+
+		// 输入1
+		if (fee.compareTo(BigDecimal.ZERO) <= 0) {
+			// 不支付手续费
+			// transaction.addSignedInput(transaction.getOutput(0), ecKey);
+			transaction.addInput(transaction.getOutput(0));
+			// transaction.getOutput(0).getOutPointFor()
+		}
+		else {
+			TransactionInput in1 = new TransactionInput(np, transaction, new byte[0], ou1.getOutPointFor(),
+					feeCoin.add(valueCoin));
+			transaction.addInput(in1);
+		}
+
+		TransactionInput in = transaction.getInput(0);
+
+		Script scriptPubKey = in.getConnectedOutput().getScriptPubKey();
+
+		RedeemData redeemData = in.getConnectedRedeemData(keyBag);
+
+		byte[] script = redeemData.redeemScript.getProgram();
+
+		TransactionSignature signature = transaction.calculateSignature(0, ek1, script, Transaction.SigHash.ALL, false);
+
+		System.out.println(client);
 	}
 
 	@Test
