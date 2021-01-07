@@ -15,7 +15,6 @@ import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutput;
-import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.wallet.KeyBag;
@@ -24,14 +23,16 @@ import org.bouncycastle.util.encoders.Hex;
 import org.junit.Test;
 import live.lingting.virtual.currency.contract.Contract;
 import live.lingting.virtual.currency.contract.EtherscanContract;
+import live.lingting.virtual.currency.contract.OmniContract;
 import live.lingting.virtual.currency.core.JsonRpcClient;
+import live.lingting.virtual.currency.endpoints.BitcoinEndpoints;
 import live.lingting.virtual.currency.endpoints.InfuraEndpoints;
 import live.lingting.virtual.currency.endpoints.OmniEndpoints;
 import live.lingting.virtual.currency.endpoints.TronscanEndpoints;
 import live.lingting.virtual.currency.properties.InfuraProperties;
 import live.lingting.virtual.currency.properties.OmniProperties;
 import live.lingting.virtual.currency.properties.TronscanProperties;
-import live.lingting.virtual.currency.service.VirtualCurrencyService;
+import live.lingting.virtual.currency.service.PlatformService;
 import live.lingting.virtual.currency.service.impl.InfuraServiceImpl;
 import live.lingting.virtual.currency.service.impl.OmniHttpServiceImpl;
 import live.lingting.virtual.currency.service.impl.TronscanServiceImpl;
@@ -47,7 +48,7 @@ import live.lingting.virtual.currency.util.TronscanUtil;
 @Slf4j
 public class TransferTest {
 
-	private VirtualCurrencyService service;
+	private PlatformService service;
 
 	@Test
 	@SneakyThrows
@@ -102,7 +103,13 @@ public class TransferTest {
 	@Test
 	@SneakyThrows
 	public void btcTest() {
-		service = new OmniHttpServiceImpl(new OmniProperties().setEndpoints(OmniEndpoints.MAINNET));
+		service = new OmniHttpServiceImpl(new OmniProperties()
+				// 网络
+				.setNp(TestNet3Params.get())
+				// omni 节点
+				.setOmniEndpoints(OmniEndpoints.MAINNET)
+				// 比特 节点
+				.setBitcoinEndpoints(BitcoinEndpoints.TEST));
 
 		TestNet3Params np = TestNet3Params.get();
 
@@ -122,6 +129,8 @@ public class TransferTest {
 
 		BigDecimal value = new BigDecimal("0.000001");
 		System.out.println("a1 向 a2 转 " + value.toPlainString() + " btc");
+		TransferResult transfer = service.transfer(ac1, a2, OmniContract.BTC, value);
+		System.out.println(JsonUtil.toJson(transfer));
 
 		Map<String, String> headers = new HashMap<>();
 
@@ -224,13 +233,14 @@ public class TransferTest {
 
 		TransactionInput in = transaction.getInput(0);
 
-		Script scriptPubKey = in.getConnectedOutput().getScriptPubKey();
+		// Script scriptPubKey = in.getConnectedOutput().getScriptPubKey();
+		//
+		// RedeemData redeemData = in.getConnectedRedeemData(keyBag);
+		//
+		// byte[] script = redeemData.redeemScript.getProgram();
 
-		RedeemData redeemData = in.getConnectedRedeemData(keyBag);
-
-		byte[] script = redeemData.redeemScript.getProgram();
-
-		TransactionSignature signature = transaction.calculateSignature(0, ek1, script, Transaction.SigHash.ALL, false);
+		// TransactionSignature signature = transaction.calculateSignature(0, ek1, script,
+		// Transaction.SigHash.ALL, false);
 
 		System.out.println(client);
 	}

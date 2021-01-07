@@ -26,14 +26,14 @@ import live.lingting.virtual.currency.omni.Domain;
 import live.lingting.virtual.currency.omni.TokenHistory;
 import live.lingting.virtual.currency.omni.TransactionByHash;
 import live.lingting.virtual.currency.properties.OmniProperties;
-import live.lingting.virtual.currency.service.VirtualCurrencyService;
+import live.lingting.virtual.currency.service.PlatformService;
 import live.lingting.virtual.currency.util.AbiUtil;
 
 /**
  * @author lingting 2020-09-01 17:16
  */
 @Slf4j
-public class OmniHttpServiceImpl implements VirtualCurrencyService {
+public class OmniHttpServiceImpl implements PlatformService {
 
 	/**
 	 * 精度需要计算的标志

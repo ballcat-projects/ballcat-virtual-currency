@@ -31,7 +31,7 @@ import live.lingting.virtual.currency.endpoints.Endpoints;
 import live.lingting.virtual.currency.enums.TransactionStatus;
 import live.lingting.virtual.currency.enums.VcPlatform;
 import live.lingting.virtual.currency.properties.TronscanProperties;
-import live.lingting.virtual.currency.service.VirtualCurrencyService;
+import live.lingting.virtual.currency.service.PlatformService;
 import live.lingting.virtual.currency.tronscan.Transaction.RawData;
 import live.lingting.virtual.currency.tronscan.TransactionInfo;
 import live.lingting.virtual.currency.tronscan.Trc10;
@@ -48,7 +48,7 @@ import live.lingting.virtual.currency.util.TronscanUtil;
  * @author lingting 2020-09-01 17:16
  */
 @Slf4j
-public class TronscanServiceImpl implements VirtualCurrencyService {
+public class TronscanServiceImpl implements PlatformService {
 
 	@Getter
 	private static final Map<String, Integer> CONTRACT_DECIMAL_CACHE = new ConcurrentHashMap<>();

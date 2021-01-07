@@ -17,7 +17,7 @@ import live.lingting.virtual.currency.contract.TronscanContract;
  *
  * @author lingting 2020-09-01 17:15
  */
-public interface VirtualCurrencyService {
+public interface PlatformService {
 
 	/**
 	 * 通过交易hash获取交易信息

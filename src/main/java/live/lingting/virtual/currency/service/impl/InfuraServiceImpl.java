@@ -46,7 +46,7 @@ import live.lingting.virtual.currency.etherscan.Input;
 import live.lingting.virtual.currency.etherscan.TransactionByHash;
 import live.lingting.virtual.currency.etherscan.TransactionReceipt;
 import live.lingting.virtual.currency.properties.InfuraProperties;
-import live.lingting.virtual.currency.service.VirtualCurrencyService;
+import live.lingting.virtual.currency.service.PlatformService;
 import live.lingting.virtual.currency.util.AbiUtil;
 import live.lingting.virtual.currency.util.EtherscanUtil;
 
@@ -54,7 +54,7 @@ import live.lingting.virtual.currency.util.EtherscanUtil;
  * @author lingting 2020-09-01 17:16
  */
 @Slf4j
-public class InfuraServiceImpl implements VirtualCurrencyService {
+public class InfuraServiceImpl implements PlatformService {
 
 	private static final String EMPTY_ADDRESS = "0x0000000000000000000000000000000000000000";
 
