@@ -1,5 +1,6 @@
 package live.lingting.virtual.currency.properties;
 
+import java.util.Map;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import live.lingting.virtual.currency.endpoints.Endpoints;
@@ -24,5 +25,10 @@ public class TronscanProperties implements PlatformProperties {
 	 * 自定义url, 可为空
 	 */
 	private String url;
+
+	/**
+	 * rpc 请求时的请求头
+	 */
+	private Map<String, String> headers;
 
 }

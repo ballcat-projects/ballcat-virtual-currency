@@ -1,5 +1,6 @@
 package live.lingting.virtual.currency.properties;
 
+import java.util.Map;
 import java.util.function.Supplier;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -35,5 +36,10 @@ public class OmniProperties implements PlatformProperties {
 	 * 自定义url, 可为空
 	 */
 	private String url;
+
+	/**
+	 * rpc 请求时的请求头
+	 */
+	private Map<String, String> headers;
 
 }

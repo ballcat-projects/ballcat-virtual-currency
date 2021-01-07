@@ -1,6 +1,7 @@
 package live.lingting.virtual.currency.properties;
 
 import cn.hutool.core.util.StrUtil;
+import java.util.Map;
 import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.experimental.Accessors;
@@ -38,11 +39,16 @@ public class InfuraProperties implements PlatformProperties {
 	 */
 	private String url;
 
+	/**
+	 * rpc 请求时的请求头
+	 */
+	private Map<String, String> headers;
+
 	@SneakyThrows
 	public JsonRpcClient getHttpClient() {
 		// 是否自定义 web3j url
 		if (StrUtil.isNotBlank(url)) {
-			return JsonRpcClient.of(url);
+			return JsonRpcClient.of(url, headers);
 		}
 		return JsonRpcClient.of(getEndpoints().getHttpUrl(getProjectId()));
 	}
