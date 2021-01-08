@@ -13,7 +13,7 @@ import lombok.Getter;
 public enum OmniEndpoints implements Endpoints {
 
 	/**
-	 * 节点名
+	 * 主节点 <a href="https://api.omniexplorer.info/"/>
 	 */
 	MAINNET("https://api.omniexplorer.info/", "主节点"),
 

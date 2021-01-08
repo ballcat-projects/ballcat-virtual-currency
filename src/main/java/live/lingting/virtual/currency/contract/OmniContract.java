@@ -18,7 +18,7 @@ public enum OmniContract implements Contract {
 	 */
 	USDT("31", 8),
 
-	BTC("0", 0),
+	BTC("0", 8),
 
 	OMNI("1", 8),
 
