@@ -5,7 +5,7 @@
     <groupId>live.lingting</groupId>
     <artifactId>virtual-currency</artifactId>
     <packaging>jar</packaging>
-    <version>0.2.2</version>
+    <version>0.3.0</version>
 
     <name>virtual-currency</name>
     <description>虚拟货币处理</description>
