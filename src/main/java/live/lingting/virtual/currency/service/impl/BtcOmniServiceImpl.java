@@ -1,5 +1,6 @@
 package live.lingting.virtual.currency.service.impl;
 
+import static live.lingting.virtual.currency.util.BitcoinUtil.PROPERTY_PREFIX;
 import static org.bitcoinj.core.Transaction.Purpose;
 import static org.bitcoinj.core.Transaction.SigHash;
 
@@ -10,6 +11,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.MathContext;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -39,6 +41,8 @@ import live.lingting.virtual.currency.Transaction;
 import live.lingting.virtual.currency.TransferParams;
 import live.lingting.virtual.currency.TransferResult;
 import live.lingting.virtual.currency.bitcoin.FeeAndSpent;
+import live.lingting.virtual.currency.bitcoin.LatestBlock;
+import live.lingting.virtual.currency.bitcoin.RawTransaction;
 import live.lingting.virtual.currency.bitcoin.UnspentRes;
 import live.lingting.virtual.currency.bitcoin.UnspentRes.Unspent;
 import live.lingting.virtual.currency.contract.Contract;
@@ -61,7 +65,7 @@ import live.lingting.virtual.currency.util.BitcoinUtil;
  * @author lingting 2020-09-01 17:16
  */
 @Slf4j
-public class OmniHttpServiceImpl implements PlatformService {
+public class BtcOmniServiceImpl implements PlatformService {
 
 	/**
 	 * 精度需要计算的标志
@@ -92,7 +96,7 @@ public class OmniHttpServiceImpl implements PlatformService {
 
 	private final Endpoints bitcoinEndpoints;
 
-	public OmniHttpServiceImpl(OmniProperties properties) {
+	public BtcOmniServiceImpl(OmniProperties properties) {
 		this.properties = properties;
 		// 自定义 omni url
 		if (StrUtil.isNotBlank(properties.getOmniUrl())) {
@@ -114,7 +118,45 @@ public class OmniHttpServiceImpl implements PlatformService {
 	}
 
 	@Override
-	public Optional<Transaction> getTransactionByHash(String hash) throws JsonProcessingException {
+	public Optional<Transaction> getTransactionByHash(String hash) throws Throwable {
+		RawTransaction rawTransaction = RawTransaction.of(bitcoinEndpoints, hash);
+
+		if (rawTransaction == null || StrUtil.isBlank(rawTransaction.getHash())
+				|| CollectionUtil.isEmpty(rawTransaction.getOuts())) {
+			return Optional.empty();
+		}
+
+		// 不包含特征数据, 肯定是btc
+		if (!rawTransaction.getResponse().contains(PROPERTY_PREFIX)) {
+			return btcTransactionHandler(rawTransaction);
+		}
+		// 包含特征数据, 需要搜索
+		boolean isBtc = true;
+
+		// 总输出数量
+		BigInteger sumOut = BigInteger.ZERO;
+		// 输出详情
+		Map<String, BigDecimal> outInfos = new HashMap<>(rawTransaction.getOuts().size());
+
+		// 搜索输出, 判断是否为 btc交易
+		for (RawTransaction.Out out : rawTransaction.getOuts()) {
+			String script = out.getScript();
+			// 指定字符串开头
+			if (script.startsWith(PROPERTY_PREFIX)
+					// 长度为 44
+					&& script.length() == 44) {
+				isBtc = false;
+				break;
+			}
+			// 统计输出数量, 如果为btc交易, 可以正常统计完成
+			sumOut = statisticsDetails(sumOut, outInfos, out);
+		}
+
+		// btc 交易处理
+		if (isBtc) {
+			return btcTransactionHandler(sumOut, outInfos, rawTransaction);
+		}
+
 		TransactionByHash response = request(STATIC_TRANSACTION_HASH, omniEndpoints, hash);
 		// 交易查询不到 或者 valid 为 false
 		if (response.getAmount() == null || !response.getValid()) {
@@ -139,9 +181,11 @@ public class OmniHttpServiceImpl implements PlatformService {
 				.setFrom(response.getSendingAddress())
 
 				.setTo(response.getReferenceAddress())
-				// 大于等于 配置的最小值则确认导致,否则等待
-				.setStatus(response.getConfirmations() >= properties.getConfirmationsMin() ? TransactionStatus.SUCCESS
-						: TransactionStatus.WAIT);
+
+				.setStatus(
+						// 大于等于 配置的最小值则 交易成功,否则等待
+						response.getConfirmations().compareTo(BigInteger.valueOf(properties.getConfirmationsMin())) >= 0
+								? TransactionStatus.SUCCESS : TransactionStatus.WAIT);
 		return Optional.of(transaction);
 	}
 
@@ -261,7 +305,9 @@ public class OmniHttpServiceImpl implements PlatformService {
 			// 转账合约数量
 			BigInteger number = valueToBalanceByContract(value, contract);
 			// 构筑输出hex
-			String contractHex = StrUtil.format("6a146f6d6e69{}{}",
+			String contractHex = StrUtil.format("{}{}{}",
+					// 合约转账 开头字符串
+					PROPERTY_PREFIX,
 					// 合约hash 的 十六进制 前面补0 到 16位
 					StrUtil.padPre(new BigInteger(contract.getHash()).toString(16), 16, "0"),
 					// 转账数量 的 十六进制 前面补0 到 16位
@@ -361,6 +407,89 @@ public class OmniHttpServiceImpl implements PlatformService {
 		// 休眠, 然后调用自身
 		ThreadUtil.sleep(sleepTime());
 		return request(domain, endpoints, params);
+	}
+
+	/**
+	 * 解析原始交易数据, 返回结果
+	 * @author lingting 2021-01-10 19:00
+	 */
+	private Optional<Transaction> btcTransactionHandler(RawTransaction rawTransaction) throws Throwable {
+		// 总输出数量
+		BigInteger sumOut = BigInteger.ZERO;
+		// 输出详情
+		Map<String, BigDecimal> outInfos = new HashMap<>(rawTransaction.getOuts().size());
+
+		// 输出统计
+		for (RawTransaction.Out out : rawTransaction.getOuts()) {
+			// 统计输出数量
+			sumOut = statisticsDetails(sumOut, outInfos, out);
+		}
+		return btcTransactionHandler(sumOut, outInfos, rawTransaction);
+	}
+
+	private Optional<Transaction> btcTransactionHandler(BigInteger sumOut, Map<String, BigDecimal> outInfos,
+			RawTransaction rawTransaction) throws Throwable {
+		// 总输入数量
+		BigInteger sumIn = BigInteger.ZERO;
+		// 输入详情
+		Map<String, BigDecimal> inInfos = new HashMap<>(rawTransaction.getIns().size());
+
+		// 输入统计
+		for (RawTransaction.In in : rawTransaction.getIns()) {
+			sumIn = statisticsDetails(sumIn, inInfos, in.getPrevOut());
+		}
+		// 手续费 = 输入 - 输出 转换为 btc
+		BigDecimal fee = getNumberByBalanceAndContract(sumIn.subtract(sumOut), OmniContract.BTC);
+
+		Transaction transaction = new Transaction().setContract(OmniContract.BTC)
+
+				.setBlock(rawTransaction.getBlockHeight())
+
+				.setHash(rawTransaction.getHash())
+
+				.setVcPlatform(VcPlatform.OMNI)
+
+				.setTime(rawTransaction.getTime())
+				// btc 详情
+				.setBtcInfo(new Transaction.BtcInfo(inInfos, outInfos, fee));
+
+		// 没有高度
+		if (rawTransaction.getBlockHeight() == null) {
+			// 等待
+			transaction.setStatus(TransactionStatus.WAIT);
+		}
+		// 计算确认数
+		else {
+			// 获取最新区块
+			LatestBlock block = LatestBlock.of(bitcoinEndpoints);
+			// 计算确认数
+			BigInteger confirmationNumber = block.getHeight().subtract(transaction.getBlock());
+			transaction.setStatus(
+					// 大于等于 配置的最小值则 交易成功,否则等待
+					confirmationNumber.compareTo(BigInteger.valueOf(properties.getConfirmationsMin())) >= 0
+							? TransactionStatus.SUCCESS : TransactionStatus.WAIT);
+		}
+		return Optional.of(transaction);
+	}
+
+	/**
+	 * 抽取统计操作
+	 * @author lingting 2021-01-10 19:31
+	 */
+	private BigInteger statisticsDetails(BigInteger sumIn, Map<String, BigDecimal> inInfos, RawTransaction.Out out)
+			throws Throwable {
+		// 统计输入数量
+		sumIn = sumIn.add(out.getValue());
+		// 存在统计详情
+		if (inInfos.containsKey(out.getAddr())) {
+			inInfos.put(out.getAddr(),
+					inInfos.get(out.getAddr()).add(getNumberByBalanceAndContract(out.getValue(), OmniContract.BTC)));
+		}
+		// 不存在统计详情
+		else {
+			inInfos.put(out.getAddr(), getNumberByBalanceAndContract(out.getValue(), OmniContract.BTC));
+		}
+		return sumIn;
 	}
 
 }

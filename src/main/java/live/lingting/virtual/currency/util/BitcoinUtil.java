@@ -3,7 +3,6 @@ package live.lingting.virtual.currency.util;
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.StrUtil;
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.math.MathContext;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
@@ -12,14 +11,16 @@ import org.bitcoinj.core.NetworkParameters;
 import org.bouncycastle.util.encoders.Hex;
 import live.lingting.virtual.currency.Account;
 import live.lingting.virtual.currency.TransferParams;
-import live.lingting.virtual.currency.bitcoin.UnspentRes;
 
 /**
  * @author lingting 2020/12/28 17:49
  */
 public class BitcoinUtil {
 
-	public static final Coin COIN_TEN = Coin.valueOf(10);
+	/**
+	 * omni 合约转账 script 开头字符串
+	 */
+	public static final String PROPERTY_PREFIX = "6a146f6d6e69";
 
 	/**
 	 * @param id id 可在 [
@@ -79,15 +80,6 @@ public class BitcoinUtil {
 		// 设置公钥
 		account.setPublicKey(publicKey);
 		return account;
-	}
-
-	/**
-	 * 未使用余额中的 value 转为 聪
-	 * @see UnspentRes.Unspent#getValue()
-	 * @author lingting 2021-01-07 16:41
-	 */
-	public static Coin unspentValueToCoin(BigInteger value) {
-		return Coin.valueOf(value.longValue());
 	}
 
 	/**

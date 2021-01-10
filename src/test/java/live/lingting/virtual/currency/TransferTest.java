@@ -26,7 +26,7 @@ import live.lingting.virtual.currency.properties.OmniProperties;
 import live.lingting.virtual.currency.properties.TronscanProperties;
 import live.lingting.virtual.currency.service.PlatformService;
 import live.lingting.virtual.currency.service.impl.InfuraServiceImpl;
-import live.lingting.virtual.currency.service.impl.OmniHttpServiceImpl;
+import live.lingting.virtual.currency.service.impl.BtcOmniServiceImpl;
 import live.lingting.virtual.currency.service.impl.TronscanServiceImpl;
 import live.lingting.virtual.currency.util.AbiUtil;
 import live.lingting.virtual.currency.util.BitcoinUtil;
@@ -134,7 +134,7 @@ public class TransferTest {
 
 		final JsonRpcClient client = JsonRpcClient.of("http://192.168.1.206:18332", headers);
 
-		service = new OmniHttpServiceImpl(new OmniProperties()
+		service = new BtcOmniServiceImpl(new OmniProperties()
 				// 广播交易
 				.setBroadcastTransaction((raw, endpoints) -> {
 					try {

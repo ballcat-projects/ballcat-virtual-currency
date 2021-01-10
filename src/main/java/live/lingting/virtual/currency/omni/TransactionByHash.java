@@ -30,7 +30,7 @@ public class TransactionByHash implements Domain<TransactionByHash> {
 	private Long blockTime;
 
 	@JsonProperty("confirmations")
-	private Long confirmations;
+	private BigInteger confirmations;
 
 	@JsonProperty("divisible")
 	private Boolean divisible;
