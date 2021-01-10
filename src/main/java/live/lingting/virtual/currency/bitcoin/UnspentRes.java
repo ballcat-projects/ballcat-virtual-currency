@@ -17,16 +17,25 @@ import live.lingting.virtual.currency.util.JsonUtil;
 @Data
 public class UnspentRes {
 
-	public static UnspentRes of(Endpoints endpoints, String address) throws JsonProcessingException {
-		HttpRequest request = HttpRequest.get(endpoints.getHttpUrl("unspent?confirmations=6&active=" + address));
-		return JsonUtil.toObj(request.execute().body(), UnspentRes.class);
-	}
-
 	@JsonProperty("notice")
 	private String notice;
 
 	@JsonProperty("unspent_outputs")
 	private List<Unspent> unspentList;
+
+	/**
+	 * 获取指定地址未使用utxo
+	 * @param endpoints 节点
+	 * @param min 最小确认数
+	 * @param address 地址
+	 * @return live.lingting.virtual.currency.bitcoin.UnspentRes
+	 * @author lingting 2021-01-08 18:40
+	 */
+	public static UnspentRes of(Endpoints endpoints, int min, String address) throws JsonProcessingException {
+		HttpRequest request = HttpRequest
+				.get(endpoints.getHttpUrl("unspent?confirmations=" + min + "&active=" + address));
+		return JsonUtil.toObj(request.execute().body(), UnspentRes.class);
+	}
 
 	@NoArgsConstructor
 	@Data
@@ -51,7 +60,7 @@ public class UnspentRes {
 		 * 交易数量
 		 */
 		@JsonProperty("value")
-		private Long value;
+		private String value;
 
 		@JsonProperty("value_hex")
 		private String valueHex;

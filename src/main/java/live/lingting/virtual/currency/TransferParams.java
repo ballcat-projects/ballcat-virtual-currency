@@ -41,4 +41,5 @@ public class TransferParams {
 	 * fee 总价, 即不管这笔交易输入输出怎样, 只付这么多手续费
 	 */
 	private Coin sumFee;
+
 }

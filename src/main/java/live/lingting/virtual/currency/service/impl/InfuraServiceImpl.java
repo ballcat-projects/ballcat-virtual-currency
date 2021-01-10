@@ -87,7 +87,7 @@ public class InfuraServiceImpl implements PlatformService {
 		Input input;
 		// 不是使用代币交易，而是直接使用eth交易
 		if (EtherscanUtil.START.equals(byHash.getInput())) {
-			input = new Input().setTo(byHash.getTo()).setValue(new BigDecimal(byHash.getValue()))
+			input = new Input().setTo(byHash.getTo()).setValue(new BigInteger(byHash.getValue()))
 					.setContract(EtherscanContract.ETH);
 		}
 		else {
@@ -178,10 +178,10 @@ public class InfuraServiceImpl implements PlatformService {
 
 	@Override
 	@SuppressWarnings("all")
-	public BigDecimal getBalanceByAddressAndContract(String address, Contract contract) throws Throwable {
+	public BigInteger getBalanceByAddressAndContract(String address, Contract contract) throws Throwable {
 		if (contract == EtherscanContract.ETH) {
 			return EtherscanUtil
-					.toBigDecimal(client.invoke("eth_getBalance", String.class, address, BlockEnum.LATEST.getVal()));
+					.toBigInteger(client.invoke("eth_getBalance", String.class, address, BlockEnum.LATEST.getVal()));
 		}
 		// 执行方法
 		List<Type> list = ethCall("balanceOf", ListUtil.toList(new Address(address)),
@@ -189,23 +189,23 @@ public class InfuraServiceImpl implements PlatformService {
 				}), address, contract.getHash());
 		// 返回值不为空
 		if (!CollectionUtil.isEmpty(list)) {
-			return new BigDecimal(list.get(0).getValue().toString());
+			return new BigInteger(list.get(0).getValue().toString());
 		}
-		return BigDecimal.ZERO;
+		return BigInteger.ZERO;
 	}
 
 	@Override
-	public BigDecimal getNumberByBalanceAndContract(BigDecimal balance, Contract contract, MathContext mathContext)
+	public BigDecimal getNumberByBalanceAndContract(BigInteger balance, Contract contract, MathContext mathContext)
 			throws Throwable {
 		// 合约为null 返回原值
 		if (contract == null) {
-			return balance;
+			return new BigDecimal(balance);
 		}
 		if (balance == null) {
 			return BigDecimal.ZERO;
 		}
 		// 计算返回值
-		return balance.divide(BigDecimal.TEN.pow(getDecimalsByContract(contract)), mathContext);
+		return new BigDecimal(balance).divide(BigDecimal.TEN.pow(getDecimalsByContract(contract)), mathContext);
 	}
 
 	@Override
@@ -216,7 +216,7 @@ public class InfuraServiceImpl implements PlatformService {
 		// 获取账户信息
 		Credentials credentials = Credentials.create(from.getPrivateKey(), from.getPublicKey());
 		// 计算转账数量
-		BigInteger amount = value.multiply(BigDecimal.TEN.pow(getDecimalsByContract(contract))).toBigInteger();
+		BigInteger amount = valueToBalanceByContract(value, contract);
 		// nonce, 由于要保证每笔交易递增, 所以直接使用eth数量
 		BigInteger nonce = EtherscanUtil.toBigInteger(
 				client.invoke("eth_getTransactionCount", String.class, from.getAddress(), BlockEnum.PENDING.getVal()));

@@ -3,7 +3,7 @@ package live.lingting.virtual.currency.etherscan;
 import static live.lingting.virtual.currency.util.AbiUtil.removePreZero;
 import static live.lingting.virtual.currency.util.EtherscanUtil.START;
 
-import java.math.BigDecimal;
+import java.math.BigInteger;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import live.lingting.virtual.currency.AbiMethod;
@@ -37,9 +37,9 @@ public class Input {
 	private String from;
 
 	/**
-	 * 单位 个
+	 * 数量
 	 */
-	private BigDecimal value;
+	private BigInteger value;
 
 	/**
 	 * 合约

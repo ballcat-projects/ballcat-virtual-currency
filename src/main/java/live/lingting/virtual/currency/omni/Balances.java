@@ -3,7 +3,7 @@ package live.lingting.virtual.currency.omni;
 import cn.hutool.http.HttpRequest;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.List;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -57,7 +57,7 @@ public class Balances implements Domain<Balances> {
 		private String symbol;
 
 		@JsonProperty("value")
-		private BigDecimal value;
+		private BigInteger value;
 
 		@JsonProperty("error")
 		private Boolean error;

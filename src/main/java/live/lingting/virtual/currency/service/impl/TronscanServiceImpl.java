@@ -11,7 +11,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.MathContext;
-import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -188,13 +187,13 @@ public class TronscanServiceImpl implements PlatformService {
 	}
 
 	@Override
-	public BigDecimal getBalanceByAddressAndContract(String address, Contract contract) throws JsonProcessingException {
+	public BigInteger getBalanceByAddressAndContract(String address, Contract contract) throws JsonProcessingException {
 		live.lingting.virtual.currency.tronscan.Account account = live.lingting.virtual.currency.tronscan.Account
 				.of(endpoints, address);
 
 		// 搜索拥有的数据
 		if (account.getData().size() == 0) {
-			return BigDecimal.ZERO;
+			return BigInteger.ZERO;
 		}
 
 		live.lingting.virtual.currency.tronscan.Account.Data data = account.getData().get(0);
@@ -205,11 +204,11 @@ public class TronscanServiceImpl implements PlatformService {
 		// trc20
 		if (isTrc20(contract.getHash())) {
 			if (CollectionUtil.isEmpty(data.getTrc20())) {
-				return BigDecimal.ZERO;
+				return BigInteger.ZERO;
 			}
 			// 从trc20中寻找
-			for (Map<String, BigDecimal> map : data.getTrc20()) {
-				for (Map.Entry<String, BigDecimal> entry : map.entrySet()) {
+			for (Map<String, BigInteger> map : data.getTrc20()) {
+				for (Map.Entry<String, BigInteger> entry : map.entrySet()) {
 					// 如果指定合约的hash 与当前trc20 key相同
 					if (entry.getKey().equals(contract.getHash())) {
 						return entry.getValue();
@@ -220,7 +219,7 @@ public class TronscanServiceImpl implements PlatformService {
 		// 非 trc20
 		else {
 			if (CollectionUtil.isEmpty(data.getAssetV2())) {
-				return BigDecimal.ZERO;
+				return BigInteger.ZERO;
 			}
 			// 从assetV2中寻找
 			for (live.lingting.virtual.currency.tronscan.Account.Data.AssetV2 v2 : data.getAssetV2()) {
@@ -232,28 +231,28 @@ public class TronscanServiceImpl implements PlatformService {
 		}
 
 		// 未找到合约, 返回 0
-		return BigDecimal.ZERO;
+		return BigInteger.ZERO;
 	}
 
 	@Override
-	public BigDecimal getNumberByBalanceAndContract(BigDecimal balance, Contract contract, MathContext mathContext)
+	public BigDecimal getNumberByBalanceAndContract(BigInteger balance, Contract contract, MathContext mathContext)
 			throws JsonProcessingException {
 		// 合约为null 返回原值
 		if (contract == null) {
-			return balance;
+			return new BigDecimal(balance);
 		}
 		if (balance == null) {
 			return BigDecimal.ZERO;
 		}
 		// 计算返回值
-		return balance.divide(BigDecimal.TEN.pow(getDecimalsByContract(contract)), mathContext);
+		return new BigDecimal(balance).divide(BigDecimal.TEN.pow(getDecimalsByContract(contract)), mathContext);
 	}
 
 	@Override
 	public TransferResult transfer(Account from, String to, Contract contract, BigDecimal value, TransferParams params)
-			throws JsonProcessingException, NoSuchAlgorithmException {
+			throws Throwable {
 		// 计算转账数量
-		BigInteger amount = value.multiply(BigDecimal.TEN.pow(getDecimalsByContract(contract))).toBigInteger();
+		BigInteger amount = valueToBalanceByContract(value, contract);
 		String txId;
 		RawData rawData;
 		String rawDataHex;

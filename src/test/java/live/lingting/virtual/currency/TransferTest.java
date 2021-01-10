@@ -15,7 +15,6 @@ import org.bouncycastle.util.encoders.Hex;
 import org.junit.Test;
 import live.lingting.virtual.currency.contract.Contract;
 import live.lingting.virtual.currency.contract.EtherscanContract;
-import live.lingting.virtual.currency.contract.OmniContract;
 import live.lingting.virtual.currency.core.JsonRpcClient;
 import live.lingting.virtual.currency.endpoints.BitcoinEndpoints;
 import live.lingting.virtual.currency.endpoints.InfuraEndpoints;
@@ -113,8 +112,18 @@ public class TransferTest {
 		String a2 = "2MsX74Kyreue6qg8okRtjhnd2yz8zAnLcNi";
 		// 0.01232216
 		String a3 = "mv4rnyY3Su5gjcDNzbMLKBQkBicCtHUtFB";
+		// 0.001 转btc 收到 omni 测试币
+		String a4 = "moneyqMan7uh8FqdCA2BV5yZ8qVrc9ikLP";
+		// yusuo, omni 测试币转
+		String a5 = "2Mw3TeWtsJwJ6C7WE8cpjMhS2X4cWk87NLC";
 
-		client.invokeObj("listunspent", 0, 999999 , new String[]{a1});
+		client.invokeObj("listunspent", 0, 999999, new String[] { a1 });
+		client.invokeObj("omni_listproperties");
+		client.invokeObj("omni_getproperty", 1);
+		client.invokeObj("omni_getbalance", a1, 1);
+		client.invokeObj("omni_getbalance", a5, 1);
+		client.invokeObj("omni_gettransaction", "5ba9d08a06eb2c0e98c01d34a4517ab711058e8bafee71b9f938a7f0d23df33a");
+		client.invokeObj("omni_gettransaction", "790d15d045e5712ba2f203b1e55bf35ac6cbb9ad2521e1140c95db804cfb7559");
 
 		System.out.println(client);
 	}
@@ -139,7 +148,6 @@ public class TransferTest {
 					catch (Throwable throwable) {
 						return new PushTx(throwable);
 					}
-
 				})
 				// 网络
 				.setNp(TestNet3Params.get())
@@ -158,19 +166,24 @@ public class TransferTest {
 
 		// 这个地址是给我发测试币的地址, 直接转回去
 		String a2 = "2MsX74Kyreue6qg8okRtjhnd2yz8zAnLcNi";
-		// 0.01232216
+		// 0.01232216 + 0.01025856
 		String a3 = "mv4rnyY3Su5gjcDNzbMLKBQkBicCtHUtFB";
 		// 0.001 转btc 收到 omni 测试币
 		String a4 = "moneyqMan7uh8FqdCA2BV5yZ8qVrc9ikLP";
 		// yusuo, omni 测试币转
 		String a5 = "2Mw3TeWtsJwJ6C7WE8cpjMhS2X4cWk87NLC";
 
-		BigDecimal value = new BigDecimal("0.00000546");
-		System.out.println("a1 向 a5 转 " + value.toPlainString() + " btc");
+		Contract omni = AbiUtil.createContract("1", 8);
+		Contract testOmni = AbiUtil.createContract("2", 8);
+
+		Contract contract = omni;
+		BigDecimal value = new BigDecimal("0.01");
+		// System.out.println("a1 向 a5 转 " + value.toPlainString() + " btc");
+		System.out.println("a1 向 a5 转 " + value.toPlainString() + " omni");
 		TransferParams params = new TransferParams();
 		params.setSumFee(Coin.valueOf(546));
 
-		TransferResult transfer = service.transfer(ac1, a5, OmniContract.BTC, value, params);
+		TransferResult transfer = service.transfer(ac1, a5, contract, value, params);
 		System.out.println(JsonUtil.toJson(transfer));
 	}
 

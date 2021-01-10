@@ -26,6 +26,43 @@ import live.lingting.virtual.currency.util.JsonUtil;
 public class OmniProperties implements PlatformProperties {
 
 	/**
+	 * 返回每个字节使用多少手续费, 单位 聪
+	 */
+	public Supplier<Coin> feeByByte = () -> {
+		HttpRequest request = HttpRequest.get("https://bitcoinfees.earn.com/api/v1/fees/recommended");
+
+		try {
+			Map<?, ?> map = JsonUtil.toObj(request.execute().body(), Map.class);
+			/*
+			 * 返回值有三个
+			 *
+			 * fastestFee: 最快
+			 *
+			 * fastestFee: 一般
+			 *
+			 * hourFee: 最慢
+			 */
+			return Coin.valueOf(Convert.toLong(map.get("hourFee")));
+		}
+		catch (Exception e) {
+			// 默认 100 聪
+			return Coin.valueOf(100);
+		}
+	};
+
+	/**
+	 * 广播交易, 暴露这个函数主要用于测试网络广播交易使用
+	 */
+	public BiFunction<String, Endpoints, PushTx> broadcastTransaction = (raw, endpoints) -> {
+		try {
+			return PushTx.of(endpoints, raw);
+		}
+		catch (JsonProcessingException e) {
+			return new PushTx(e);
+		}
+	};
+
+	/**
 	 * omni节点
 	 */
 	private Endpoints omniEndpoints;
@@ -73,42 +110,5 @@ public class OmniProperties implements PlatformProperties {
 	 * rpc 请求时的请求头
 	 */
 	private Map<String, String> headers;
-
-	/**
-	 * 返回每个字节使用多少手续费, 单位 聪
-	 */
-	public Supplier<Coin> feeByByte = () -> {
-		HttpRequest request = HttpRequest.get("https://bitcoinfees.earn.com/api/v1/fees/recommended");
-
-		try {
-			Map<?, ?> map = JsonUtil.toObj(request.execute().body(), Map.class);
-			/*
-			 * 返回值有三个
-			 *
-			 * fastestFee: 最快
-			 *
-			 * fastestFee: 一般
-			 *
-			 * hourFee: 最慢
-			 */
-			return Coin.valueOf(Convert.toLong(map.get("hourFee")));
-		}
-		catch (Exception e) {
-			// 默认 100 聪
-			return Coin.valueOf(100);
-		}
-	};
-
-	/**
-	 * 广播交易, 暴露这个函数主要用于测试网络广播交易使用
-	 */
-	public BiFunction<String, Endpoints, PushTx> broadcastTransaction = (raw, endpoints) -> {
-		try {
-			return PushTx.of(endpoints, raw);
-		}
-		catch (JsonProcessingException e) {
-			return new PushTx(e);
-		}
-	};
 
 }

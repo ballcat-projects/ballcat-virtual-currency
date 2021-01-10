@@ -13,6 +13,17 @@ import live.lingting.virtual.currency.util.JsonUtil;
 @Data
 public class PushTx {
 
+	private Throwable e;
+
+	@JsonProperty("status")
+	private String status;
+
+	@JsonProperty("pushed")
+	private String pushed;
+
+	@JsonProperty("tx")
+	private String txId;
+
 	public PushTx(Throwable e) {
 		this.e = e;
 	}
@@ -32,17 +43,6 @@ public class PushTx {
 	public static PushTx success(String txId) {
 		return new PushTx("OK", "Success", txId);
 	}
-
-	private Throwable e;
-
-	@JsonProperty("status")
-	private String status;
-
-	@JsonProperty("pushed")
-	private String pushed;
-
-	@JsonProperty("tx")
-	private String txId;
 
 	public boolean isSuccess() {
 		return "OK".equals(status) && "Success".equals(pushed);

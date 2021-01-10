@@ -2,7 +2,6 @@ package live.lingting.virtual.currency.util;
 
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.StrUtil;
-import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
@@ -37,7 +36,7 @@ public class EtherscanUtil {
 			}
 			String[] array = AbiUtil.stringToArrayBy64(str);
 			input.setTo(array[0]);
-			input.setValue(new BigDecimal(Long.parseLong(array[1], 16)));
+			input.setValue(new BigInteger(array[1], 16));
 		});
 
 		METHOD_HANDLER.put(AbiMethod.SEND_MULTI_SIG_TOKEN.getMethodId(), input -> {
@@ -47,7 +46,7 @@ public class EtherscanUtil {
 			}
 			String[] array = AbiUtil.stringToArrayBy64(str);
 			input.setTo(array[0]);
-			input.setValue(new BigDecimal(Long.parseLong(array[1], 16)));
+			input.setValue(new BigInteger(array[1], 16));
 			String address = START + AbiUtil.removePreZero(array[2]);
 			input.setContract(EtherscanContract.getByHash(address));
 			input.setContractAddress(address);
@@ -60,7 +59,7 @@ public class EtherscanUtil {
 			}
 			String[] array = AbiUtil.stringToArrayBy64(str);
 			input.setTo(array[0]);
-			input.setValue(new BigDecimal(Long.parseLong(array[1], 16)));
+			input.setValue(new BigInteger(array[1], 16));
 		});
 
 		METHOD_HANDLER.put(AbiMethod.TRANSFER_FROM.getMethodId(), input -> {
@@ -71,7 +70,7 @@ public class EtherscanUtil {
 			String[] array = AbiUtil.stringToArrayBy64(str);
 			input.setFrom(array[0]);
 			input.setTo(array[1]);
-			input.setValue(new BigDecimal(Long.parseLong(array[2], 16)));
+			input.setValue(new BigInteger(array[2], 16));
 		});
 	}
 
@@ -150,10 +149,6 @@ public class EtherscanUtil {
 
 	public static BigInteger toBigInteger(String str) {
 		return new BigInteger(removeStart(str), 16);
-	}
-
-	public static BigDecimal toBigDecimal(String str) {
-		return new BigDecimal(toBigInteger(str));
 	}
 
 	public static String removeStart(String str) {

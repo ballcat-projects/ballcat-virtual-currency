@@ -1,6 +1,5 @@
 package live.lingting.virtual.currency.service.impl;
 
-import static live.lingting.virtual.currency.util.BitcoinUtil.getSumFee;
 import static org.bitcoinj.core.Transaction.Purpose;
 import static org.bitcoinj.core.Transaction.SigHash;
 
@@ -11,18 +10,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.MathContext;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import lombok.var;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Context;
@@ -32,6 +26,7 @@ import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutPoint;
+import org.bitcoinj.core.Utils;
 import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptBuilder;
@@ -43,6 +38,7 @@ import live.lingting.virtual.currency.Account;
 import live.lingting.virtual.currency.Transaction;
 import live.lingting.virtual.currency.TransferParams;
 import live.lingting.virtual.currency.TransferResult;
+import live.lingting.virtual.currency.bitcoin.FeeAndSpent;
 import live.lingting.virtual.currency.bitcoin.UnspentRes;
 import live.lingting.virtual.currency.bitcoin.UnspentRes.Unspent;
 import live.lingting.virtual.currency.contract.Contract;
@@ -170,10 +166,10 @@ public class OmniHttpServiceImpl implements PlatformService {
 	}
 
 	@Override
-	public BigDecimal getBalanceByAddressAndContract(String address, Contract contract) throws JsonProcessingException {
+	public BigInteger getBalanceByAddressAndContract(String address, Contract contract) throws JsonProcessingException {
 		Balances balances = request(STATIC_BALANCES, omniEndpoints, address);
 		if (CollectionUtil.isEmpty(balances.getBalance())) {
-			return BigDecimal.ZERO;
+			return BigInteger.ZERO;
 		}
 		for (Balances.Balance balance : balances.getBalance()) {
 			// 协助缓存精度
@@ -186,116 +182,145 @@ public class OmniHttpServiceImpl implements PlatformService {
 				return balance.getValue();
 			}
 		}
-		return BigDecimal.ZERO;
+		return BigInteger.ZERO;
 	}
 
 	@Override
-	public BigDecimal getNumberByBalanceAndContract(BigDecimal balance, Contract contract, MathContext mathContext)
+	public BigDecimal getNumberByBalanceAndContract(BigInteger balance, Contract contract, MathContext mathContext)
 			throws JsonProcessingException {
 		if (contract == null) {
-			return balance;
+			return new BigDecimal(balance);
 		}
 		if (balance == null) {
 			return BigDecimal.ZERO;
 		}
 		// 计算返回值
-		return balance.divide(BigDecimal.TEN.pow(getDecimalsByContract(contract)), mathContext);
+		return new BigDecimal(balance).divide(BigDecimal.TEN.pow(getDecimalsByContract(contract)), mathContext);
 	}
 
 	@Override
 	public TransferResult transfer(Account from, String to, Contract contract, BigDecimal value, TransferParams params)
 			throws Throwable {
 		NetworkParameters np = properties.getNp();
+		// BTC 转账数量
+		Coin btcAmount;
+		// 转账比特
 		if (contract == OmniContract.BTC) {
-			// 计算转账数量
-			Coin amount = BitcoinUtil.btcToCoin(value);
-
-			// 未设置总价 进行 手续费单价配置
-			if (params.getSumFee() == null) {
-				params.setFee(params.getFee() == null ? properties.feeByByte.get() : params.getFee());
-			}
-
-			// 计算手续费, 是否找零 , 使用的余额
-			FeeAndSpent fs = FeeAndSpent.of(
-					// 服务
-					this,
-					// 合约
-					contract,
-					// 参数
-					params,
-					// 未使用余额
-					UnspentRes.of(bitcoinEndpoints, from.getAddress()).getUnspentList(),
-					// 转账数量
-					amount,
-					// 最小确认数
-					new BigInteger(properties.getConfirmationsMin().toString()));
-
-			ECKey key = ECKey.fromPrivate(Hex.decode(from.getPrivateKey()));
-
-			// 构筑交易
-			org.bitcoinj.core.Transaction tx = new org.bitcoinj.core.Transaction(np);
-
-			Address fromAddress = Address.fromString(np, from.getAddress());
-			Address toAddress = Address.fromString(np, to);
-			// 输出
-			tx.addOutput(amount, toAddress);
-
-			if (fs.getZero()) {
-				tx.addOutput(
-						// 找零 = 输出数量 - 手续费 - 转账数量
-						fs.getOutNumber().subtract(fs.getFee()).subtract(amount),
-						// 找零给自己
-						key);
-			}
-
-			// 输入
-			for (int i = 0; i < fs.getList().size(); i++) {
-				Unspent spent = fs.getList().get(i);
-				TransactionOutPoint outPoint = new TransactionOutPoint(np, spent.getTxOutputN(),
-						Sha256Hash.wrap(spent.getTxId()));
-
-				TransactionInput input = new TransactionInput(np, tx, Hex.decode(spent.getScript()), outPoint,
-						Coin.valueOf(spent.getValue()));
-				tx.addInput(input);
-			}
-
-			List<TransactionInput> inputs = tx.getInputs();
-			// 签名所有 input
-			for (int i = 0; i < inputs.size(); i++) {
-				Script scriptPubKey = ScriptBuilder.createOutputScript(fromAddress);
-				Sha256Hash hash = tx.hashForSignature(i, scriptPubKey, SigHash.ALL, true);
-				ECKey.ECDSASignature ecdsaSignature = key.sign(hash);
-				TransactionSignature txSignature = new TransactionSignature(ecdsaSignature, SigHash.ALL, true);
-				if (ScriptPattern.isP2PK(scriptPubKey)) {
-					tx.getInput(i).setScriptSig(ScriptBuilder.createInputScript(txSignature));
-				}
-				else {
-					if (!ScriptPattern.isP2PKH(scriptPubKey)) {
-						throw new ScriptException(ScriptError.SCRIPT_ERR_UNKNOWN_ERROR,
-								"Unable to sign this scrptPubKey: " + scriptPubKey);
-					}
-					tx.getInput(i).setScriptSig(ScriptBuilder.createInputScript(txSignature, key));
-				}
-			}
-
-			tx.verify();
-			Context.getOrCreate(np);
-			tx.getConfidence().setSource(TransactionConfidence.Source.SELF);
-			tx.setPurpose(Purpose.USER_PAYMENT);
-			String raw = Hex.toHexString(tx.bitcoinSerialize());
-
-			// 广播交易, 返回 交易hash
-			PushTx pushTx = properties.getBroadcastTransaction().apply(raw, omniEndpoints);
-			if (!pushTx.isSuccess()) {
-				if (pushTx.getE() != null) {
-					throw new VirtualCurrencyException("转账失败", pushTx.getE());
-				}
-				throw new VirtualCurrencyException("转账失败");
-			}
-			return TransferResult.success(pushTx.getTxId());
+			btcAmount = BitcoinUtil.btcToCoin(value);
 		}
-		// 合约转账
-		return null;
+		// 转账合约
+		else {
+			// 最小比特转账要求
+			btcAmount = Coin.valueOf(546);
+		}
+
+		// 未设置总价 进行 手续费单价配置
+		if (params.getSumFee() == null) {
+			params.setFee(params.getFee() == null ? properties.feeByByte.get() : params.getFee());
+		}
+
+		// 计算手续费, 是否找零 , 使用的余额
+		FeeAndSpent fs = FeeAndSpent.of(
+				// 服务
+				this,
+				// 合约
+				contract,
+				// 参数
+				params,
+				// 未使用余额
+				UnspentRes.of(bitcoinEndpoints, properties.getConfirmationsMin(), from.getAddress()).getUnspentList(),
+				// 转账数量
+				btcAmount,
+				// 最小确认数
+				new BigInteger(properties.getConfirmationsMin().toString()));
+
+		// 输入地址密钥
+		ECKey key = ECKey.fromPrivate(Hex.decode(from.getPrivateKey()));
+
+		// 构筑交易
+		org.bitcoinj.core.Transaction tx = new org.bitcoinj.core.Transaction(np);
+
+		// 输入地址
+		Address fromAddress = Address.fromString(np, from.getAddress());
+		// 输出地址
+		Address toAddress = Address.fromString(np, to);
+		// 转账比特输出
+		tx.addOutput(btcAmount, toAddress);
+
+		// 找零输出
+		if (fs.getZero()) {
+			tx.addOutput(
+					// 找零 = 输出数量 - 手续费 - 转账数量
+					fs.getOutNumber().subtract(fs.getFee()).subtract(btcAmount),
+					// 找零给自己
+					key);
+		}
+
+		// 转账合约输出
+		if (contract != OmniContract.BTC) {
+			// 转账合约数量
+			BigInteger number = valueToBalanceByContract(value, contract);
+			// 构筑输出hex
+			String contractHex = StrUtil.format("6a146f6d6e69{}{}",
+					// 合约hash 的 十六进制 前面补0 到 16位
+					StrUtil.padPre(new BigInteger(contract.getHash()).toString(16), 16, "0"),
+					// 转账数量 的 十六进制 前面补0 到 16位
+					StrUtil.padPre(number.toString(16), 16, "0"));
+
+			// 加入输出
+			tx.addOutput(Coin.ZERO, new Script(Utils.HEX.decode(contractHex)));
+		}
+
+		// 添加输入
+		for (int i = 0; i < fs.getList().size(); i++) {
+			Unspent spent = fs.getList().get(i);
+			TransactionOutPoint outPoint = new TransactionOutPoint(np, spent.getTxOutputN(),
+					Sha256Hash.wrap(spent.getTxId()));
+
+			TransactionInput input = new TransactionInput(np, tx, Hex.decode(spent.getScript()), outPoint,
+					Coin.valueOf(Long.parseLong(spent.getValue())));
+			tx.addInput(input);
+		}
+
+		List<TransactionInput> inputs = tx.getInputs();
+		// 签名输入
+		for (int i = 0; i < inputs.size(); i++) {
+			Script scriptPubKey = ScriptBuilder.createOutputScript(fromAddress);
+			Sha256Hash hash = tx.hashForSignature(i, scriptPubKey, SigHash.ALL, true);
+			ECKey.ECDSASignature ecdsaSignature = key.sign(hash);
+			TransactionSignature txSignature = new TransactionSignature(ecdsaSignature, SigHash.ALL, true);
+			if (ScriptPattern.isP2PK(scriptPubKey)) {
+				tx.getInput(i).setScriptSig(ScriptBuilder.createInputScript(txSignature));
+			}
+			else {
+				if (!ScriptPattern.isP2PKH(scriptPubKey)) {
+					throw new ScriptException(ScriptError.SCRIPT_ERR_UNKNOWN_ERROR,
+							"Unable to sign this scrptPubKey: " + scriptPubKey);
+				}
+				tx.getInput(i).setScriptSig(ScriptBuilder.createInputScript(txSignature, key));
+			}
+		}
+
+		// 验证
+		tx.verify();
+		// 创建上下文
+		Context.getOrCreate(np);
+		// 设置来源
+		tx.getConfidence().setSource(TransactionConfidence.Source.SELF);
+
+		tx.setPurpose(Purpose.USER_PAYMENT);
+		// 生成用于广播的hex字符串
+		String raw = Hex.toHexString(tx.bitcoinSerialize());
+
+		// 广播交易, 返回 交易hash
+		PushTx pushTx = properties.getBroadcastTransaction().apply(raw, omniEndpoints);
+		if (!pushTx.isSuccess()) {
+			if (pushTx.getE() != null) {
+				throw new VirtualCurrencyException("转账失败", pushTx.getE());
+			}
+			throw new VirtualCurrencyException("转账失败");
+		}
+		return TransferResult.success(pushTx.getTxId());
 	}
 
 	/**
@@ -336,113 +361,6 @@ public class OmniHttpServiceImpl implements PlatformService {
 		// 休眠, 然后调用自身
 		ThreadUtil.sleep(sleepTime());
 		return request(domain, endpoints, params);
-	}
-
-	/**
-	 * 手续费和使用的余额
-	 *
-	 * @author lingting 2021-01-07 15:08
-	 */
-	@Data
-	@NoArgsConstructor
-	@AllArgsConstructor
-	public static class FeeAndSpent {
-
-		public static FeeAndSpent of(PlatformService service, Contract contract, TransferParams params,
-				List<Unspent> unspentList, Coin amount, BigInteger min) throws Throwable {
-			// 记录本次转账使用的 spent
-			List<Unspent> useList = new ArrayList<>();
-			// 转出数量
-			Coin outNumber = Coin.ZERO;
-			// 总手续费(不找零)
-			Coin sumFee = Coin.ZERO;
-			// 是否找零
-			boolean isZero = false;
-
-			for (var unspent : unspentList) {
-				// 如果确认数低于最小确认数, 不使用
-				if (unspent.getConfirmations().compareTo(min) < 0) {
-					continue;
-				}
-
-				// 计算手续费(不找零)
-				Coin coin = getSumFee(useList.size(), 1, params);
-				// 计算 转账数量+手续费(不找零)
-				Coin number = amount.add(coin);
-				// 如果转出数量 大于等于 转账数量+手续费(不找零)
-				if (outNumber.compareTo(number) >= 0) {
-					// 如果转出数量 大于 转账数量+手续费(找零)
-					if (outNumber.compareTo(number.add(Coin.valueOf(34))) > 0) {
-						// 找零
-						isZero = true;
-						// 配置总手续费 = 不找零手续费 + 34
-						sumFee = coin.add(Coin.valueOf(34));
-					}
-					// 如果转出数量 小于等于 转账数量+手续费(找零)
-					else {
-						// 不找零
-						isZero = false;
-						// 配置总手续费 = 转出数量 - 转账数量
-						sumFee = outNumber.subtract(amount);
-					}
-					// 足够交易, 结束
-					break;
-				}
-
-				// 如果转出数量 小于等于 转账数量+手续费(不找零), 需要继续添加
-				useList.add(unspent);
-				outNumber = outNumber.add(
-						// 转为 聪
-						BitcoinUtil.btcToCoin(
-								// 交易数量转为 个btc
-								// service.getNumberByBalanceAndContract(new
-								// BigDecimal(unspent.getValue()), contract)));
-								service.getNumberByBalanceAndContract(
-										// 数量
-										new BigDecimal(unspent.getValue()),
-										// 合约
-										contract)));
-
-			}
-
-			// 如果手续费为0, 表示没有进行手续费判断
-			if (sumFee.compareTo(Coin.ZERO) == 0) {
-				// 计算手续费(不找零)
-				Coin coin = getSumFee(useList.size(), 1, params);
-				// 如果转出数量 大于等于 转账数量 + 手续费(不找零)
-				if (outNumber.compareTo(coin.add(amount)) >= 0) {
-					// 如果转出数量 大于 转账数量+手续费(找零)
-					if (outNumber.compareTo(coin.add(amount).add(Coin.valueOf(34))) > 0) {
-						// 找零
-						isZero = true;
-						// 配置总手续费 = 不找零手续费 + 34
-						sumFee = coin.add(Coin.valueOf(34));
-					}
-					// 如果转出数量 小于等于 转账数量+手续费(找零)
-					else {
-						// 不找零
-						isZero = false;
-						// 配置总手续费 = 转出数量 - 转账数量
-						sumFee = outNumber.subtract(amount);
-					}
-				}
-				// 小于
-				else {
-					throw new VirtualCurrencyException("余额不足");
-				}
-			}
-
-			return new FeeAndSpent(sumFee, outNumber, useList, isZero);
-		}
-
-		private Coin fee;
-
-		private Coin outNumber;
-
-		private List<Unspent> list;
-
-		private Boolean zero = false;
-
 	}
 
 }
