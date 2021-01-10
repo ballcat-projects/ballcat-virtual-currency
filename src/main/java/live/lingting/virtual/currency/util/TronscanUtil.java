@@ -4,7 +4,6 @@ import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -50,7 +49,7 @@ public class TronscanUtil {
 			// 收款人
 			String to = decodeAddressParam(array[0]);
 			// 数量
-			BigDecimal amount = new BigDecimal(new BigInteger(AbiUtil.removePreZero(array[1]), 16));
+			BigInteger amount = new BigInteger(AbiUtil.removePreZero(array[1]), 16);
 			return new Trc20Data().setAmount(amount).setTo(to);
 		});
 
@@ -79,7 +78,7 @@ public class TronscanUtil {
 					// 收款人
 					.setTo(decodeAddressParam(array[0]))
 					// 数量
-					.setAmount(new BigDecimal(Long.parseLong(array[1], 16)))
+					.setAmount(new BigInteger(array[1], 16))
 					// 合约地址
 					.setContract(contract);
 		});
@@ -89,8 +88,7 @@ public class TronscanUtil {
 				str = str.substring((AbiMethod.SEND_MULTI_SIG.getMethodId()).length());
 			}
 			String[] array = AbiUtil.stringToArrayBy64(str);
-			return new Trc20Data().setTo(decodeAddressParam(array[0]))
-					.setAmount(new BigDecimal(Long.parseLong(array[1], 16)));
+			return new Trc20Data().setTo(decodeAddressParam(array[0])).setAmount(new BigInteger(array[1], 16));
 		});
 
 		METHOD_HANDLER.put(AbiMethod.TRANSFER_FROM.getMethodId(), str -> {
@@ -104,7 +102,7 @@ public class TronscanUtil {
 					// 收款人
 					.setTo(decodeAddressParam(array[1]))
 					// 数量
-					.setAmount(new BigDecimal(Long.parseLong(array[2], 16)));
+					.setAmount(new BigInteger(array[2], 16));
 		});
 	}
 

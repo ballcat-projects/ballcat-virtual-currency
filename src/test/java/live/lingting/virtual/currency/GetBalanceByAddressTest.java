@@ -13,9 +13,9 @@ import live.lingting.virtual.currency.endpoints.TronscanEndpoints;
 import live.lingting.virtual.currency.properties.InfuraProperties;
 import live.lingting.virtual.currency.properties.OmniProperties;
 import live.lingting.virtual.currency.properties.TronscanProperties;
-import live.lingting.virtual.currency.service.VirtualCurrencyService;
+import live.lingting.virtual.currency.service.PlatformService;
 import live.lingting.virtual.currency.service.impl.InfuraServiceImpl;
-import live.lingting.virtual.currency.service.impl.OmniServiceImpl;
+import live.lingting.virtual.currency.service.impl.OmniHttpServiceImpl;
 import live.lingting.virtual.currency.service.impl.TronscanServiceImpl;
 
 /**
@@ -24,7 +24,7 @@ import live.lingting.virtual.currency.service.impl.TronscanServiceImpl;
 @Slf4j
 public class GetBalanceByAddressTest {
 
-	private VirtualCurrencyService service;
+	private PlatformService service;
 
 	@Test
 	@SneakyThrows
@@ -41,7 +41,7 @@ public class GetBalanceByAddressTest {
 	@Test
 	@SneakyThrows
 	public void btcTest() {
-		service = new OmniServiceImpl(new OmniProperties().setEndpoints(OmniEndpoints.MAINNET));
+		service = new OmniHttpServiceImpl(new OmniProperties().setOmniEndpoints(OmniEndpoints.MAINNET));
 		BigDecimal decimal = service.getNumberByAddressAndContract("1KN4mnqdUhtERmrZdfke1VUkBQUMcicNHE",
 				OmniContract.MAID_SAFE_COIN);
 		System.out.println(decimal);

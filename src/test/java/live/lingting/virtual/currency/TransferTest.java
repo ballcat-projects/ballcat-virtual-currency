@@ -2,24 +2,36 @@ package live.lingting.virtual.currency;
 
 import static live.lingting.virtual.currency.contract.TronscanContract.TRX;
 
+import cn.hutool.core.codec.Base64;
 import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.ECKey;
+import org.bitcoinj.params.TestNet3Params;
+import org.bouncycastle.util.encoders.Hex;
 import org.junit.Test;
 import live.lingting.virtual.currency.contract.Contract;
 import live.lingting.virtual.currency.contract.EtherscanContract;
+import live.lingting.virtual.currency.core.JsonRpcClient;
+import live.lingting.virtual.currency.endpoints.BitcoinEndpoints;
 import live.lingting.virtual.currency.endpoints.InfuraEndpoints;
 import live.lingting.virtual.currency.endpoints.OmniEndpoints;
 import live.lingting.virtual.currency.endpoints.TronscanEndpoints;
+import live.lingting.virtual.currency.omni.PushTx;
 import live.lingting.virtual.currency.properties.InfuraProperties;
 import live.lingting.virtual.currency.properties.OmniProperties;
 import live.lingting.virtual.currency.properties.TronscanProperties;
-import live.lingting.virtual.currency.service.VirtualCurrencyService;
+import live.lingting.virtual.currency.service.PlatformService;
 import live.lingting.virtual.currency.service.impl.InfuraServiceImpl;
-import live.lingting.virtual.currency.service.impl.OmniServiceImpl;
+import live.lingting.virtual.currency.service.impl.OmniHttpServiceImpl;
 import live.lingting.virtual.currency.service.impl.TronscanServiceImpl;
 import live.lingting.virtual.currency.util.AbiUtil;
+import live.lingting.virtual.currency.util.BitcoinUtil;
 import live.lingting.virtual.currency.util.EtherscanUtil;
+import live.lingting.virtual.currency.util.JsonUtil;
 import live.lingting.virtual.currency.util.TronscanUtil;
 
 /**
@@ -28,7 +40,7 @@ import live.lingting.virtual.currency.util.TronscanUtil;
 @Slf4j
 public class TransferTest {
 
-	private VirtualCurrencyService service;
+	private PlatformService service;
 
 	@Test
 	@SneakyThrows
@@ -82,8 +94,97 @@ public class TransferTest {
 
 	@Test
 	@SneakyThrows
+	public void debug() {
+		Map<String, String> headers = new HashMap<>();
+
+		headers.put("Authorization", "Basic " + Base64.encode("omnicorerpc" + ":" + "5hMTZI9iBGFqKxsWfOUF"));
+
+		JsonRpcClient client = JsonRpcClient.of("http://192.168.1.206:18332", headers);
+		TestNet3Params np = TestNet3Params.get();
+
+		String a1 = "miBEA6o6nZcaLZebR1dsDv4AMHRwJk1mbi";
+		String puk1 = "03a5be350852bb09e24edc83f8e02070a74597a8b775af46e8efbef394ae4fa98e";
+		String prk1 = "27b5bf6853c1730c20c152d67d9f4f85b20b674267f621bd1c88d177b2d56d83";
+		Account ac1 = BitcoinUtil.getAccountOfKey(a1, prk1);
+		ECKey ek1 = ECKey.fromPrivate(Hex.decode(prk1));
+
+		// 这个地址是给我发测试币的地址, 直接转回去
+		String a2 = "2MsX74Kyreue6qg8okRtjhnd2yz8zAnLcNi";
+		// 0.01232216
+		String a3 = "mv4rnyY3Su5gjcDNzbMLKBQkBicCtHUtFB";
+		// 0.001 转btc 收到 omni 测试币
+		String a4 = "moneyqMan7uh8FqdCA2BV5yZ8qVrc9ikLP";
+		// yusuo, omni 测试币转
+		String a5 = "2Mw3TeWtsJwJ6C7WE8cpjMhS2X4cWk87NLC";
+
+		client.invokeObj("listunspent", 0, 999999, new String[] { a1 });
+		client.invokeObj("omni_listproperties");
+		client.invokeObj("omni_getproperty", 1);
+		client.invokeObj("omni_getbalance", a1, 1);
+		client.invokeObj("omni_getbalance", a5, 1);
+		client.invokeObj("omni_gettransaction", "5ba9d08a06eb2c0e98c01d34a4517ab711058e8bafee71b9f938a7f0d23df33a");
+		client.invokeObj("omni_gettransaction", "790d15d045e5712ba2f203b1e55bf35ac6cbb9ad2521e1140c95db804cfb7559");
+
+		System.out.println(client);
+	}
+
+	@Test
+	@SneakyThrows
 	public void btcTest() {
-		service = new OmniServiceImpl(new OmniProperties().setEndpoints(OmniEndpoints.MAINNET));
+
+		Map<String, String> headers = new HashMap<>();
+
+		headers.put("Authorization", "Basic " + Base64.encode("omnicorerpc" + ":" + "5hMTZI9iBGFqKxsWfOUF"));
+
+		final JsonRpcClient client = JsonRpcClient.of("http://192.168.1.206:18332", headers);
+
+		service = new OmniHttpServiceImpl(new OmniProperties()
+				// 广播交易
+				.setBroadcastTransaction((raw, endpoints) -> {
+					try {
+						String hash = client.invoke("sendrawtransaction", String.class, raw);
+						return PushTx.success(hash);
+					}
+					catch (Throwable throwable) {
+						return new PushTx(throwable);
+					}
+				})
+				// 网络
+				.setNp(TestNet3Params.get())
+				// omni 节点
+				.setOmniEndpoints(OmniEndpoints.MAINNET)
+				// 比特 节点
+				.setBitcoinEndpoints(BitcoinEndpoints.TEST));
+
+		TestNet3Params np = TestNet3Params.get();
+
+		String a1 = "miBEA6o6nZcaLZebR1dsDv4AMHRwJk1mbi";
+		String puk1 = "03a5be350852bb09e24edc83f8e02070a74597a8b775af46e8efbef394ae4fa98e";
+		String prk1 = "27b5bf6853c1730c20c152d67d9f4f85b20b674267f621bd1c88d177b2d56d83";
+		Account ac1 = BitcoinUtil.getAccountOfKey(a1, prk1);
+		ECKey ek1 = ECKey.fromPrivate(Hex.decode(prk1));
+
+		// 这个地址是给我发测试币的地址, 直接转回去
+		String a2 = "2MsX74Kyreue6qg8okRtjhnd2yz8zAnLcNi";
+		// 0.01232216 + 0.01025856
+		String a3 = "mv4rnyY3Su5gjcDNzbMLKBQkBicCtHUtFB";
+		// 0.001 转btc 收到 omni 测试币
+		String a4 = "moneyqMan7uh8FqdCA2BV5yZ8qVrc9ikLP";
+		// yusuo, omni 测试币转
+		String a5 = "2Mw3TeWtsJwJ6C7WE8cpjMhS2X4cWk87NLC";
+
+		Contract omni = AbiUtil.createContract("1", 8);
+		Contract testOmni = AbiUtil.createContract("2", 8);
+
+		Contract contract = omni;
+		BigDecimal value = new BigDecimal("0.01");
+		// System.out.println("a1 向 a5 转 " + value.toPlainString() + " btc");
+		System.out.println("a1 向 a5 转 " + value.toPlainString() + " omni");
+		TransferParams params = new TransferParams();
+		params.setSumFee(Coin.valueOf(546));
+
+		TransferResult transfer = service.transfer(ac1, a5, contract, value, params);
+		System.out.println(JsonUtil.toJson(transfer));
 	}
 
 	@Test

@@ -5,7 +5,7 @@
     <groupId>live.lingting</groupId>
     <artifactId>virtual-currency</artifactId>
     <packaging>jar</packaging>
-    <version>0.2.2</version>
+    <version>0.3.0</version>
 
     <name>virtual-currency</name>
     <description>虚拟货币处理</description>
@@ -109,6 +109,12 @@
                     <groupId>com.squareup.okhttp3</groupId>
                 </exclusion>
             </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>29.0-jre</version>
         </dependency>
         <dependency>
             <groupId>org.tron.tronj</groupId>

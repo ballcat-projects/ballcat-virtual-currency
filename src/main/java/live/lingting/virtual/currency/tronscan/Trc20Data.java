@@ -1,6 +1,6 @@
 package live.lingting.virtual.currency.tronscan;
 
-import java.math.BigDecimal;
+import java.math.BigInteger;
 import lombok.experimental.Accessors;
 import live.lingting.virtual.currency.AbiMethod;
 import live.lingting.virtual.currency.contract.Contract;
@@ -40,6 +40,6 @@ public class Trc20Data {
 	/**
 	 * 数量
 	 */
-	private BigDecimal amount;
+	private BigInteger amount;
 
 }

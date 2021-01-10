@@ -3,7 +3,6 @@ package live.lingting.virtual.currency.tronscan;
 import cn.hutool.http.HttpRequest;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
 import lombok.Data;
@@ -97,7 +96,7 @@ public class Transaction {
 					private String contractAddress;
 
 					@JsonProperty("amount")
-					private BigDecimal amount;
+					private BigInteger amount;
 
 					@JsonProperty("asset_name")
 					private String assetName;

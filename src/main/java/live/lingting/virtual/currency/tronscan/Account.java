@@ -4,6 +4,7 @@ import cn.hutool.http.HttpRequest;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 import lombok.NoArgsConstructor;
@@ -75,7 +76,7 @@ public class Account {
 		private BigDecimal freeNetUsage;
 
 		@JsonProperty("balance")
-		private BigDecimal balance;
+		private BigInteger balance;
 
 		@JsonProperty("latest_consume_free_time")
 		private Long latestConsumeFreeTime;
@@ -99,7 +100,7 @@ public class Account {
 		private List<AssetV2> assetV2;
 
 		@JsonProperty("trc20")
-		private List<Map<String, BigDecimal>> trc20;
+		private List<Map<String, BigInteger>> trc20;
 
 		@NoArgsConstructor
 		@lombok.Data
@@ -223,7 +224,7 @@ public class Account {
 		public static class AssetV2 {
 
 			@JsonProperty("value")
-			private BigDecimal value;
+			private BigInteger value;
 
 			@JsonProperty("key")
 			private String key;

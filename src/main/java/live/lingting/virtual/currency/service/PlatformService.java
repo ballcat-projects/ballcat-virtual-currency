@@ -1,6 +1,7 @@
 package live.lingting.virtual.currency.service;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.math.MathContext;
 import java.util.Optional;
 import live.lingting.virtual.currency.Account;
@@ -17,7 +18,7 @@ import live.lingting.virtual.currency.contract.TronscanContract;
  *
  * @author lingting 2020-09-01 17:15
  */
-public interface VirtualCurrencyService {
+public interface PlatformService {
 
 	/**
 	 * 通过交易hash获取交易信息
@@ -45,7 +46,7 @@ public interface VirtualCurrencyService {
 	 * @author lingting 2020-12-10 23:56
 	 * @exception Throwable 可能抛出的异常
 	 */
-	BigDecimal getBalanceByAddressAndContract(String address, Contract contract) throws Throwable;
+	BigInteger getBalanceByAddressAndContract(String address, Contract contract) throws Throwable;
 
 	/**
 	 * 获取指定地址, 指定合约余额 (单位: 个)
@@ -61,7 +62,7 @@ public interface VirtualCurrencyService {
 
 	/**
 	 * 通过
-	 * {@link VirtualCurrencyService#getBalanceByAddressAndContract(java.lang.String, Contract)}
+	 * {@link PlatformService#getBalanceByAddressAndContract(java.lang.String, Contract)}
 	 * 方法的余额单位不一定是个, 会附带小数, 可执行此方法转换为以个为单位
 	 * @param balance getBalanceByAddressAndContract 方法返回值
 	 * @param contract 合约地址
@@ -69,13 +70,13 @@ public interface VirtualCurrencyService {
 	 * @author lingting 2020-12-11 17:20
 	 * @exception Throwable 可能抛出的异常
 	 */
-	default BigDecimal getNumberByBalanceAndContract(BigDecimal balance, Contract contract) throws Throwable {
+	default BigDecimal getNumberByBalanceAndContract(BigInteger balance, Contract contract) throws Throwable {
 		return getNumberByBalanceAndContract(balance, contract, MathContext.UNLIMITED);
 	}
 
 	/**
 	 * 通过
-	 * {@link VirtualCurrencyService#getBalanceByAddressAndContract(java.lang.String, Contract)}
+	 * {@link PlatformService#getBalanceByAddressAndContract(java.lang.String, Contract)}
 	 * 方法的余额单位不一定是个, 会附带小数, 可执行此方法转换为以个为单位
 	 * @param balance getBalanceByAddressAndContract 方法返回值
 	 * @param contract 合约地址
@@ -84,8 +85,19 @@ public interface VirtualCurrencyService {
 	 * @author lingting 2020-12-11 17:20
 	 * @exception Throwable 可能抛出的异常
 	 */
-	BigDecimal getNumberByBalanceAndContract(BigDecimal balance, Contract contract, MathContext mathContext)
+	BigDecimal getNumberByBalanceAndContract(BigInteger balance, Contract contract, MathContext mathContext)
 			throws Throwable;
+
+	/**
+	 * 指定合约金额(单位 个)转为数量
+	 * @param value 金额
+	 * @param contract 合约
+	 * @return 返回数量
+	 * @throws Throwable 异常
+	 */
+	default BigInteger valueToBalanceByContract(BigDecimal value, Contract contract) throws Throwable {
+		return value.multiply(BigDecimal.TEN.pow(getDecimalsByContract(contract))).toBigInteger();
+	}
 
 	/**
 	 * 转账
