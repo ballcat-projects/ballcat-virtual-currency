@@ -33,6 +33,10 @@ public enum TronscanContract implements Contract {
 	 * PW
 	 */
 	PW("1002263", 0),
+	/**
+	 * PTP
+	 */
+	PTP("1001367", 0),
 
 	;
 

@@ -55,12 +55,8 @@ public class TransferTest {
 
 		Contract contract = AbiUtil.createContract("0x9bae6500cd511f1546f7c1e1a9baf34b3afd5d01");
 
-		// String a1 = "0x9471851ad4032899a6fd45fc730dfc40f91ffd3c";
 		String a1 = "0x8825226957c7898113f6a1dddb680bf355782342";
-		// String pb1 =
-		// "56d67ccdc455b93b46a3fd21f950c93d8be2e18c872126e584c7653e4a4796fac59b93bb3c52aa2563df6e72651e938f5a38a0fbae61c513486ee707d0542317";
 		String pb1 = "df154f4660d9fb2645bdbf24db3a0875be6f84295323c873c6d2b3ba9e41bc255c5c7c5547997a81013fc674d0ee69c8d10f1aa295e48e994a383647072b7b17";
-		// String pr1 = "f520231e9ff23a651135467028136bbc5193c6bc71465480215ccf8e16a97be";
 		String pr1 = "a2aef487fce63769f65689fcea175c79aa6faeb5aca9ac8a57052a8d898a9c9";
 		Account ac1 = EtherscanUtil.getAccountOfKey(a1, pr1);
 

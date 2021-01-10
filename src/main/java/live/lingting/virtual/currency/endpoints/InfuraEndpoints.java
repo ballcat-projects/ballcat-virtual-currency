@@ -21,6 +21,9 @@ public enum InfuraEndpoints implements Endpoints {
 
 	KOVAN("https://kovan.infura.io/v3/", ""),
 
+	/**
+	 * 浏览器地址 https://rinkeby.etherscan.io/
+	 */
 	RINKEBY("https://rinkeby.infura.io/v3/", ""),
 	/*
 	 * 下面这个节点实际名称 GÖRLI, 由于该名称存在非ascii字符，改名
