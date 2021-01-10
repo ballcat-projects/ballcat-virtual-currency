@@ -87,7 +87,7 @@ public class InfuraServiceImpl implements PlatformService {
 		Input input;
 		// 不是使用代币交易，而是直接使用eth交易
 		if (EtherscanUtil.START.equals(byHash.getInput())) {
-			input = new Input().setTo(byHash.getTo()).setValue(new BigInteger(byHash.getValue()))
+			input = new Input().setTo(byHash.getTo()).setValue(EtherscanUtil.toBigInteger(byHash.getValue()))
 					.setContract(EtherscanContract.ETH);
 		}
 		else {
