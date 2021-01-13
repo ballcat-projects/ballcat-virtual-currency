@@ -115,15 +115,14 @@ public class Transfer {
 				// 假设只拥有第三个公钥对应的私钥
 				ListUtil.toList("", "", "7102ee9535259e129c392ee061b0e97ecd86d248fd99425a1aa4285ccaf651cc"));
 
-		ac9	= BitcoinUtil.getAccountOfKey(
-				"tb1qdhgxl3vjcg9djhd30zykmz83x63nau4rtmahmd",
+		ac9 = BitcoinUtil.getAccountOfKey("tb1qdhgxl3vjcg9djhd30zykmz83x63nau4rtmahmd",
 				"02e16db98d2012dc17dec062ccb898fb1c7afe6d278763eefdc2d5eae721e8b2df",
-				"8aee29b56cab5c2fbb48a2e9e54382804f33ef7dbca039eb8a3dcab97ad2e47e"
-		);
+				"8aee29b56cab5c2fbb48a2e9e54382804f33ef7dbca039eb8a3dcab97ad2e47e");
 	}
 
 	@Test
 	public void createMultiAddress() throws Throwable {
+		init();
 		List<ECKey> keys = ListUtil.toList(
 				// 020f36d7b035992140d1aec93cdbfd1780c5cb70a138394d42e296e94734a8846a
 				ECKey.fromPrivate(Hex.decode("395222b75a102bdabaeb3f6d616ad7972642e5bfe529e3052814ef340e931fb3")),
@@ -200,12 +199,13 @@ public class Transfer {
 		// TransferResult transfer = service.transfer(ac1, ac8.getAddress(),
 		// OmniContract.BTC, value);
 		// TransferResult transfer = service.transfer(ac6, a1, OmniContract.BTC, value);
-		//TransferResult transfer = service.transfer(ac8, a1, OmniContract.BTC, value);
+		// TransferResult transfer = service.transfer(ac8, a1, OmniContract.BTC, value);
 		// TransferResult transfer = service.transfer(ac1, a6, OmniContract.BTC, value);
 		// TransferResult transfer = service.transfer(ac5, a1, OmniContract.BTC, value);
 		// TransferResult transfer = service.transfer(ac7, a3, OmniContract.BTC, value);
-		// TransferResult transfer = service.transfer(ac1, ac9.getAddress(), OmniContract.BTC, value);
-		 TransferResult transfer = service.transfer(ac8, ac9.getAddress(), OmniContract.BTC, value);
+		// TransferResult transfer = service.transfer(ac1, ac9.getAddress(),
+		// OmniContract.BTC, value);
+		TransferResult transfer = service.transfer(ac8, ac9.getAddress(), OmniContract.BTC, value);
 
 		if (!transfer.getSuccess()) {
 			System.out.println("转账失败: " + JsonUtil.toJson(transfer));
@@ -231,16 +231,9 @@ public class Transfer {
 		System.out.println(
 				"a5 OMNI 余额: " + client.invokeObj("omni_getbalance", a5, Convert.toInt(OmniContract.OMNI.getHash())));
 
-		// 获取未使用花费
-		// System.out.println(client.invokeObj("listunspent", 0, 999999, new String[] { a1
-		// }));
-		// System.out.println(client.invokeObj("listunspent", 0, 999999, new String[] { a6
-		// }));
-		client.invokeObj("omni_getbalance", a1, 1);
-		client.invokeObj("omni_getbalance", a6, 1);
 		BigDecimal value = new BigDecimal("0.01");
-		System.out.println("a1 向 a6 转 " + value.toPlainString() + " OMNI");
-		TransferResult transfer = service.transfer(ac1, a6, OmniContract.OMNI, value);
+		System.out.println("a1 向 a5 转 " + value.toPlainString() + " OMNI");
+		TransferResult transfer = service.transfer(ac1, a5, OmniContract.OMNI, value);
 
 		if (!transfer.getSuccess()) {
 			System.out.println("转账失败: " + JsonUtil.toJson(transfer));
@@ -248,6 +241,7 @@ public class Transfer {
 		else {
 			System.out.println("转账成功");
 			System.out.println(transfer.getHash());
+			System.out.println(client.invokeObj("omni_gettransaction", transfer.getHash()));
 		}
 	}
 
