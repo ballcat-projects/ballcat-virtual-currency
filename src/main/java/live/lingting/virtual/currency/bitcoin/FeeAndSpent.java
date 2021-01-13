@@ -92,8 +92,6 @@ public class FeeAndSpent {
 					// 转为 聪
 					BitcoinUtil.btcToCoin(
 							// 交易数量转为 个btc
-							// service.getNumberByBalanceAndContract(new
-							// BigDecimal(unspent.getValue()), contract)));
 							service.getNumberByBalanceAndContract(
 									// 数量
 									new BigInteger(unspent.getValue()),
@@ -127,7 +125,7 @@ public class FeeAndSpent {
 			}
 			// 小于
 			else {
-				throw new VirtualCurrencyException("余额不足");
+				throw new VirtualCurrencyException("余额不足 "+ coin.add(amount).toPlainString());
 			}
 		}
 

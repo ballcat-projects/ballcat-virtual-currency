@@ -21,13 +21,15 @@ public class Select {
 	private static final PlatformService service;
 
 	static {
-		service = new BtcOmniServiceImpl(new OmniProperties().setOmniEndpoints(OmniEndpoints.MAINNET).setBitcoinEndpoints(BitcoinEndpoints.MAINNET));
+		service = new BtcOmniServiceImpl(new OmniProperties().setOmniEndpoints(OmniEndpoints.MAINNET)
+				.setBitcoinEndpoints(BitcoinEndpoints.MAINNET));
 	}
 
 	@Test
 	@SneakyThrows
 	public void btc() {
-		Optional<Transaction> optional = service.getTransactionByHash("3130a1f6e1101deb1a5afee161eaf9ec66ee42727e706b1adab32ed68cf1ab38");
+		Optional<Transaction> optional = service
+				.getTransactionByHash("3130a1f6e1101deb1a5afee161eaf9ec66ee42727e706b1adab32ed68cf1ab38");
 
 		System.out.println("交易是否存在: " + optional.isPresent());
 		if (optional.isPresent()) {
@@ -56,7 +58,8 @@ public class Select {
 	@Test
 	@SneakyThrows
 	public void property() {
-		Optional<Transaction> optional = service.getTransactionByHash("3130a1f6e1101deb1a5afee161eaf9ec66ee42727e706b1adab32ed68cf1ab38");
+		Optional<Transaction> optional = service
+				.getTransactionByHash("3130a1f6e1101deb1a5afee161eaf9ec66ee42727e706b1adab32ed68cf1ab38");
 
 		System.out.println("交易是否存在: " + optional.isPresent());
 		if (optional.isPresent()) {

@@ -5,12 +5,14 @@ import static org.bitcoinj.core.Transaction.Purpose;
 import static org.bitcoinj.core.Transaction.SigHash;
 
 import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.MathContext;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +30,7 @@ import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutPoint;
+import org.bitcoinj.core.TransactionWitness;
 import org.bitcoinj.core.Utils;
 import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.script.Script;
@@ -278,9 +281,6 @@ public class BtcOmniServiceImpl implements PlatformService {
 				// 最小确认数
 				new BigInteger(properties.getConfirmationsMin().toString()));
 
-		// 输入地址密钥
-		ECKey key = ECKey.fromPrivate(Hex.decode(from.getPrivateKey()));
-
 		// 构筑交易
 		org.bitcoinj.core.Transaction tx = new org.bitcoinj.core.Transaction(np);
 
@@ -297,7 +297,7 @@ public class BtcOmniServiceImpl implements PlatformService {
 					// 找零 = 输出数量 - 手续费 - 转账数量
 					fs.getOutNumber().subtract(fs.getFee()).subtract(btcAmount),
 					// 找零给自己
-					key);
+					fromAddress);
 		}
 
 		// 转账合约输出
@@ -331,19 +331,77 @@ public class BtcOmniServiceImpl implements PlatformService {
 		List<TransactionInput> inputs = tx.getInputs();
 		// 签名输入
 		for (int i = 0; i < inputs.size(); i++) {
-			Script scriptPubKey = ScriptBuilder.createOutputScript(fromAddress);
-			Sha256Hash hash = tx.hashForSignature(i, scriptPubKey, SigHash.ALL, true);
-			ECKey.ECDSASignature ecdsaSignature = key.sign(hash);
-			TransactionSignature txSignature = new TransactionSignature(ecdsaSignature, SigHash.ALL, true);
-			if (ScriptPattern.isP2PK(scriptPubKey)) {
-				tx.getInput(i).setScriptSig(ScriptBuilder.createInputScript(txSignature));
+			TransactionInput txIn = tx.getInput(i);
+			Script script = txIn.getScriptSig();
+			// p2sh处理
+			if (ScriptPattern.isP2SH(script)) {
+				List<TransactionSignature> signatures;
+				List<ECKey> keys;
+				// 多签
+				if (from.getMulti()) {
+					keys = new ArrayList<>(from.getPublicKeyArray().size());
+					List<String> publicKeyArray = from.getPublicKeyArray();
+					for (int j = 0; j < publicKeyArray.size(); j++) {
+						// 私钥为空
+						if (StrUtil.isBlank(from.getPrivateKeyArray().get(j))) {
+							keys.add(ECKey.fromPublicOnly(Hex.decode(publicKeyArray.get(j))));
+						}
+						// 私钥不为空
+						else {
+							keys.add(ECKey.fromPrivate(Hex.decode(from.getPrivateKeyArray().get(j))));
+						}
+					}
+				}
+				// 单签
+				else {
+					keys = ListUtil.toList(ECKey.fromPrivate(Hex.decode(from.getPrivateKey())));
+				}
+
+				// 创建脚本
+				script = ScriptBuilder.createMultiSigOutputScript(from.getMultiNum(), keys);
+				signatures = new ArrayList<>(keys.size());
+				for (ECKey key : keys) {
+					if (key.hasPrivKey()) {
+						signatures.add(new TransactionSignature(
+								// 签名
+								key.sign(
+										// 生成hash
+										tx.hashForSignature(i, script, SigHash.ALL, false)),
+								SigHash.ALL, false)
+
+						);
+					}
+				}
+
+				Script scriptSig = ScriptBuilder.createP2SHMultiSigInputScript(signatures, script);
+				txIn.setScriptSig(scriptSig);
+				continue;
+			}
+
+			ECKey key = ECKey.fromPrivate(Hex.decode(from.getPrivateKey()));
+
+			if (ScriptPattern.isP2WPKH(script)) {
+				System.out.println("isP2WPKH");
+				script = ScriptBuilder.createP2WPKHOutputScript(key);
+				TransactionSignature signature = tx.calculateWitnessSignature(i, key, script, txIn.getValue(),
+						SigHash.ALL, false);
+				txIn.setScriptSig(ScriptBuilder.createEmpty());
+				txIn.setWitness(TransactionWitness.redeemP2WPKH(signature, key));
+				continue;
+			}
+
+			Sha256Hash hash = tx.hashForSignature(i, script, SigHash.ALL, false);
+			TransactionSignature txSignature = new TransactionSignature(key.sign(hash), SigHash.ALL, false);
+
+			if (ScriptPattern.isP2PK(script)) {
+				txIn.setScriptSig(ScriptBuilder.createInputScript(txSignature));
+			}
+			else if (ScriptPattern.isP2PKH(script)) {
+				txIn.setScriptSig(ScriptBuilder.createInputScript(txSignature, key));
 			}
 			else {
-				if (!ScriptPattern.isP2PKH(scriptPubKey)) {
-					throw new ScriptException(ScriptError.SCRIPT_ERR_UNKNOWN_ERROR,
-							"Unable to sign this scrptPubKey: " + scriptPubKey);
-				}
-				tx.getInput(i).setScriptSig(ScriptBuilder.createInputScript(txSignature, key));
+				throw new ScriptException(ScriptError.SCRIPT_ERR_UNKNOWN_ERROR,
+						"Unable to sign this scriptPubKey: " + script);
 			}
 		}
 
@@ -357,7 +415,7 @@ public class BtcOmniServiceImpl implements PlatformService {
 		tx.setPurpose(Purpose.USER_PAYMENT);
 		// 生成用于广播的hex字符串
 		String raw = Hex.toHexString(tx.bitcoinSerialize());
-
+		System.out.println(raw);
 		// 广播交易, 返回 交易hash
 		PushTx pushTx = properties.getBroadcastTransaction().apply(raw, omniEndpoints);
 		if (!pushTx.isSuccess()) {

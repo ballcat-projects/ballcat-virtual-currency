@@ -77,8 +77,8 @@ public class Transfer {
 		System.out.println("a1 向 a2 转 " + value.toPlainString() + " eth");
 		TransferResult transfer = service.transfer(ac1, a2, EtherscanContract.ETH, value);
 
-		if (!transfer.getSuccess()){
-			System.out.println("转账失败: "+ JsonUtil.toJson(transfer));
+		if (!transfer.getSuccess()) {
+			System.out.println("转账失败: " + JsonUtil.toJson(transfer));
 		}
 		else {
 			System.out.println("转账成功");
@@ -90,7 +90,7 @@ public class Transfer {
 	@SneakyThrows
 	public void erc20() {
 		// 通过浏览器查看到的精度为 18
-		System.out.println("cl 精度 "+ service.getDecimalsByContract(cl));
+		System.out.println("cl 精度 " + service.getDecimalsByContract(cl));
 
 		// 可在 https://rinkeby.chain.link/ 中获取
 		BigDecimal b1 = service.getNumberByAddressAndContract(a1, cl);
@@ -103,8 +103,8 @@ public class Transfer {
 		System.out.println("a1 向 a2 转 " + value.toPlainString() + " cl");
 		TransferResult transfer = service.transfer(ac1, a2, cl, value);
 
-		if (!transfer.getSuccess()){
-			System.out.println("转账失败: "+ JsonUtil.toJson(transfer));
+		if (!transfer.getSuccess()) {
+			System.out.println("转账失败: " + JsonUtil.toJson(transfer));
 		}
 		else {
 			System.out.println("转账成功");

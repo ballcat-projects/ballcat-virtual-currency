@@ -4,18 +4,23 @@ import cn.hutool.http.HttpRequest;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 import live.lingting.virtual.currency.endpoints.Endpoints;
 import live.lingting.virtual.currency.util.JsonUtil;
 
 /**
  * @author lingting 2021/1/7 11:19
  */
-@NoArgsConstructor
 @Data
+@NoArgsConstructor
+@Accessors(chain = true)
 public class UnspentRes {
+
+	public static final String ERROR = "No free outputs to spend";
 
 	@JsonProperty("notice")
 	private String notice;
@@ -34,7 +39,11 @@ public class UnspentRes {
 	public static UnspentRes of(Endpoints endpoints, int min, String address) throws JsonProcessingException {
 		HttpRequest request = HttpRequest
 				.get(endpoints.getHttpUrl("unspent?confirmations=" + min + "&active=" + address));
-		return JsonUtil.toObj(request.execute().body(), UnspentRes.class);
+		String response = request.execute().body();
+		if (response.equals(ERROR)) {
+			return new UnspentRes().setUnspentList(new ArrayList<>());
+		}
+		return JsonUtil.toObj(response, UnspentRes.class);
 	}
 
 	@NoArgsConstructor

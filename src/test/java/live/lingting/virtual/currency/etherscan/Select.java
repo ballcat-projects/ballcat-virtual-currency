@@ -29,7 +29,8 @@ public class Select {
 	@Test
 	@SneakyThrows
 	public void etc() {
-		Optional<Transaction> optional = service.getTransactionByHash("0x17dfd34a127eab2be3c17e9567d42ab39fde92907b23bb190071744eff2be9e0");
+		Optional<Transaction> optional = service
+				.getTransactionByHash("0x17dfd34a127eab2be3c17e9567d42ab39fde92907b23bb190071744eff2be9e0");
 
 		System.out.println("交易是否存在: " + optional.isPresent());
 		if (optional.isPresent()) {
@@ -57,7 +58,8 @@ public class Select {
 	@Test
 	@SneakyThrows
 	public void erc20() {
-		Optional<Transaction> optional = service.getTransactionByHash("0x17dfd34a127eab2be3c17e9567d42ab39fde92907b23bb190071744eff2be9e0");
+		Optional<Transaction> optional = service
+				.getTransactionByHash("0x17dfd34a127eab2be3c17e9567d42ab39fde92907b23bb190071744eff2be9e0");
 
 		System.out.println("交易是否存在: " + optional.isPresent());
 		if (optional.isPresent()) {
