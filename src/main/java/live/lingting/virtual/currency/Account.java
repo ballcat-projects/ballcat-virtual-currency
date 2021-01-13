@@ -65,7 +65,7 @@ public class Account {
 	 * 请注意多签账号公私钥顺序, 顺序不正确可能导致交易广播失败
 	 * @author lingting 2021-01-12 17:13
 	 */
-	public Account(String address,int multiNum, List<String> publicKeyArray, List<String> privateKeyArray) {
+	public Account(String address, int multiNum, List<String> publicKeyArray, List<String> privateKeyArray) {
 		this.address = address;
 		this.multi = true;
 		this.multiNum = multiNum;

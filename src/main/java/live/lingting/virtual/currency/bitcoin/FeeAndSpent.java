@@ -125,7 +125,7 @@ public class FeeAndSpent {
 			}
 			// 小于
 			else {
-				throw new VirtualCurrencyException("余额不足 "+ coin.add(amount).toPlainString());
+				throw new VirtualCurrencyException("余额不足 " + coin.add(amount).toPlainString());
 			}
 		}
 
