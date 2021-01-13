@@ -3,6 +3,8 @@ package live.lingting.virtual.currency.properties;
 import cn.hutool.core.convert.Convert;
 import cn.hutool.http.HttpRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
@@ -12,6 +14,8 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.TestNet3Params;
+import live.lingting.virtual.currency.bitcoin.Unspent;
+import live.lingting.virtual.currency.bitcoin.UnspentRes;
 import live.lingting.virtual.currency.endpoints.Endpoints;
 import live.lingting.virtual.currency.omni.PushTx;
 import live.lingting.virtual.currency.util.JsonUtil;
@@ -59,6 +63,18 @@ public class OmniProperties implements PlatformProperties {
 		}
 		catch (JsonProcessingException e) {
 			return new PushTx(e);
+		}
+	};
+
+	/**
+	 * 获取未花费输出
+	 */
+	public BiFunction<String, Endpoints, List<Unspent>> unspent = (address, endpoints) -> {
+		try {
+			return Unspent.of(UnspentRes.of(endpoints, getConfirmationsMin(), address));
+		}
+		catch (Exception e) {
+			return Collections.emptyList();
 		}
 	};
 

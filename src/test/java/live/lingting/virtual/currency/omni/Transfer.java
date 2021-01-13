@@ -205,7 +205,8 @@ public class Transfer {
 		// TransferResult transfer = service.transfer(ac7, a3, OmniContract.BTC, value);
 		// TransferResult transfer = service.transfer(ac1, ac9.getAddress(),
 		// OmniContract.BTC, value);
-		TransferResult transfer = service.transfer(ac8, ac9.getAddress(), OmniContract.BTC, value);
+		//TransferResult transfer = service.transfer(ac8, ac9.getAddress(), OmniContract.BTC, value);
+		TransferResult transfer = service.transfer(ac9, a3, OmniContract.BTC, value);
 
 		if (!transfer.getSuccess()) {
 			System.out.println("转账失败: " + JsonUtil.toJson(transfer));

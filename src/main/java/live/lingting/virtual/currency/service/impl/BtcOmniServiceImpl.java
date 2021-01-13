@@ -46,8 +46,7 @@ import live.lingting.virtual.currency.TransferResult;
 import live.lingting.virtual.currency.bitcoin.FeeAndSpent;
 import live.lingting.virtual.currency.bitcoin.LatestBlock;
 import live.lingting.virtual.currency.bitcoin.RawTransaction;
-import live.lingting.virtual.currency.bitcoin.UnspentRes;
-import live.lingting.virtual.currency.bitcoin.UnspentRes.Unspent;
+import live.lingting.virtual.currency.bitcoin.Unspent;
 import live.lingting.virtual.currency.contract.Contract;
 import live.lingting.virtual.currency.contract.OmniContract;
 import live.lingting.virtual.currency.endpoints.Endpoints;
@@ -275,7 +274,7 @@ public class BtcOmniServiceImpl implements PlatformService {
 				// 参数
 				params,
 				// 未使用余额
-				UnspentRes.of(bitcoinEndpoints, properties.getConfirmationsMin(), from.getAddress()).getUnspentList(),
+				properties.getUnspent().apply(from.getAddress(), bitcoinEndpoints),
 				// 转账数量
 				btcAmount,
 				// 最小确认数
@@ -320,11 +319,11 @@ public class BtcOmniServiceImpl implements PlatformService {
 		// 添加输入
 		for (int i = 0; i < fs.getList().size(); i++) {
 			Unspent spent = fs.getList().get(i);
-			TransactionOutPoint outPoint = new TransactionOutPoint(np, spent.getTxOutputN(),
-					Sha256Hash.wrap(spent.getTxId()));
+			TransactionOutPoint outPoint = new TransactionOutPoint(np, spent.getOut(),
+					Sha256Hash.wrap(spent.getHash()));
 
 			TransactionInput input = new TransactionInput(np, tx, Hex.decode(spent.getScript()), outPoint,
-					Coin.valueOf(Long.parseLong(spent.getValue())));
+					Coin.valueOf(spent.getValue().longValue()));
 			tx.addInput(input);
 		}
 
