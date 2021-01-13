@@ -1,48 +1,110 @@
 package live.lingting.virtual.currency.util;
 
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.StrUtil;
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.math.MathContext;
+import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.List;
+import org.bitcoinj.core.Base58;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.core.SegwitAddress;
+import org.bitcoinj.core.Sha256Hash;
+import org.bouncycastle.crypto.digests.RIPEMD160Digest;
 import org.bouncycastle.util.encoders.Hex;
 import live.lingting.virtual.currency.Account;
 import live.lingting.virtual.currency.TransferParams;
-import live.lingting.virtual.currency.bitcoin.UnspentRes;
 
 /**
  * @author lingting 2020/12/28 17:49
  */
 public class BitcoinUtil {
 
-	public static final Coin COIN_TEN = Coin.valueOf(10);
-
 	/**
-	 * @param id id 可在 [
-	 * {@link NetworkParameters#ID_MAINNET},{@link NetworkParameters#ID_TESTNET} ] 中选择
+	 * omni 合约转账 script 开头字符串
 	 */
-	public static Account create(String id) {
-		return create(NetworkParameters.fromID(id));
-	}
+	public static final String PROPERTY_PREFIX = "6a146f6d6e69";
 
 	/**
+	 * 基础地址
 	 * @param parameters 表示地址在哪个网络使用, 使用
 	 * {@link NetworkParameters#fromID(java.lang.String)} 此方法进行生成, id 可在 [
 	 * {@link NetworkParameters#ID_MAINNET},{@link NetworkParameters#ID_TESTNET} ] 中选择
 	 */
-	public static Account create(NetworkParameters parameters) {
-		ECKey ecKey = new ECKey();
+	public static Account createLegacyAddress(NetworkParameters parameters) {
+		ECKey ecKey = new ECKey(new SecureRandom());
 		return new Account()
 				// 地址
-				.setAddress(LegacyAddress.fromKey(parameters, ecKey).toBase58())
+				.setAddress(LegacyAddress.fromKey(parameters, ecKey).toString())
 				// 私钥
 				.setPrivateKey(ecKey.getPrivateKeyAsHex())
 				// 公钥
 				.setPublicKey(ecKey.getPublicKeyAsHex());
+	}
+
+	/**
+	 * 隔离见证地址
+	 * @author lingting 2021-01-12 13:24
+	 */
+	public static Account createSegwitAddress(NetworkParameters parameters) {
+		ECKey ecKey = new ECKey(new SecureRandom());
+		return new Account()
+				// 地址
+				.setAddress(SegwitAddress.fromKey(parameters, ecKey).toString())
+				// 私钥
+				.setPrivateKey(ecKey.getPrivateKeyAsHex())
+				// 公钥
+				.setPublicKey(ecKey.getPublicKeyAsHex());
+	}
+
+	/**
+	 * 创建多签地址
+	 * @param min 最小值, 即多少个人签名即可进行交易
+	 * @param number 通过多少个地址来生成
+	 * @author lingting 2021-01-12 17:10
+	 */
+	public static Account createMultiAddress(NetworkParameters parameters, int min, int number) {
+		List<ECKey> keys = new ArrayList<>();
+		for (int i = 0; i < number; i++) {
+			keys.add(new ECKey(new SecureRandom()));
+		}
+
+		return createMultiAddress(parameters, min, keys);
+	}
+
+	public static Account createMultiAddress(NetworkParameters parameters, int min, List<ECKey> keys) {
+		// 构筑脚本
+		StringBuilder script = new StringBuilder(Hex.toHexString(new byte[] { (byte) (80 + min) }));
+
+		List<String> publicKeys = new ArrayList<>(keys.size());
+		List<String> privateKeys = new ArrayList<>(keys.size());
+
+		for (ECKey key : keys) {
+			String publicKeyAsHex = key.getPublicKeyAsHex();
+			publicKeys.add(publicKeyAsHex);
+			privateKeys.add(key.getPrivateKeyAsHex());
+			script.append("21").append(publicKeyAsHex);
+		}
+		script.append(Hex.toHexString(new byte[] { (byte) (80 + keys.size()) })).append("ae");
+
+		// sha256
+		byte[] sha256 = Sha256Hash.hash(Hex.decode(script.toString()));
+
+		// 散列脚本
+		RIPEMD160Digest digest = new RIPEMD160Digest();
+		digest.update(sha256, 0, sha256.length);
+		byte[] out = new byte[20];
+		digest.doFinal(out, 0);
+
+		// 转为 p2sh地址
+		String address = Base58.encodeChecked(parameters.getP2SHHeader(), out);
+		return new Account().setAddress(address).setMulti(true).setPrivateKeyArray(privateKeys)
+				.setPublicKeyArray(publicKeys);
 	}
 
 	/**
@@ -82,12 +144,26 @@ public class BitcoinUtil {
 	}
 
 	/**
-	 * 未使用余额中的 value 转为 聪
-	 * @see UnspentRes.Unspent#getValue()
-	 * @author lingting 2021-01-07 16:41
+	 * 生成多签账号
+	 * @param multiNum 最少签名个数, 简单来说必须转入与 multiNum 对应数量的可用私钥
+	 * @param address 地址
+	 * @param publicKeyArray 所有 公钥 请注意顺序, 如果顺序与生成时不一致可能导致无法正常交易
+	 * @param privateKeyArray 请与 公钥 一一对应, 如果您未拥有该 公钥 对应的 私钥, 则插入 空值
+	 * @return live.lingting.virtual.currency.Account
+	 * @author lingting 2021-01-12 20:51
 	 */
-	public static Coin unspentValueToCoin(BigInteger value) {
-		return Coin.valueOf(value.longValue());
+	public static Account getMultiAccountOfKey(String address, int multiNum, List<String> publicKeyArray,
+			List<String> privateKeyArray) {
+		// 最少一个签名
+		Assert.isFalse(multiNum < 1);
+		// 地址不能为空
+		Assert.isFalse(StrUtil.isBlank(address));
+		// 密钥不能为空
+		Assert.isFalse(CollectionUtil.isEmpty(publicKeyArray));
+		Assert.isFalse(CollectionUtil.isEmpty(privateKeyArray));
+		// 公私钥长度必须一致
+		Assert.isFalse(publicKeyArray.size() != privateKeyArray.size());
+		return new Account(address, multiNum, publicKeyArray, privateKeyArray);
 	}
 
 	/**

@@ -31,14 +31,14 @@ public class FeeAndSpent {
 
 	private Coin outNumber;
 
-	private List<UnspentRes.Unspent> list;
+	private List<Unspent> list;
 
 	private Boolean zero = false;
 
 	public static FeeAndSpent of(PlatformService service, Contract contract, TransferParams params,
-			List<UnspentRes.Unspent> unspentList, Coin amount, BigInteger min) throws Throwable {
+			List<Unspent> unspentList, Coin amount, BigInteger min) throws Throwable {
 		// 记录本次转账使用的 spent
-		List<UnspentRes.Unspent> useList = new ArrayList<>();
+		List<Unspent> useList = new ArrayList<>();
 		// 转出数量
 		Coin outNumber = Coin.ZERO;
 		// 总手续费(不找零)
@@ -92,11 +92,9 @@ public class FeeAndSpent {
 					// 转为 聪
 					BitcoinUtil.btcToCoin(
 							// 交易数量转为 个btc
-							// service.getNumberByBalanceAndContract(new
-							// BigDecimal(unspent.getValue()), contract)));
 							service.getNumberByBalanceAndContract(
 									// 数量
-									new BigInteger(unspent.getValue()),
+									unspent.getValue(),
 									// 合约
 									contract)));
 
@@ -127,7 +125,7 @@ public class FeeAndSpent {
 			}
 			// 小于
 			else {
-				throw new VirtualCurrencyException("余额不足");
+				throw new VirtualCurrencyException("余额不足 " + coin.add(amount).toPlainString());
 			}
 		}
 

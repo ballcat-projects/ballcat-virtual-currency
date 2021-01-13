@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
- * tronscan 节点
+ * tronscan 节点, 文档 https://cn.developers.tron.network/
  *
  * @author lingting 2020-09-02 17:04
  */

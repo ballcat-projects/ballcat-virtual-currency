@@ -192,7 +192,7 @@ public class TronscanServiceImpl implements PlatformService {
 				.of(endpoints, address);
 
 		// 搜索拥有的数据
-		if (account.getData().size() == 0) {
+		if (CollectionUtil.isEmpty(account.getData())) {
 			return BigInteger.ZERO;
 		}
 

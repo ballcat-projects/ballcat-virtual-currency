@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
- * Omni节点
+ * bitcoin 节点. 文档 https://www.blockchain.com/api/blockchain_api
  *
  * @author lingting 2020-09-02 17:04
  */
@@ -13,12 +13,12 @@ import lombok.Getter;
 public enum BitcoinEndpoints implements Endpoints {
 
 	/**
-	 * 主节点 <a href="https://www.blockchain.com/api/blockchain_api"/>
+	 * 主节点 https://www.blockchain.com/api/blockchain_api
 	 */
 	MAINNET("https://blockchain.info/", "主节点"),
 
 	/**
-	 * 测试节点 <a href="https://www.blockchain.com/api/blockchain_api"/>
+	 * 测试节点 https://www.blockchain.com/api/blockchain_api
 	 */
 	TEST("https://testnet.blockchain.info/", "测试节点"),
 

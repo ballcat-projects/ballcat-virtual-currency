@@ -2,6 +2,7 @@ package live.lingting.virtual.currency;
 
 import java.math.BigInteger;
 import lombok.Data;
+import lombok.experimental.Accessors;
 import org.bitcoinj.core.Coin;
 
 /**
@@ -10,6 +11,7 @@ import org.bitcoinj.core.Coin;
  * @author lingting 2020/12/29 10:03
  */
 @Data
+@Accessors(chain = true)
 public class TransferParams {
 
 	/**

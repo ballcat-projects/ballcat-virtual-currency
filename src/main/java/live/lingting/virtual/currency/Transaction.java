@@ -5,8 +5,11 @@ import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.util.Map;
 import java.util.TimeZone;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import live.lingting.virtual.currency.contract.Contract;
@@ -67,6 +70,24 @@ public class Transaction {
 	private LocalDateTime time;
 
 	/**
+	 * 是否为btc交易
+	 */
+	private Boolean btc;
+
+	/**
+	 * 获取btc交易详情
+	 */
+	private BtcInfo btcInfo;
+
+	/**
+	 * 是否为btc交易, 如果 btcInfo不为null 则为btc交易
+	 * @author lingting 2021-01-10 18:36
+	 */
+	public Boolean getBtc() {
+		return btcInfo != null;
+	}
+
+	/**
 	 * 返回系统默认时区的交易时间
 	 *
 	 * @author lingting 2020-09-23 18:41
@@ -81,6 +102,10 @@ public class Transaction {
 		return this;
 	}
 
+	/**
+	 * 设置时间
+	 * @param time 时间戳, 单位 秒
+	 */
 	public Transaction setTime(long time) {
 		return setTime(LocalDateTime.ofEpochSecond(time, 0, ZoneOffset.UTC));
 	}
@@ -104,6 +129,27 @@ public class Transaction {
 			return null;
 		}
 		return time.plusSeconds(TimeZone.getTimeZone(zoneId).getRawOffset() / 1000);
+	}
+
+	@Getter
+	@Setter
+	@Accessors(chain = true)
+	@NoArgsConstructor
+	@AllArgsConstructor
+	public static class BtcInfo {
+
+		/**
+		 * 地址 -> btc个数, 单位: 个
+		 */
+		private Map<String, BigDecimal> in;
+
+		/**
+		 * 地址 -> btc个数, 单位: 个
+		 */
+		private Map<String, BigDecimal> out;
+
+		private BigDecimal fee;
+
 	}
 
 }
