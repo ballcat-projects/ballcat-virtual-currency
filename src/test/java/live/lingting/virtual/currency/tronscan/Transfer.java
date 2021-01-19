@@ -67,6 +67,13 @@ public class Transfer {
 	public static void main(String[] args) throws JsonProcessingException {
 		String s = "{\"address\":\"TKeU9ChEmqHcXQK5uY79S1mXP9ZsZ68ocz\"," + "\"publicKey"
 				+ "\":\"803d809e80150b808d2186b24ada31783e6eabf78feae3b3f4d1cae28a25a4d5152884ff68f026d7baf79183904049bdc612fe23850aed52324731a37041313a\",\"privateKey\":\"4aada735aac438abbc19794d05d3267f6e7abc64b51aeac0f97ccc606e29db48\",\"multi\":false}\n";
+
+		String s2 = "{\"address\":\"TNXwczCYFn15rvk8YV8z5rnSN9nAmH1t1V\"," + "\"publicKey"
+				+ "\":\"806248a34bcce9b438f688c800b469a017d57f8bfad290d3b24e5e1f3622b3ebc15debff747f00ac93e2d8c70c0e6ba066058487b0a24e6ce211c4372a115f5e\",\"privateKey\":\"677b8f8ba957cea8a0025de7d6e90358ea23e8bd39f34908d9e1235ff7273757\",\"multi\":false}";
+
+		String s3 = "{\"address\":\"TFvQMGTs43oBQUauFnNkyz544J7LhdzBWq\"," + "\"publicKey"
+				+ "\":\"0f33a52389b1f644f0ab1e6b2fd170a56a023d957ee70dcd32e7c7996e551342c9814719661a69e17b1c495696b4ca66c0d602b56343b94b71a6c5a1cabe1bc0\",\"privateKey\":\"2ed5328a2bd8289f103ece714133c35a56c2e8d62d117988fff44bdf114e9f6d\",\"multi\":false}\n";
+
 		Account account = TronscanUtil.create();
 		System.out.println(JsonUtil.toJson(account));
 	}

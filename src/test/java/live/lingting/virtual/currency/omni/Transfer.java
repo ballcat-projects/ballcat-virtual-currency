@@ -4,17 +4,24 @@ import cn.hutool.core.codec.Base64;
 import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.convert.Convert;
 import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.SneakyThrows;
+import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.TestNet3Params;
 import org.bouncycastle.util.encoders.Hex;
 import org.junit.Test;
 import live.lingting.virtual.currency.Account;
+import live.lingting.virtual.currency.TransferParams;
 import live.lingting.virtual.currency.TransferResult;
+import live.lingting.virtual.currency.bitcoin.Unspent;
+import live.lingting.virtual.currency.bitcoin.UnspentRes;
 import live.lingting.virtual.currency.contract.OmniContract;
 import live.lingting.virtual.currency.core.JsonRpcClient;
 import live.lingting.virtual.currency.endpoints.BitcoinEndpoints;
@@ -162,12 +169,26 @@ public class Transfer {
 				.setBroadcastTransaction((raw, endpoints) -> {
 					try {
 						// 使用测试服节点进行广播, 没有找到其他api有测试服广播接口. 如果您知道, 可以的话,请告诉我, 谢谢
-						String hash = client.invoke("sendrawtransaction", String.class, raw);
-						return PushTx.success(hash);
-						// return PushTx.success("");
+						// String hash = client.invoke("sendrawtransaction", String.class,
+						// raw);
+						// return PushTx.success(hash);
+						return PushTx.success("");
 					}
 					catch (Throwable throwable) {
 						return new PushTx(throwable);
+					}
+				})
+				// 获取未花费输出
+				.setUnspent((address, endpoints) -> {
+					if (address.startsWith("t")) {
+						return listUnspent(client, address);
+					}
+
+					try {
+						return Unspent.of(UnspentRes.of(endpoints, 6, address));
+					}
+					catch (Exception e) {
+						return Collections.emptyList();
 					}
 				})
 				// 网络
@@ -176,6 +197,34 @@ public class Transfer {
 				.setOmniEndpoints(OmniEndpoints.MAINNET)
 				// 比特 节点
 				.setBitcoinEndpoints(BitcoinEndpoints.TEST));
+	}
+
+	public static List<Unspent> listUnspent(JsonRpcClient client, String address) {
+		try {
+			List<Map<String, Object>> list = client.invoke("listunspent", List.class, 6, 9999999,
+					new String[] { address });
+
+			List<Unspent> unspents = new ArrayList<>(list.size());
+
+			for (Map<String, Object> m : list) {
+				unspents.add(new Unspent()
+						.setValue(new BigDecimal(Convert.toStr(m.get("amount")))
+								.multiply(BigDecimal.TEN.pow(OmniContract.BTC.getDecimals())).toBigInteger())
+
+						.setConfirmations(new BigInteger(Convert.toStr(m.get("confirmations"))))
+
+						.setHash(Convert.toStr(m.get("txid")))
+
+						.setOut(Convert.toLong(m.get("vout")))
+
+						.setScript(Convert.toStr(m.get("scriptPubKey"))));
+			}
+
+			return unspents;
+		}
+		catch (Throwable throwable) {
+			return Collections.emptyList();
+		}
 	}
 
 	@Test
@@ -196,19 +245,26 @@ public class Transfer {
 		System.out.println("a7: " + a7);
 		System.out.println("a8: " + ac8.getAddress());
 		System.out.println("a9: " + ac9.getAddress());
+		TransferParams params = new TransferParams().setSumFee(Coin.valueOf(546));
 		// TransferResult transfer = service.transfer(ac1, a7, OmniContract.BTC, value);
 		// TransferResult transfer = service.transfer(ac1, ac8.getAddress(),
 		// OmniContract.BTC, value);
 		// TransferResult transfer = service.transfer(ac6, a1, OmniContract.BTC, value);
-		// TransferResult transfer = service.transfer(ac8, a1, OmniContract.BTC, value);
+		// TransferResult transfer = service.transfer(ac7, a1, OmniContract.BTC, value,
+		// params);
+		// TransferResult transfer = service.transfer(ac8, a1, OmniContract.BTC, value,
+		// params);
 		// TransferResult transfer = service.transfer(ac1, a6, OmniContract.BTC, value);
-		// TransferResult transfer = service.transfer(ac5, a1, OmniContract.BTC, value);
-		// TransferResult transfer = service.transfer(ac7, a3, OmniContract.BTC, value);
-		TransferResult transfer = service.transfer(ac1, ac9.getAddress(), OmniContract.BTC, value);
+		// TransferResult transfer = service.transfer(ac5, a1, OmniContract.BTC, value,
+		// params);
+		// TransferResult transfer = service.transfer(ac7, a3, OmniContract.BTC, value,
+		// params);
+		// TransferResult transfer = service.transfer(ac1, ac9.getAddress(),
+		// OmniContract.BTC, value , params);
 		// TransferResult transfer = service.transfer(ac8, ac9.getAddress(),
 		// OmniContract.BTC, value);
-		// TransferResult transfer = service.transfer(ac9, a3, OmniContract.BTC, value);
-
+		TransferResult transfer = service.transfer(ac9, ac8.getAddress(), OmniContract.BTC, value, params);
+		// client.invokeObj("listunspent", 6, 9999999, new String[]{ac9.getAddress()})
 		if (!transfer.getSuccess()) {
 			System.out.println("转账失败: " + JsonUtil.toJson(transfer));
 		}

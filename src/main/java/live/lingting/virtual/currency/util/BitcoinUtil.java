@@ -108,6 +108,31 @@ public class BitcoinUtil {
 	}
 
 	/**
+	 * 根据公钥和签名要求数量生成对应 public key hash
+	 * @author lingting 2021-01-19 11:28
+	 */
+	public static byte[] generateMultiPublicKeyHash(int min, List<String> publicKeyList) {
+		// 构筑脚本
+		StringBuilder script = new StringBuilder(Hex.toHexString(new byte[] { (byte) (80 + min) }));
+
+		for (String key : publicKeyList) {
+			script.append("21").append(key);
+		}
+		script.append(Hex.toHexString(new byte[] { (byte) (80 + publicKeyList.size()) })).append("ae");
+
+		// sha256
+		byte[] sha256 = Sha256Hash.hash(Hex.decode(script.toString()));
+
+		// 散列脚本
+		RIPEMD160Digest digest = new RIPEMD160Digest();
+		digest.update(sha256, 0, sha256.length);
+		byte[] out = new byte[20];
+		digest.doFinal(out, 0);
+
+		return out;
+	}
+
+	/**
 	 * 根据私钥获取账户
 	 * @param address 地址
 	 * @param privateKey 私钥

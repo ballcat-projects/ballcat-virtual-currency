@@ -70,6 +70,12 @@ public class Transfer {
 			NoSuchProviderException, JsonProcessingException {
 		String s = "{\"address\":\"0xb84286ea170661e25d8ef5f52cc18066e175b5ba\"," + "\"publicKey"
 				+ "\":\"58b75ffb6bdb54ca16a94c4eb2ddd603c9b61e8df1b8eab2366a106eb587b1f311f512aade1cb5ffc8baa433a679ed29274a677d8ef40b54e90ce0572fe75e64\",\"privateKey\":\"dc8b697056d14dbe7c7ed431f9e9c2dd34ee93663425750bbd3907c549107d7a\",\"multi\":false}\n";
+
+		String s2 = "{\"address\":\"0x9060a6c61e998ab0c4b6855f68af30f5a4354cc2\"," + "\"publicKey"
+				+ "\":\"7ca5e0694f53b968ac3ac6f2e56ad8afd9e07f2e7764adc7a53a1eb571136342ba3df1080347077fe65662bb38ac0e08578df3bdabdfcccae14d0cf91af33401\",\"privateKey\":\"37b1eeca602a68620b00ee56dcf25b1c88bf599b60e4c9130068ff6d9debfc15\",\"multi\":false}";
+
+		String s3 = "{\"address\":\"0xfc2be74e45af57049fa5cc8ea1923fc9e3927577\"," + "\"publicKey"
+					+ "\":\"bbf6f69003aaf2db4f8f8bed14656a0ab982c46506009de5dacefa0da0b04d9ef9886cf8dfc1d9a87c8872fd3fe2569cc8c367e19163ced038a8aefefce8d3e6\",\"privateKey\":\"e921173570bb99a11639bcb028ce45fc051ab63d3aa6e9b3a5617dd5ecdea50d\",\"multi\":false}";
 		System.out.println(JsonUtil.toJson(EtherscanUtil.createAccount()));
 	}
 
@@ -84,9 +90,9 @@ public class Transfer {
 		BigDecimal b2 = service.getNumberByAddressAndContract(a2, EtherscanContract.ETH);
 		System.out.println("a2 ETH余额: " + b2.toPlainString());
 
-		BigDecimal value = new BigDecimal("1");
+		BigDecimal value = new BigDecimal("1.5");
 		System.out.println("a1 向 a2 转 " + value.toPlainString() + " eth");
-		TransferResult transfer = service.transfer(ac1, a2, EtherscanContract.ETH, value);
+		TransferResult transfer = service.transfer(ac2, "0xfc2be74e45af57049fa5cc8ea1923fc9e3927577", EtherscanContract.ETH, value);
 
 		if (!transfer.getSuccess()) {
 			System.out.println("转账失败: " + JsonUtil.toJson(transfer));
@@ -110,10 +116,10 @@ public class Transfer {
 		BigDecimal b2 = service.getNumberByAddressAndContract(a2, cl);
 		System.out.println("a2 cl余额: " + b2.toPlainString());
 
-		BigDecimal value = new BigDecimal("3");
+		BigDecimal value = new BigDecimal("10");
 		System.out.println("a1 向 a2 转 " + value.toPlainString() + " cl");
-		//TransferResult transfer = service.transfer(ac1, a2, cl, value);
-		TransferResult transfer = service.transfer(ac2, "0xb84286Ea170661E25d8eF5F52Cc18066e175B5BA", cl, value);
+		// TransferResult transfer = service.transfer(ac1, a2, cl, value);
+		TransferResult transfer = service.transfer(ac1, "0xfc2be74e45af57049fa5cc8ea1923fc9e3927577", cl, value);
 
 		if (!transfer.getSuccess()) {
 			System.out.println("转账失败: " + JsonUtil.toJson(transfer));

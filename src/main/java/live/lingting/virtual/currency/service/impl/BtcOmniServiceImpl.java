@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.MathContext;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,6 +54,7 @@ import live.lingting.virtual.currency.contract.OmniContract;
 import live.lingting.virtual.currency.endpoints.Endpoints;
 import live.lingting.virtual.currency.enums.TransactionStatus;
 import live.lingting.virtual.currency.enums.VcPlatform;
+import live.lingting.virtual.currency.exception.VirtualCurrencyException;
 import live.lingting.virtual.currency.omni.Balances;
 import live.lingting.virtual.currency.omni.Domain;
 import live.lingting.virtual.currency.omni.PushTx;
@@ -336,31 +338,49 @@ public class BtcOmniServiceImpl implements PlatformService {
 
 		List<TransactionInput> inputs = tx.getInputs();
 		// 签名输入
-		for (int i = 0; i < inputs.size(); i++) {
-			TransactionInput txIn = tx.getInput(i);
+		for (int inputIndex = 0; inputIndex < inputs.size(); inputIndex++) {
+			TransactionInput txIn = tx.getInput(inputIndex);
 			Script script = txIn.getScriptSig();
 			// p2sh处理
 			if (ScriptPattern.isP2SH(script)) {
 				List<TransactionSignature> signatures;
+				List<String> publicKeys;
 				List<ECKey> keys;
 				// 多签
 				if (from.getMulti()) {
 					keys = new ArrayList<>(from.getPublicKeyArray().size());
+					publicKeys = new ArrayList<>(from.getPublicKeyArray().size());
 					List<String> publicKeyArray = from.getPublicKeyArray();
-					for (int j = 0; j < publicKeyArray.size(); j++) {
+					for (int keyIndex = 0; keyIndex < publicKeyArray.size(); keyIndex++) {
+						// 保存public key
+						publicKeys.add(publicKeyArray.get(keyIndex));
 						// 私钥为空
-						if (StrUtil.isBlank(from.getPrivateKeyArray().get(j))) {
-							keys.add(ECKey.fromPublicOnly(Hex.decode(publicKeyArray.get(j))));
+						if (StrUtil.isBlank(from.getPrivateKeyArray().get(keyIndex))) {
+							keys.add(ECKey.fromPublicOnly(Hex.decode(publicKeyArray.get(keyIndex))));
 						}
 						// 私钥不为空
 						else {
-							keys.add(ECKey.fromPrivate(Hex.decode(from.getPrivateKeyArray().get(j))));
+							ECKey ecKey = ECKey.fromPrivate(Hex.decode(from.getPrivateKeyArray().get(keyIndex)));
+							keys.add(ecKey);
+							// 验证公钥
+							if (!ecKey.getPublicKeyAsHex().equals(publicKeyArray.get(keyIndex))) {
+								throw new VirtualCurrencyException(
+										StrUtil.format("转换账号密钥索引{}, 通过私钥推导的公钥与对应公钥不一致, 请检查数据!", keyIndex));
+							}
 						}
 					}
 				}
 				// 单签
 				else {
 					keys = ListUtil.toList(ECKey.fromPrivate(Hex.decode(from.getPrivateKey())));
+					publicKeys = ListUtil.toList(from.getPublicKey());
+				}
+
+				// 验证 public key hash
+				if (!Arrays.equals(script.getPubKeyHash(),
+						BitcoinUtil.generateMultiPublicKeyHash(from.getMultiNum(), publicKeys))) {
+					throw new VirtualCurrencyException(
+							"解析出来的 public key hash 与输入脚本的 public key hash 不一致, 请检查转账账号数据(公钥顺序是否正确, 最小签名数量是否正确, 地址是否正确等)");
 				}
 
 				// 创建脚本
@@ -372,7 +392,7 @@ public class BtcOmniServiceImpl implements PlatformService {
 								// 签名
 								key.sign(
 										// 生成hash
-										tx.hashForSignature(i, script, SigHash.ALL, false)),
+										tx.hashForSignature(inputIndex, script, SigHash.ALL, false)),
 								SigHash.ALL, false)
 
 						);
@@ -387,18 +407,20 @@ public class BtcOmniServiceImpl implements PlatformService {
 			ECKey key = ECKey.fromPrivate(Hex.decode(from.getPrivateKey()));
 
 			if (ScriptPattern.isP2WPKH(script)) {
-				System.out.println("isP2WPKH");
 				script = ScriptBuilder.createP2WPKHOutputScript(key);
-				TransactionSignature signature = tx.calculateWitnessSignature(i, key, script, txIn.getValue(),
+				TransactionSignature signature = tx.calculateWitnessSignature(inputIndex, key, script, txIn.getValue(),
 						SigHash.ALL, false);
 				txIn.setScriptSig(ScriptBuilder.createEmpty());
 				txIn.setWitness(TransactionWitness.redeemP2WPKH(signature, key));
 				continue;
 			}
 
-			Sha256Hash hash = tx.hashForSignature(i, script, SigHash.ALL, false);
-			TransactionSignature txSignature = new TransactionSignature(key.sign(hash), SigHash.ALL, false);
-
+			TransactionSignature txSignature = tx.calculateSignature(inputIndex, key, script, SigHash.ALL, false);
+			// 验证 public key hash
+			if (!Arrays.equals(script.getPubKeyHash(), key.getPubKeyHash())) {
+				throw new VirtualCurrencyException(
+						"通过私钥解析出来的public key hash 与 输入脚本中的 public key hash 不一致, 请检查转账账号地址与私钥是否匹配!");
+			}
 			if (ScriptPattern.isP2PK(script)) {
 				txIn.setScriptSig(ScriptBuilder.createInputScript(txSignature));
 			}
