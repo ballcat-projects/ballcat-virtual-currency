@@ -426,9 +426,9 @@ public class BtcOmniServiceImpl implements PlatformService {
 		PushTx pushTx = properties.getBroadcastTransaction().apply(raw, omniEndpoints);
 		if (!pushTx.isSuccess()) {
 			if (pushTx.getE() != null) {
-				throw new VirtualCurrencyException("转账失败", pushTx.getE());
+				return TransferResult.error(pushTx.getE());
 			}
-			throw new VirtualCurrencyException("转账失败");
+			return TransferResult.error("转账失败");
 		}
 		return TransferResult.success(pushTx.getTxId());
 	}

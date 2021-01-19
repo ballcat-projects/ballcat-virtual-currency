@@ -1,8 +1,10 @@
 package live.lingting.virtual.currency;
 
 import java.util.List;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import lombok.experimental.Accessors;
 
 /**
@@ -10,7 +12,9 @@ import lombok.experimental.Accessors;
  *
  * @author lingting 2020/12/22 16:12
  */
-@Data
+@Getter
+@Setter
+@ToString
 @Accessors(chain = true)
 @NoArgsConstructor
 public class Account {
@@ -71,6 +75,21 @@ public class Account {
 		this.multiNum = multiNum;
 		this.publicKeyArray = publicKeyArray;
 		this.privateKeyArray = privateKeyArray;
+	}
+
+	@Override
+	public int hashCode() {
+		return address.hashCode();
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof Account) {
+			if (((Account) obj).getAddress().equals(address)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 }
