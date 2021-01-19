@@ -484,11 +484,14 @@ public class BtcOmniServiceImpl implements PlatformService {
 	private <T> T request(Domain<T> domain, Endpoints endpoints, Object params) throws JsonProcessingException {
 		// 获取锁
 		if (properties.getLock().get()) {
-			// 执行请求方法
-			T t = domain.of(endpoints, params);
-			// 释放锁
-			properties.getUnlock().get();
-			return t;
+			try {
+				// 执行请求方法
+				return domain.of(endpoints, params);
+			}
+			finally {
+				// 释放锁
+				properties.getUnlock().get();
+			}
 		}
 		// 休眠, 然后调用自身
 		ThreadUtil.sleep(sleepTime());
