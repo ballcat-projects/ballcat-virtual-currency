@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.SneakyThrows;
 import org.bitcoinj.core.ECKey;
+import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.TestNet3Params;
 import org.bouncycastle.util.encoders.Hex;
 import org.junit.Test;
@@ -130,7 +131,7 @@ public class Transfer {
 				ECKey.fromPrivate(Hex.decode("998059439fa9a6591cae0e0ba863c1544384aefe4c90c1e98eec670ab55bfc8c")),
 				// 0376ad68f86690a1f2c2e7aca2f5722c245fadceb9d9889e5ababde3534127d93b
 				ECKey.fromPrivate(Hex.decode("7102ee9535259e129c392ee061b0e97ecd86d248fd99425a1aa4285ccaf651cc")));
-		Account multiAddress = BitcoinUtil.createMultiAddress(TestNet3Params.get(), 1, keys);
+		Account multiAddress = BitcoinUtil.createMultiAddress(MainNetParams.get(), 1, keys);
 		System.out.println(multiAddress.getAddress());
 		System.out.println("------------------");
 		multiAddress.getPublicKeyArray().forEach(System.out::println);

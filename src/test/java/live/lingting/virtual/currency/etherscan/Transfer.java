@@ -1,6 +1,10 @@
 package live.lingting.virtual.currency.etherscan;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import java.math.BigDecimal;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import lombok.SneakyThrows;
 import org.junit.Test;
 import live.lingting.virtual.currency.Account;
@@ -62,9 +66,16 @@ public class Transfer {
 
 	}
 
+	public static void main(String[] args) throws InvalidAlgorithmParameterException, NoSuchAlgorithmException,
+			NoSuchProviderException, JsonProcessingException {
+		String s = "{\"address\":\"0xb84286ea170661e25d8ef5f52cc18066e175b5ba\"," + "\"publicKey"
+				+ "\":\"58b75ffb6bdb54ca16a94c4eb2ddd603c9b61e8df1b8eab2366a106eb587b1f311f512aade1cb5ffc8baa433a679ed29274a677d8ef40b54e90ce0572fe75e64\",\"privateKey\":\"dc8b697056d14dbe7c7ed431f9e9c2dd34ee93663425750bbd3907c549107d7a\",\"multi\":false}\n";
+		System.out.println(JsonUtil.toJson(EtherscanUtil.createAccount()));
+	}
+
 	@Test
 	@SneakyThrows
-	public void etc() {
+	public void eth() {
 
 		// 可在 https://faucet.rinkeby.io/ 中获取
 		BigDecimal b1 = service.getNumberByAddressAndContract(a1, EtherscanContract.ETH);
@@ -99,9 +110,10 @@ public class Transfer {
 		BigDecimal b2 = service.getNumberByAddressAndContract(a2, cl);
 		System.out.println("a2 cl余额: " + b2.toPlainString());
 
-		BigDecimal value = new BigDecimal("1");
+		BigDecimal value = new BigDecimal("3");
 		System.out.println("a1 向 a2 转 " + value.toPlainString() + " cl");
-		TransferResult transfer = service.transfer(ac1, a2, cl, value);
+		//TransferResult transfer = service.transfer(ac1, a2, cl, value);
+		TransferResult transfer = service.transfer(ac2, "0xb84286Ea170661E25d8eF5F52Cc18066e175B5BA", cl, value);
 
 		if (!transfer.getSuccess()) {
 			System.out.println("转账失败: " + JsonUtil.toJson(transfer));

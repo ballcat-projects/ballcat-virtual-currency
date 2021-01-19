@@ -43,6 +43,7 @@ import live.lingting.virtual.currency.Account;
 import live.lingting.virtual.currency.Transaction;
 import live.lingting.virtual.currency.TransferParams;
 import live.lingting.virtual.currency.TransferResult;
+import live.lingting.virtual.currency.bitcoin.Balance;
 import live.lingting.virtual.currency.bitcoin.FeeAndSpent;
 import live.lingting.virtual.currency.bitcoin.LatestBlock;
 import live.lingting.virtual.currency.bitcoin.RawTransaction;
@@ -52,7 +53,6 @@ import live.lingting.virtual.currency.contract.OmniContract;
 import live.lingting.virtual.currency.endpoints.Endpoints;
 import live.lingting.virtual.currency.enums.TransactionStatus;
 import live.lingting.virtual.currency.enums.VcPlatform;
-import live.lingting.virtual.currency.exception.VirtualCurrencyException;
 import live.lingting.virtual.currency.omni.Balances;
 import live.lingting.virtual.currency.omni.Domain;
 import live.lingting.virtual.currency.omni.PushTx;
@@ -213,6 +213,13 @@ public class BtcOmniServiceImpl implements PlatformService {
 
 	@Override
 	public BigInteger getBalanceByAddressAndContract(String address, Contract contract) throws JsonProcessingException {
+		if (contract == OmniContract.BTC) {
+			Balance balance = Balance.of(bitcoinEndpoints, address);
+			if (balance == null || balance.getFinalBalance() == null) {
+				return BigInteger.ZERO;
+			}
+			return balance.getFinalBalance();
+		}
 		Balances balances = request(STATIC_BALANCES, omniEndpoints, address);
 		if (CollectionUtil.isEmpty(balances.getBalance())) {
 			return BigInteger.ZERO;

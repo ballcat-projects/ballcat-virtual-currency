@@ -1,5 +1,6 @@
 package live.lingting.virtual.currency.tronscan;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import java.math.BigDecimal;
 import lombok.SneakyThrows;
 import org.junit.Test;
@@ -63,6 +64,13 @@ public class Transfer {
 
 	}
 
+	public static void main(String[] args) throws JsonProcessingException {
+		String s = "{\"address\":\"TKeU9ChEmqHcXQK5uY79S1mXP9ZsZ68ocz\"," + "\"publicKey"
+				+ "\":\"803d809e80150b808d2186b24ada31783e6eabf78feae3b3f4d1cae28a25a4d5152884ff68f026d7baf79183904049bdc612fe23850aed52324731a37041313a\",\"privateKey\":\"4aada735aac438abbc19794d05d3267f6e7abc64b51aeac0f97ccc606e29db48\",\"multi\":false}\n";
+		Account account = TronscanUtil.create();
+		System.out.println(JsonUtil.toJson(account));
+	}
+
 	@Test
 	@SneakyThrows
 	public void trx() {
@@ -73,7 +81,7 @@ public class Transfer {
 		BigDecimal b2 = service.getNumberByAddressAndContract(a2, TronscanContract.TRX);
 		System.out.println("a2 TRX余额: " + b2.toPlainString());
 
-		BigDecimal value = new BigDecimal("1");
+		BigDecimal value = new BigDecimal("100");
 		System.out.println("a1 向 a2 转 " + value.toPlainString() + " trx");
 		TransferResult transfer = service.transfer(ac1, a2, TronscanContract.TRX, value);
 
@@ -125,7 +133,7 @@ public class Transfer {
 		BigDecimal b2 = service.getNumberByAddressAndContract(a2, usdj);
 		System.out.println("a2 usdj余额: " + b2.toPlainString());
 
-		BigDecimal value = new BigDecimal("1");
+		BigDecimal value = new BigDecimal("10");
 		System.out.println("a1 向 a2 转 " + value.toPlainString() + " usdj");
 		TransferResult transfer = service.transfer(ac1, a2, usdj, value);
 
