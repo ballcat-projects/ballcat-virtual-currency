@@ -75,7 +75,7 @@ public class Transfer {
 				+ "\":\"7ca5e0694f53b968ac3ac6f2e56ad8afd9e07f2e7764adc7a53a1eb571136342ba3df1080347077fe65662bb38ac0e08578df3bdabdfcccae14d0cf91af33401\",\"privateKey\":\"37b1eeca602a68620b00ee56dcf25b1c88bf599b60e4c9130068ff6d9debfc15\",\"multi\":false}";
 
 		String s3 = "{\"address\":\"0xfc2be74e45af57049fa5cc8ea1923fc9e3927577\"," + "\"publicKey"
-					+ "\":\"bbf6f69003aaf2db4f8f8bed14656a0ab982c46506009de5dacefa0da0b04d9ef9886cf8dfc1d9a87c8872fd3fe2569cc8c367e19163ced038a8aefefce8d3e6\",\"privateKey\":\"e921173570bb99a11639bcb028ce45fc051ab63d3aa6e9b3a5617dd5ecdea50d\",\"multi\":false}";
+				+ "\":\"bbf6f69003aaf2db4f8f8bed14656a0ab982c46506009de5dacefa0da0b04d9ef9886cf8dfc1d9a87c8872fd3fe2569cc8c367e19163ced038a8aefefce8d3e6\",\"privateKey\":\"e921173570bb99a11639bcb028ce45fc051ab63d3aa6e9b3a5617dd5ecdea50d\",\"multi\":false}";
 		System.out.println(JsonUtil.toJson(EtherscanUtil.createAccount()));
 	}
 
@@ -92,7 +92,8 @@ public class Transfer {
 
 		BigDecimal value = new BigDecimal("1.5");
 		System.out.println("a1 向 a2 转 " + value.toPlainString() + " eth");
-		TransferResult transfer = service.transfer(ac2, "0xfc2be74e45af57049fa5cc8ea1923fc9e3927577", EtherscanContract.ETH, value);
+		TransferResult transfer = service.transfer(ac2, "0xfc2be74e45af57049fa5cc8ea1923fc9e3927577",
+				EtherscanContract.ETH, value);
 
 		if (!transfer.getSuccess()) {
 			System.out.println("转账失败: " + JsonUtil.toJson(transfer));

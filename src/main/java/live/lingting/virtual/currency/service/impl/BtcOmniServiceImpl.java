@@ -217,7 +217,7 @@ public class BtcOmniServiceImpl implements PlatformService {
 	public BigInteger getBalanceByAddressAndContract(String address, Contract contract) throws JsonProcessingException {
 		if (contract == OmniContract.BTC) {
 			Balance balance = Balance.of(bitcoinEndpoints, address);
-			if (balance == null || balance.getFinalBalance() == null) {
+			if (balance == null || StrUtil.isNotBlank(balance.getError()) || balance.getFinalBalance() == null) {
 				return BigInteger.ZERO;
 			}
 			return balance.getFinalBalance();
@@ -453,6 +453,12 @@ public class BtcOmniServiceImpl implements PlatformService {
 			return TransferResult.error("转账失败");
 		}
 		return TransferResult.success(pushTx.getTxId());
+	}
+
+	@Override
+	public boolean validate(String address) throws JsonProcessingException {
+		Balance balance = Balance.of(bitcoinEndpoints, address);
+		return StrUtil.isBlank(balance.getError());
 	}
 
 	/**

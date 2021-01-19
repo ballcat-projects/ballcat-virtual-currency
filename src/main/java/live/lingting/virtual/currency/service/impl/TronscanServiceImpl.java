@@ -7,7 +7,9 @@ import static live.lingting.virtual.currency.util.TronscanUtil.resolve;
 
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.http.HttpRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.MathContext;
@@ -41,6 +43,7 @@ import live.lingting.virtual.currency.tronscan.TriggerResult.TransferBroadcastRe
 import live.lingting.virtual.currency.tronscan.TriggerResult.Trc10TransferGenerateResult;
 import live.lingting.virtual.currency.tronscan.TriggerResult.Trc20TransferGenerateResult;
 import live.lingting.virtual.currency.util.AbiUtil;
+import live.lingting.virtual.currency.util.JsonUtil;
 import live.lingting.virtual.currency.util.TronscanUtil;
 
 /**
@@ -321,6 +324,24 @@ public class TronscanServiceImpl implements PlatformService {
 			result.setCode(broadcastResult.getCode()).setMessage(broadcastResult.getMessage()).setSuccess(false);
 		}
 		return result;
+	}
+
+	@Override
+	public boolean validate(String address) {
+		HttpRequest request = HttpRequest.post(endpoints.getHttpUrl("wallet/validateaddress"));
+		request.body("{\"address\": \"" + address + "\"}");
+		try {
+			String response = request.execute().body();
+			Map<String, String> map = JsonUtil.toObj(response, new TypeReference<Map<String, String>>() {
+			});
+			if ("true".equals(map.get("result"))) {
+				return true;
+			}
+			return false;
+		}
+		catch (Exception e) {
+			return false;
+		}
 	}
 
 }

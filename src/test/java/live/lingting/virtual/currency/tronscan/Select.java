@@ -110,4 +110,11 @@ public class Select {
 		}
 	}
 
+	@SneakyThrows
+	@Test
+	public void valid() {
+		System.out.println(service.validate("sfasdagsdfs"));
+		System.out.println(service.validate("TAVvnk5WwMGYPyF8LpSPkQcmghMuUoR813"));
+	}
+
 }

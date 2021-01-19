@@ -127,4 +127,12 @@ public interface PlatformService {
 	TransferResult transfer(Account from, String to, Contract contract, BigDecimal value, TransferParams params)
 			throws Throwable;
 
+	/**
+	 * 校验地址是否正确
+	 * @param address 地址
+	 * @return boolean true 正确地址
+	 * @author lingting 2021-01-19 15:41
+	 */
+	boolean validate(String address) throws Throwable;
+
 }

@@ -39,6 +39,7 @@ import live.lingting.virtual.currency.core.JsonRpcClient;
 import live.lingting.virtual.currency.enums.EtherscanReceiptStatus;
 import live.lingting.virtual.currency.enums.TransactionStatus;
 import live.lingting.virtual.currency.enums.VcPlatform;
+import live.lingting.virtual.currency.etherscan.Balance;
 import live.lingting.virtual.currency.etherscan.Block;
 import live.lingting.virtual.currency.etherscan.BlockEnum;
 import live.lingting.virtual.currency.etherscan.EtherscanTransaction;
@@ -258,6 +259,12 @@ public class InfuraServiceImpl implements PlatformService {
 		String hash = client.invoke("eth_sendRawTransaction", String.class, hex);
 
 		return TransferResult.success(hash);
+	}
+
+	@Override
+	public boolean validate(String address) throws Throwable {
+		Balance of = Balance.of(client, address);
+		return of.getAmount() != null;
 	}
 
 	/**
