@@ -49,7 +49,7 @@ public class TronscanUtil {
 			// 收款人
 			String to = decodeAddressParam(array[0]);
 			// 数量
-			BigInteger amount = new BigInteger(AbiUtil.removePreZero(array[1]), 16);
+			BigInteger amount = decodeIntParam(array[1]);
 			return new Trc20Data().setAmount(amount).setTo(to);
 		});
 
@@ -78,7 +78,7 @@ public class TronscanUtil {
 					// 收款人
 					.setTo(decodeAddressParam(array[0]))
 					// 数量
-					.setAmount(new BigInteger(array[1], 16))
+					.setAmount(decodeIntParam(array[1]))
 					// 合约地址
 					.setContract(contract);
 		});
@@ -88,7 +88,7 @@ public class TronscanUtil {
 				str = str.substring((AbiMethod.SEND_MULTI_SIG.getMethodId()).length());
 			}
 			String[] array = AbiUtil.stringToArrayBy64(str);
-			return new Trc20Data().setTo(decodeAddressParam(array[0])).setAmount(new BigInteger(array[1], 16));
+			return new Trc20Data().setTo(decodeAddressParam(array[0])).setAmount(decodeIntParam(array[1]));
 		});
 
 		METHOD_HANDLER.put(AbiMethod.TRANSFER_FROM.getMethodId(), str -> {
@@ -102,7 +102,7 @@ public class TronscanUtil {
 					// 收款人
 					.setTo(decodeAddressParam(array[1]))
 					// 数量
-					.setAmount(new BigInteger(array[2], 16));
+					.setAmount(decodeIntParam(array[2]));
 		});
 	}
 
@@ -120,6 +120,14 @@ public class TronscanUtil {
 		}
 
 		throw new VirtualCurrencyException("未支持此方法, 请手动处理");
+	}
+
+	public static BigInteger decodeIntParam(String param) {
+		String str = AbiUtil.removePreZero(param);
+		if (StrUtil.isBlank(str)) {
+			return BigInteger.ZERO;
+		}
+		return new BigInteger(str, 16);
 	}
 
 	/**
