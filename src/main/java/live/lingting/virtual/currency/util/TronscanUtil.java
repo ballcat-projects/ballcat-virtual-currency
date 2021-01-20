@@ -137,11 +137,13 @@ public class TronscanUtil {
 	public static String decodeAddressParam(String param) {
 		String str = AbiUtil.removePreZero(param);
 
-		if (!str.startsWith(HEX_ADDRESS_PREFIX)) {
-			// 长度处理
-			if (str.length() != 40) {
-				str = StrUtil.padPre(str, 40, "0");
-			}
+		// 不带 41 的长度
+		if (str.length() < 40) {
+			str = StrUtil.padPre(str, 40, "0");
+		}
+
+		// 带 41的长度
+		if (str.length() < 42) {
 			str = HEX_ADDRESS_PREFIX + str;
 		}
 		return TronscanUtil.hexToString(str);
