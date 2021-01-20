@@ -240,4 +240,25 @@ public class BitcoinUtil {
 		return params.getSumFee();
 	}
 
+	/**
+	 * 私钥转 wif格式
+	 * @param pk 私钥
+	 * @return java.lang.String
+	 * @author lingting 2021-01-19 17:36
+	 */
+	public static String toWif(NetworkParameters np, String pk) {
+		return toWif(np, ECKey.fromPrivate(Hex.decode(pk)));
+	}
+
+	/**
+	 * 私钥转 wif格式
+	 * @param np 环境
+	 * @param key 私钥
+	 * @return java.lang.String
+	 * @author lingting 2021-01-19 17:36
+	 */
+	public static String toWif(NetworkParameters np, ECKey key) {
+		return key.getPrivateKeyAsWiF(np);
+	}
+
 }
