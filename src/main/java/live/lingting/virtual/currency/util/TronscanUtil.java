@@ -196,10 +196,14 @@ public class TronscanUtil {
 		return createAccount(pubKey, priKey);
 	}
 
-	public static Account createAccount(String pubKey, String priKey) {
+	public static Account createAccount(String publicKey, String privateKey) {
+		return new Account(getHexAddressByPublicKey(publicKey), publicKey, privateKey);
+	}
+
+	public static String getHexAddressByPublicKey(String publicKey) {
 		Keccak.Digest256 digest = new Keccak.Digest256();
 		// 对公钥进行hash
-		byte[] hash = digest.digest(Hex.decode(pubKey));
+		byte[] hash = digest.digest(Hex.decode(publicKey));
 		// 提取最后20个字节
 		byte[] hash20 = ArrayUtil.sub(hash, hash.length - 20, hash.length);
 		// 初识地址
@@ -209,13 +213,9 @@ public class TronscanUtil {
 		// 添加其他数据
 		System.arraycopy(hash20, 0, initAddress, 1, 20);
 		// 生成地址
-		String address = Base58Check.bytesToBase58(initAddress);
-		return new Account(address, pubKey, priKey);
+		return Base58Check.bytesToBase58(initAddress);
 	}
 
-	public static void main(String[] args) {
-		System.out.println(createAccount());
-	}
 	/**
 	 * 根据私钥获取账户
 	 * @param address 地址
