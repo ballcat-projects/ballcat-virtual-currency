@@ -1,5 +1,6 @@
 package live.lingting.virtual.currency.enums;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import lombok.AllArgsConstructor;
 import live.lingting.virtual.currency.properties.InfuraProperties;
 import live.lingting.virtual.currency.properties.OmniProperties;
@@ -30,5 +31,16 @@ public enum ApiPlatform {
 	 * 协议
 	 */
 	private final VcPlatform vcPlatform;
+
+	@JsonCreator
+	public static ApiPlatform of(String str) {
+		ApiPlatform[] enums = ApiPlatform.values();
+		for (ApiPlatform e : enums) {
+			if (e.toString().equals(str)) {
+				return e;
+			}
+		}
+		return null;
+	}
 
 }

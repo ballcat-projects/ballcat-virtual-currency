@@ -1,5 +1,6 @@
 package live.lingting.virtual.currency.enums;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import lombok.AllArgsConstructor;
 
 /**
@@ -24,5 +25,16 @@ public enum VcPlatform {
 	TRONSCAN,
 
 	;
+
+	@JsonCreator
+	public static VcPlatform of(String str) {
+		VcPlatform[] enums = VcPlatform.values();
+		for (VcPlatform e : enums) {
+			if (e.toString().equals(str)) {
+				return e;
+			}
+		}
+		return null;
+	}
 
 }
