@@ -4,6 +4,7 @@ import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.StrUtil;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.math.MathContext;
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -197,7 +198,26 @@ public class BitcoinUtil {
 	 * @author lingting 2021-01-07 13:54
 	 */
 	public static Coin btcToCoin(BigDecimal btc) {
-		return Coin.valueOf(btc.multiply(BigDecimal.TEN.pow(8)).longValue());
+		return btcToCoin(btc.multiply(BigDecimal.TEN.pow(8)).toBigInteger());
+	}
+
+	/**
+	 * btc 数量转为 聪, 单位 个
+	 * @param btc btc 数量
+	 * @return org.bitcoinj.core.Coin
+	 * @author lingting 2021-01-20 17:42
+	 */
+	public static Coin btcToCoin(BigInteger btc) {
+		return Coin.valueOf(btc.longValue());
+	}
+
+	/**
+	 * 聪 转为 btc数量, 单位 个
+	 * @param coin 多少个 coin
+	 * @author lingting 2021-01-07 13:54
+	 */
+	public static BigInteger coinToBtcBalance(Coin coin) {
+		return new BigInteger(coin.toPlainString());
 	}
 
 	/**
