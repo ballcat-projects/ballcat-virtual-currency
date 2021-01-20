@@ -74,6 +74,8 @@ public class Transfer {
 		String s3 = "{\"address\":\"TFvQMGTs43oBQUauFnNkyz544J7LhdzBWq\"," + "\"publicKey"
 				+ "\":\"0f33a52389b1f644f0ab1e6b2fd170a56a023d957ee70dcd32e7c7996e551342c9814719661a69e17b1c495696b4ca66c0d602b56343b94b71a6c5a1cabe1bc0\",\"privateKey\":\"2ed5328a2bd8289f103ece714133c35a56c2e8d62d117988fff44bdf114e9f6d\",\"multi\":false}\n";
 
+		String s4 = "{\"address\":\"TKvrXAzmCJs1AFDhoLxEWZRHSrEiqzBHd9\"," + "\"publicKey"
+				+ "\":\"869afd5f52e4dfa3b051b93f0a7d4b2bfe485b3cda8be6f165ed985a21592281cc936e3f033f033b16e818267830d749a73dfd39bf43795716d0f838655152e4\",\"privateKey\":\"b83850669411d9742ca9b40130e6f084046a9c222e0fadd9b7b218f95b6feeba\",\"multi\":false}";
 		Account account = TronscanUtil.create();
 		System.out.println(JsonUtil.toJson(account));
 	}
@@ -88,9 +90,9 @@ public class Transfer {
 		BigDecimal b2 = service.getNumberByAddressAndContract(a2, TronscanContract.TRX);
 		System.out.println("a2 TRX余额: " + b2.toPlainString());
 
-		BigDecimal value = new BigDecimal("100");
+		BigDecimal value = new BigDecimal("0.1");
 		System.out.println("a1 向 a2 转 " + value.toPlainString() + " trx");
-		TransferResult transfer = service.transfer(ac1, a2, TronscanContract.TRX, value);
+		TransferResult transfer = service.transfer(ac1, "TKvrXAzmCJs1AFDhoLxEWZRHSrEiqzBHd9", TronscanContract.TRX, value);
 
 		if (!transfer.getSuccess()) {
 			System.out.println("转账失败: " + JsonUtil.toJson(transfer));
@@ -114,9 +116,9 @@ public class Transfer {
 		BigDecimal b2 = service.getNumberByAddressAndContract(a2, trz);
 		System.out.println("a2 trz余额: " + b2.toPlainString());
 
-		BigDecimal value = new BigDecimal("1");
+		BigDecimal value = new BigDecimal("0.1");
 		System.out.println("a1 向 a2 转 " + value.toPlainString() + " trz");
-		TransferResult transfer = service.transfer(ac1, a2, trz, value);
+		TransferResult transfer = service.transfer(ac1, "TKvrXAzmCJs1AFDhoLxEWZRHSrEiqzBHd9", trz, value);
 
 		if (!transfer.getSuccess()) {
 			System.out.println("转账失败: " + JsonUtil.toJson(transfer));
@@ -140,9 +142,9 @@ public class Transfer {
 		BigDecimal b2 = service.getNumberByAddressAndContract(a2, usdj);
 		System.out.println("a2 usdj余额: " + b2.toPlainString());
 
-		BigDecimal value = new BigDecimal("10");
+		BigDecimal value = new BigDecimal("50");
 		System.out.println("a1 向 a2 转 " + value.toPlainString() + " usdj");
-		TransferResult transfer = service.transfer(ac1, a2, usdj, value);
+		TransferResult transfer = service.transfer(ac1, "TKvrXAzmCJs1AFDhoLxEWZRHSrEiqzBHd9", usdj, value);
 
 		if (!transfer.getSuccess()) {
 			System.out.println("转账失败: " + JsonUtil.toJson(transfer));

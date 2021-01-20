@@ -169,10 +169,9 @@ public class Transfer {
 				.setBroadcastTransaction((raw, endpoints) -> {
 					try {
 						// 使用测试服节点进行广播, 没有找到其他api有测试服广播接口. 如果您知道, 可以的话,请告诉我, 谢谢
-						// String hash = client.invoke("sendrawtransaction", String.class,
-						// raw);
-						// return PushTx.success(hash);
-						return PushTx.success("");
+						String hash = client.invoke("sendrawtransaction", String.class, raw);
+						return PushTx.success(hash);
+						// return PushTx.success("");
 					}
 					catch (Throwable throwable) {
 						return new PushTx(throwable);
@@ -263,10 +262,16 @@ public class Transfer {
 		// OmniContract.BTC, value , params);
 		// TransferResult transfer = service.transfer(ac8, ac9.getAddress(),
 		// OmniContract.BTC, value);
-		TransferResult transfer = service.transfer(ac9, ac8.getAddress(), OmniContract.BTC, value, params);
+		TransferResult transfer = service.transfer(ac9, ac1.getAddress(), OmniContract.BTC, value, params);
 		// client.invokeObj("listunspent", 6, 9999999, new String[]{ac9.getAddress()})
 		if (!transfer.getSuccess()) {
-			System.out.println("转账失败: " + JsonUtil.toJson(transfer));
+			System.out.println("转账失败");
+			if (transfer.getException() != null) {
+				transfer.getException().printStackTrace();
+			}
+			else {
+				System.out.println("异常信息: " + transfer.getMessage());
+			}
 		}
 		else {
 			System.out.println("转账成功");

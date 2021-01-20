@@ -407,7 +407,7 @@ public class BtcOmniServiceImpl implements PlatformService {
 			ECKey key = ECKey.fromPrivate(Hex.decode(from.getPrivateKey()));
 
 			if (ScriptPattern.isP2WPKH(script)) {
-				script = ScriptBuilder.createP2WPKHOutputScript(key);
+				script = ScriptBuilder.createP2PKHOutputScript(key);
 				TransactionSignature signature = tx.calculateWitnessSignature(inputIndex, key, script, txIn.getValue(),
 						SigHash.ALL, false);
 				txIn.setScriptSig(ScriptBuilder.createEmpty());
