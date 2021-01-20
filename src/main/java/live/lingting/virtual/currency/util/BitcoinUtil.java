@@ -217,7 +217,7 @@ public class BitcoinUtil {
 	 * @author lingting 2021-01-07 13:54
 	 */
 	public static BigInteger coinToBtcBalance(Coin coin) {
-		return new BigInteger(coin.toPlainString());
+		return new BigInteger(coin.toString());
 	}
 
 	/**
@@ -226,8 +226,7 @@ public class BitcoinUtil {
 	 * @author lingting 2021-01-07 13:54
 	 */
 	public static BigDecimal coinToBtc(Coin coin) {
-		return new BigDecimal(coin.longValue()).divide(BigDecimal.TEN.pow(Coin.SMALLEST_UNIT_EXPONENT),
-				MathContext.UNLIMITED);
+		return new BigDecimal(coin.toPlainString());
 	}
 
 	/**
