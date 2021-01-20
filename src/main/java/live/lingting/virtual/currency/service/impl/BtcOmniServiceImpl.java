@@ -406,6 +406,12 @@ public class BtcOmniServiceImpl implements PlatformService {
 
 			ECKey key = ECKey.fromPrivate(Hex.decode(from.getPrivateKey()));
 
+			// 验证 public key hash
+			if (!Arrays.equals(script.getPubKeyHash(), key.getPubKeyHash())) {
+				throw new VirtualCurrencyException(
+						"通过私钥解析出来的public key hash 与 输入脚本中的 public key hash 不一致, 请检查转账账号地址与私钥是否匹配!");
+			}
+
 			if (ScriptPattern.isP2WPKH(script)) {
 				script = ScriptBuilder.createP2PKHOutputScript(key);
 				TransactionSignature signature = tx.calculateWitnessSignature(inputIndex, key, script, txIn.getValue(),
@@ -416,11 +422,7 @@ public class BtcOmniServiceImpl implements PlatformService {
 			}
 
 			TransactionSignature txSignature = tx.calculateSignature(inputIndex, key, script, SigHash.ALL, false);
-			// 验证 public key hash
-			if (!Arrays.equals(script.getPubKeyHash(), key.getPubKeyHash())) {
-				throw new VirtualCurrencyException(
-						"通过私钥解析出来的public key hash 与 输入脚本中的 public key hash 不一致, 请检查转账账号地址与私钥是否匹配!");
-			}
+
 			if (ScriptPattern.isP2PK(script)) {
 				txIn.setScriptSig(ScriptBuilder.createInputScript(txSignature));
 			}
