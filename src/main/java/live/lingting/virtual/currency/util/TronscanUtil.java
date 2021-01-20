@@ -190,16 +190,16 @@ public class TronscanUtil {
 		// 生成密钥对
 		SECP256K1.KeyPair keyPair = SECP256K1.KeyPair.generate();
 
-		// 公钥
-		SECP256K1.PublicKey publicKey = keyPair.getPublicKey();
-		String pubKey = publicKey.toString().substring(2);
-		// 私钥
-		SECP256K1.PrivateKey privateKey = keyPair.getPrivateKey();
-		String priKey = privateKey.toString().substring(2);
+		String pubKey = keyPair.getPublicKey().toString().substring(2);
+		String priKey = keyPair.getPrivateKey().toString().substring(2);
 
+		return createAccount(pubKey, priKey);
+	}
+
+	public static Account createAccount(String pubKey, String priKey) {
 		Keccak.Digest256 digest = new Keccak.Digest256();
 		// 对公钥进行hash
-		byte[] hash = digest.digest(publicKey.getEncoded());
+		byte[] hash = digest.digest(Hex.decode(pubKey));
 		// 提取最后20个字节
 		byte[] hash20 = ArrayUtil.sub(hash, hash.length - 20, hash.length);
 		// 初识地址
@@ -213,6 +213,9 @@ public class TronscanUtil {
 		return new Account(address, pubKey, priKey);
 	}
 
+	public static void main(String[] args) {
+		System.out.println(createAccount());
+	}
 	/**
 	 * 根据私钥获取账户
 	 * @param address 地址
