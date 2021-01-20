@@ -128,6 +128,9 @@ public class TronscanUtil {
 	 */
 	public static String decodeAddressParam(String param) {
 		String str = AbiUtil.removePreZero(param);
+		if (str.length() != 40) {
+			str = StrUtil.padPre(str, 40, "0");
+		}
 		if (!str.startsWith(HEX_ADDRESS_PREFIX)) {
 			str = HEX_ADDRESS_PREFIX + str;
 		}
