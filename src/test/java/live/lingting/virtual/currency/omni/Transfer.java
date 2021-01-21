@@ -251,6 +251,7 @@ public class Transfer {
 						// String hash = client.invoke("sendrawtransaction", String.class,
 						// raw);
 						// return PushTx.success(hash);
+						System.out.println(raw);
 						return PushTx.success("");
 					}
 					catch (Throwable throwable) {
@@ -350,7 +351,7 @@ public class Transfer {
 		System.out.println("a6 BTC 余额 0.03899058");
 		System.out.println("a7 BTC 余额 0");
 
-		BigDecimal value = new BigDecimal("0.001");
+		BigDecimal value = new BigDecimal("0.01");
 		// System.out.println("a1 向 a7 转 " + value.toPlainString() + " BTC");
 		System.out.println("a1: " + a1);
 		System.out.println("a5: " + a5);
@@ -358,7 +359,7 @@ public class Transfer {
 		System.out.println("a8: " + ac8.getAddress());
 		System.out.println("a9: " + ac9.getAddress());
 		TransferParams params = new TransferParams().setSumFee(Coin.valueOf(546));
-		// TransferResult transfer = service.transfer(ac1, a7, OmniContract.BTC, value);
+		TransferResult transfer = service.transfer(ac10, ac11.getAddress(), OmniContract.BTC, value);
 		// TransferResult transfer = service.transfer(ac1, ac8.getAddress(),
 		// OmniContract.BTC, value);
 		// TransferResult transfer = service.transfer(ac7, a1, OmniContract.BTC, value,
@@ -378,7 +379,8 @@ public class Transfer {
 		// OmniContract.BTC, value);
 		// TransferResult transfer = service.transfer(ac9, ac1.getAddress(),
 		// OmniContract.BTC, value, params);
-		TransferResult transfer = service.transfer(ac10, ac1.getAddress(), OmniContract.BTC, value, params);
+		// TransferResult transfer = service.transfer(ac10, ac1.getAddress(),
+		// OmniContract.BTC, value, params);
 		// client.invokeObj("listunspent", 6, 9999999, new String[]{ac9.getAddress()})
 		if (!transfer.getSuccess()) {
 			System.out.println("转账失败");
