@@ -98,7 +98,10 @@ public class EtherscanUtil {
 	 */
 	public static Account createAccount()
 			throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException {
-		ECKeyPair keyPair = Keys.createEcKeyPair();
+		return createAccount(Keys.createEcKeyPair());
+	}
+
+	public static Account createAccount(ECKeyPair keyPair) {
 		// 私钥
 		String privateKey = KeyUtil.keyDeserialization(keyPair.getPrivateKey());
 		// 公钥

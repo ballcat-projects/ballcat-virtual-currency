@@ -188,8 +188,10 @@ public class TronscanUtil {
 	 */
 	public static Account createAccount() {
 		// 生成密钥对
-		SECP256K1.KeyPair keyPair = SECP256K1.KeyPair.generate();
+		return createAccount(SECP256K1.KeyPair.generate());
+	}
 
+	public static Account createAccount(SECP256K1.KeyPair keyPair) {
 		String pubKey = keyPair.getPublicKey().toString().substring(2);
 		String priKey = keyPair.getPrivateKey().toString().substring(2);
 
