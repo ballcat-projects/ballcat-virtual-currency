@@ -2,6 +2,7 @@ package live.lingting.virtual.currency.util;
 
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.lang.Assert;
+import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -16,7 +17,7 @@ import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.SegwitAddress;
 import org.bitcoinj.core.Sha256Hash;
-import org.bouncycastle.crypto.digests.RIPEMD160Digest;
+import org.bitcoinj.core.Utils;
 import org.bouncycastle.util.encoders.Hex;
 import live.lingting.virtual.currency.Account;
 import live.lingting.virtual.currency.TransferParams;
@@ -33,15 +34,18 @@ public class BitcoinUtil {
 
 	/**
 	 * 基础地址
-	 * @param parameters 表示地址在哪个网络使用, 使用
-	 * {@link NetworkParameters#fromID(java.lang.String)} 此方法进行生成, id 可在 [
+	 * @param np 表示地址在哪个网络使用, 使用 {@link NetworkParameters#fromID(java.lang.String)}
+	 * 此方法进行生成, id 可在 [
 	 * {@link NetworkParameters#ID_MAINNET},{@link NetworkParameters#ID_TESTNET} ] 中选择
 	 */
-	public static Account createLegacyAddress(NetworkParameters parameters) {
-		ECKey ecKey = new ECKey(new SecureRandom());
+	public static Account createLegacyAddress(NetworkParameters np) {
+		return createLegacyAddress(np, new ECKey(new SecureRandom()));
+	}
+
+	public static Account createLegacyAddress(NetworkParameters np, ECKey ecKey) {
 		return new Account()
 				// 地址
-				.setAddress(LegacyAddress.fromKey(parameters, ecKey).toString())
+				.setAddress(LegacyAddress.fromKey(np, ecKey).toString())
 				// 私钥
 				.setPrivateKey(ecKey.getPrivateKeyAsHex())
 				// 公钥
@@ -52,11 +56,14 @@ public class BitcoinUtil {
 	 * 隔离见证地址
 	 * @author lingting 2021-01-12 13:24
 	 */
-	public static Account createSegwitAddress(NetworkParameters parameters) {
-		ECKey ecKey = new ECKey(new SecureRandom());
+	public static Account createSegwitAddress(NetworkParameters np) {
+		return createSegwitAddress(np, new ECKey(new SecureRandom()));
+	}
+
+	public static Account createSegwitAddress(NetworkParameters np, ECKey ecKey) {
 		return new Account()
 				// 地址
-				.setAddress(SegwitAddress.fromKey(parameters, ecKey).toString())
+				.setAddress(SegwitAddress.fromKey(np, ecKey).toString())
 				// 私钥
 				.setPrivateKey(ecKey.getPrivateKeyAsHex())
 				// 公钥
@@ -78,7 +85,7 @@ public class BitcoinUtil {
 		return createMultiAddress(parameters, min, keys);
 	}
 
-	public static Account createMultiAddress(NetworkParameters parameters, int min, List<ECKey> keys) {
+	public static Account createMultiAddress(NetworkParameters np, int min, List<ECKey> keys) {
 		// 构筑脚本
 		StringBuilder script = new StringBuilder(Hex.toHexString(new byte[] { (byte) (80 + min) }));
 
@@ -93,44 +100,50 @@ public class BitcoinUtil {
 		}
 		script.append(Hex.toHexString(new byte[] { (byte) (80 + keys.size()) })).append("ae");
 
-		// sha256
-		byte[] sha256 = Sha256Hash.hash(Hex.decode(script.toString()));
+		return createMultiAddress(np, script.toString(), publicKeys, privateKeys);
+	}
 
-		// 散列脚本
-		RIPEMD160Digest digest = new RIPEMD160Digest();
-		digest.update(sha256, 0, sha256.length);
-		byte[] out = new byte[20];
-		digest.doFinal(out, 0);
-
+	/**
+	 * p2sh脚本 16进制转 多签地址
+	 * @param np 环境
+	 * @param script 脚本 16进制
+	 * @param publicKeys 公钥
+	 * @param privateKeys 私钥
+	 * @return live.lingting.virtual.currency.Account
+	 * @author lingting 2021-01-21 15:08
+	 */
+	public static Account createMultiAddress(NetworkParameters np, String script, List<String> publicKeys,
+			List<String> privateKeys) {
 		// 转为 p2sh地址
-		String address = Base58.encodeChecked(parameters.getP2SHHeader(), out);
+		String address = Base58.encodeChecked(np.getP2SHHeader(), Utils.sha256hash160(Hex.decode(script)));
 		return new Account().setAddress(address).setMulti(true).setPrivateKeyArray(privateKeys)
 				.setPublicKeyArray(publicKeys);
 	}
 
 	/**
-	 * 根据公钥和签名要求数量生成对应 public key hash
-	 * @author lingting 2021-01-19 11:28
+	 * 创建 兼容的 隔离见证地址
+	 * @param np 环境
+	 * @return live.lingting.virtual.currency.Account
+	 * @author lingting 2021-01-21 16:46
 	 */
-	public static byte[] generateMultiPublicKeyHash(int min, List<String> publicKeyList) {
-		// 构筑脚本
-		StringBuilder script = new StringBuilder(Hex.toHexString(new byte[] { (byte) (80 + min) }));
+	public static Account createMultiSegwitAddress(NetworkParameters np) {
+		return createMultiSegwitAddress(np, new ECKey(new SecureRandom()));
+	}
 
-		for (String key : publicKeyList) {
-			script.append("21").append(key);
-		}
-		script.append(Hex.toHexString(new byte[] { (byte) (80 + publicKeyList.size()) })).append("ae");
-
-		// sha256
-		byte[] sha256 = Sha256Hash.hash(Hex.decode(script.toString()));
-
-		// 散列脚本
-		RIPEMD160Digest digest = new RIPEMD160Digest();
-		digest.update(sha256, 0, sha256.length);
-		byte[] out = new byte[20];
-		digest.doFinal(out, 0);
-
-		return out;
+	public static Account createMultiSegwitAddress(NetworkParameters np, ECKey key) {
+		// 1. 在 public key hash 前 添加 操作码 OP_0 以及 hash 长度(16进制)
+		String publicKeyHash = "0014" + Hex.toHexString(key.getPubKeyHash());
+		// 2. 进行hash 160
+		byte[] hash160 = Utils.sha256hash160(Hex.decode(publicKeyHash));
+		// 3. 添加版本号
+		byte[] versionByte = ArrayUtil.addAll(new byte[] { (byte) np.getP2SHHeader() }, hash160);
+		// 4. 两次 hash256
+		byte[] twice = Sha256Hash.hashTwice(versionByte);
+		// 5. 获取校验码
+		byte[] valid = new byte[] { twice[0], twice[1], twice[2], twice[3] };
+		// 将 校验码添加到 步骤3 的字节后 计算地址
+		String address = Base58.encode(ArrayUtil.addAll(versionByte, valid));
+		return new Account(address, key.getPublicKeyAsHex(), key.getPrivateKeyAsHex());
 	}
 
 	/**

@@ -13,6 +13,9 @@ import java.util.Map;
 import lombok.SneakyThrows;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.LegacyAddress;
+import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.core.SegwitAddress;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.TestNet3Params;
 import org.bouncycastle.util.encoders.Hex;
@@ -45,7 +48,7 @@ public class Transfer {
 	/**
 	 * 配置网络环境为测试服
 	 */
-	private static final TestNet3Params np = TestNet3Params.get();
+	private static NetworkParameters np = TestNet3Params.get();
 
 	private static final String a1;
 
@@ -82,6 +85,8 @@ public class Transfer {
 	private static final Account ac9;
 
 	private static final Account ac10;
+
+	private static final Account ac11;
 
 	static {
 		a1 = "miBEA6o6nZcaLZebR1dsDv4AMHRwJk1mbi";
@@ -124,6 +129,34 @@ public class Transfer {
 						"03103cabc278c7f6ddcb72a95362cf43b1e660d4eafe0ec3ba89aa5ee914bdd88a"),
 				ListUtil.toList("1dd474829a4ac9d3baad15637c67a9d79887031271ec0fd6067d5543837d0946",
 						"b4dfe7d37e99962bc21678961940373e592fa7691d5e3a176ca26e06156b18fc", ""));
+
+		ac11 = BitcoinUtil.getAccountOfKey("2N2dP9FtENAB8Dfh7TXyBK1znDGt5BE9BAT",
+				"899ca5442f546a0281bb40aa97ca6bbfd119449747574555357af9ed00cbb75a");
+	}
+
+	/**
+	 * 创建兼容性的隔离见证地址
+	 */
+	@Test
+	@SneakyThrows
+	public void createMultiSegwitAddress() {
+		init();
+		ECKey ecKey = ECKey.fromPrivate(Hex.decode(ac7.getPrivateKey()));
+		System.out.println("公钥: " + ecKey.getPublicKeyAsHex());
+		System.out.println("私钥: " + ecKey.getPrivateKeyAsHex());
+		System.out.println("私钥-WIF: " + ecKey.getPrivateKeyAsWiF(np));
+		// 主网
+		np = MainNetParams.get();
+
+		LegacyAddress legacyAddress = LegacyAddress.fromKey(np, ecKey);
+		System.out.println("普通地址: " + legacyAddress.toString());
+		SegwitAddress segwitAddress = SegwitAddress.fromKey(np, ecKey);
+		System.out.println("隔离见证地址: " + segwitAddress.toString());
+
+		System.out.println("兼容性隔离见证地址: " + BitcoinUtil.createMultiSegwitAddress(np, ecKey));
+		System.out.println("-------------------");
+		ecKey = ECKey.fromPrivate(Hex.decode("9a9a6539856be209b8ea2adbd155c0919646d108515b60b7b13d6a79f1ae5174"));
+		System.out.println("兼容性隔离见证地址: " + BitcoinUtil.createMultiSegwitAddress(np, ecKey));
 	}
 
 	@Test
