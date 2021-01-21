@@ -5,12 +5,12 @@ import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.StrUtil;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.math.MathContext;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 import org.bitcoinj.core.Base58;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.DumpedPrivateKey;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.core.NetworkParameters;
@@ -278,6 +278,28 @@ public class BitcoinUtil {
 	 */
 	public static String toWif(NetworkParameters np, ECKey key) {
 		return key.getPrivateKeyAsWiF(np);
+	}
+
+	/**
+	 * wif私钥格式转 16进制私钥
+	 * @param np 环境
+	 * @param wif wif私钥
+	 * @return java.lang.String
+	 * @author lingting 2021-01-21 13:43
+	 */
+	public static String wifToHex(NetworkParameters np, String wif) {
+		return wifToEcKey(np, wif).getPrivateKeyAsHex();
+	}
+
+	/**
+	 * wif私钥格式转 ecKey
+	 * @param np 环境
+	 * @param wif wif私钥
+	 * @return java.lang.String
+	 * @author lingting 2021-01-21 13:43
+	 */
+	public static ECKey wifToEcKey(NetworkParameters np, String wif) {
+		return DumpedPrivateKey.fromBase58(np, wif).getKey();
 	}
 
 }
