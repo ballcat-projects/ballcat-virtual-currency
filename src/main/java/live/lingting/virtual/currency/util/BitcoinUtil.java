@@ -1,14 +1,18 @@
 package live.lingting.virtual.currency.util;
 
 import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.convert.Convert;
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.http.HttpRequest;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Base58;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.DumpedPrivateKey;
@@ -25,6 +29,7 @@ import live.lingting.virtual.currency.TransferParams;
 /**
  * @author lingting 2020/12/28 17:49
  */
+@Slf4j
 public class BitcoinUtil {
 
 	/**
@@ -313,6 +318,49 @@ public class BitcoinUtil {
 	 */
 	public static ECKey wifToEcKey(NetworkParameters np, String wif) {
 		return DumpedPrivateKey.fromBase58(np, wif).getKey();
+	}
+
+	/**
+	 * 获取每个字节的手续费 (最慢)
+	 */
+	public static Coin getSlowFeeByByte() {
+		return getFeeByByte("hourFee");
+	}
+
+	/**
+	 * 获取每个字节的手续费 (中等)
+	 */
+	public static Coin getMediumFeeByByte() {
+		return getFeeByByte("halfHourFee");
+	}
+
+	/**
+	 * 获取每个字节的手续费 (最快)
+	 */
+	public static Coin getFastFeeByByte() {
+		return getFeeByByte("fastestFee");
+	}
+
+	private static Coin getFeeByByte(String key) {
+		HttpRequest request = HttpRequest.get("https://bitcoinfees.earn.com/api/v1/fees/recommended");
+
+		try {
+			/*
+			 * 返回值有三个
+			 *
+			 * fastestFee: 最快
+			 *
+			 * halfHourFee: 一般
+			 *
+			 * hourFee: 最慢
+			 */
+			return Coin.valueOf(Convert.toLong(JsonUtil.toObj(request.execute().body(), Map.class).get(key)));
+		}
+		catch (Exception e) {
+			log.error("获取费用失败!", e);
+			// 默认 100 聪
+			return Coin.valueOf(100);
+		}
 	}
 
 }

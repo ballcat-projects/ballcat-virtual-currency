@@ -1,8 +1,5 @@
 package live.lingting.virtual.currency.properties;
 
-import cn.hutool.core.convert.Convert;
-import cn.hutool.http.HttpRequest;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -10,6 +7,7 @@ import java.util.function.BiFunction;
 import java.util.function.Supplier;
 import lombok.Data;
 import lombok.experimental.Accessors;
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.params.MainNetParams;
@@ -18,7 +16,7 @@ import live.lingting.virtual.currency.bitcoin.Unspent;
 import live.lingting.virtual.currency.bitcoin.UnspentRes;
 import live.lingting.virtual.currency.endpoints.Endpoints;
 import live.lingting.virtual.currency.omni.PushTx;
-import live.lingting.virtual.currency.util.JsonUtil;
+import live.lingting.virtual.currency.util.BitcoinUtil;
 
 /**
  * omni平台配置
@@ -27,32 +25,13 @@ import live.lingting.virtual.currency.util.JsonUtil;
  */
 @Data
 @Accessors(chain = true)
+@Slf4j
 public class OmniProperties implements PlatformProperties {
 
 	/**
 	 * 返回每个字节使用多少手续费, 单位 聪
 	 */
-	public Supplier<Coin> feeByByte = () -> {
-		HttpRequest request = HttpRequest.get("https://bitcoinfees.earn.com/api/v1/fees/recommended");
-
-		try {
-			Map<?, ?> map = JsonUtil.toObj(request.execute().body(), Map.class);
-			/*
-			 * 返回值有三个
-			 *
-			 * fastestFee: 最快
-			 *
-			 * fastestFee: 一般
-			 *
-			 * hourFee: 最慢
-			 */
-			return Coin.valueOf(Convert.toLong(map.get("hourFee")));
-		}
-		catch (Exception e) {
-			// 默认 100 聪
-			return Coin.valueOf(100);
-		}
-	};
+	public Supplier<Coin> feeByByte = BitcoinUtil::getSlowFeeByByte;
 
 	/**
 	 * 广播交易, 暴露这个函数主要用于测试网络广播交易使用
@@ -61,7 +40,8 @@ public class OmniProperties implements PlatformProperties {
 		try {
 			return PushTx.of(endpoints, raw);
 		}
-		catch (JsonProcessingException e) {
+		catch (Exception e) {
+			log.error("广播交易异常!", e);
 			return new PushTx(e);
 		}
 	};
@@ -74,6 +54,7 @@ public class OmniProperties implements PlatformProperties {
 			return Unspent.of(UnspentRes.of(endpoints, getConfirmationsMin(), address));
 		}
 		catch (Exception e) {
+			log.error("获取未花费输出异常!", e);
 			return Collections.emptyList();
 		}
 	};
