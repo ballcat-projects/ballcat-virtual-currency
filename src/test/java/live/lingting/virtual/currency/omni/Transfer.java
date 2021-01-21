@@ -16,6 +16,7 @@ import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.SegwitAddress;
+import org.bitcoinj.core.Transaction;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.TestNet3Params;
 import org.bouncycastle.util.encoders.Hex;
@@ -145,8 +146,6 @@ public class Transfer {
 		System.out.println("公钥: " + ecKey.getPublicKeyAsHex());
 		System.out.println("私钥: " + ecKey.getPrivateKeyAsHex());
 		System.out.println("私钥-WIF: " + ecKey.getPrivateKeyAsWiF(np));
-		// 主网
-		np = MainNetParams.get();
 
 		LegacyAddress legacyAddress = LegacyAddress.fromKey(np, ecKey);
 		System.out.println("普通地址: " + legacyAddress.toString());
@@ -343,6 +342,17 @@ public class Transfer {
 
 	@Test
 	@SneakyThrows
+	public void testP2shP2wpkh() {
+		String raw = "0100000001db6b1b20aa0fd7b23880be2ecbd4a98130974cf4748fb66092ac4d3ceb1a54770100000000feffffff02b8b4eb0b000000001976a914a457b684d7f0d539a46a45bbc043f35b6d7d7a7ca4ea7ca4ea7a4a7a4a4a7a4a1a1a1a1a1a8a1a8a1a1a1a1a8a8a1a1a1a1a1a0b3b4a6a8a8a7a8a7b1a7b3b3b1b1b1b1b1b0b1b0b0b0b0b0b0b0b0b0b1b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0";
+
+		Transaction tx = new Transaction(np, Hex.decode(raw));
+
+
+		System.out.println(tx.getTxId().toString());
+	}
+
+	@Test
+	@SneakyThrows
 	public void btc() {
 		init();
 
@@ -359,7 +369,9 @@ public class Transfer {
 		System.out.println("a8: " + ac8.getAddress());
 		System.out.println("a9: " + ac9.getAddress());
 		TransferParams params = new TransferParams().setSumFee(Coin.valueOf(546));
-		TransferResult transfer = service.transfer(ac10, ac11.getAddress(), OmniContract.BTC, value);
+		TransferResult transfer = service.transfer(ac11, ac10.getAddress(), OmniContract.BTC, value);
+		// TransferResult transfer = service.transfer(ac10, ac11.getAddress(),
+		// OmniContract.BTC, value);
 		// TransferResult transfer = service.transfer(ac1, ac8.getAddress(),
 		// OmniContract.BTC, value);
 		// TransferResult transfer = service.transfer(ac7, a1, OmniContract.BTC, value,

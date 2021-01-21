@@ -47,7 +47,7 @@ public class Account {
 	/**
 	 * 最少签名个数, 多签地址要求最少使用多少个密钥进行签名
 	 */
-	private Integer multiNum;
+	private Integer multiNum = 1;
 
 	/**
 	 * 公钥组
