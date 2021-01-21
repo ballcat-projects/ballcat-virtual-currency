@@ -1,6 +1,5 @@
 package live.lingting.virtual.currency.tronscan;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import java.math.BigDecimal;
 import lombok.SneakyThrows;
 import org.junit.Test;
@@ -43,6 +42,8 @@ public class Transfer {
 
 	private static final Account ac2;
 
+	private static final Account ac3;
+
 	static {
 		service = new TronscanServiceImpl(new TronscanProperties().setEndpoints(TronscanEndpoints.NILE));
 
@@ -62,9 +63,14 @@ public class Transfer {
 		pr2 = "b1800442fe966cf8c0e5f058a4e1b7ab97b514b8983b726abe510c69b03e3905";
 		ac2 = TronscanUtil.getAccountOfKey(a2, pr2);
 
+		ac3 = TronscanUtil.getAccountOfKey("TLowwQtg4fNWsWUT5vTexpgukpwgLKg4F7",
+				"6b082db1ca6b61c2e136804699a8b8f550ae4eea4bd2a6231b0e804f16bf664f");
+
 	}
 
-	public static void main(String[] args) throws JsonProcessingException {
+	@Test
+	@SneakyThrows
+	public void run() {
 		String s = "{\"address\":\"TKeU9ChEmqHcXQK5uY79S1mXP9ZsZ68ocz\"," + "\"publicKey"
 				+ "\":\"803d809e80150b808d2186b24ada31783e6eabf78feae3b3f4d1cae28a25a4d5152884ff68f026d7baf79183904049bdc612fe23850aed52324731a37041313a\",\"privateKey\":\"4aada735aac438abbc19794d05d3267f6e7abc64b51aeac0f97ccc606e29db48\",\"multi\":false}\n";
 
@@ -76,7 +82,10 @@ public class Transfer {
 
 		String s4 = "{\"address\":\"TKvrXAzmCJs1AFDhoLxEWZRHSrEiqzBHd9\"," + "\"publicKey"
 				+ "\":\"869afd5f52e4dfa3b051b93f0a7d4b2bfe485b3cda8be6f165ed985a21592281cc936e3f033f033b16e818267830d749a73dfd39bf43795716d0f838655152e4\",\"privateKey\":\"b83850669411d9742ca9b40130e6f084046a9c222e0fadd9b7b218f95b6feeba\",\"multi\":false}";
-		Account account = TronscanUtil.create();
+
+		String s5 = "{\"address\":\"TLowwQtg4fNWsWUT5vTexpgukpwgLKg4F7\"," + "\"publicKey"
+				+ "\":\"7af3fa3054dfe9a0b85708f4a7e854d214e5ddad6889b3bca0f1856b46d3b1d964a5c5806f700d77bb5675726f956c640df229cec45106ec5f7d38ad1302ab19\",\"privateKey\":\"6b082db1ca6b61c2e136804699a8b8f550ae4eea4bd2a6231b0e804f16bf664f\",\"multi\":false}";
+		Account account = TronscanUtil.createAccount();
 		System.out.println(JsonUtil.toJson(account));
 	}
 
@@ -90,9 +99,9 @@ public class Transfer {
 		BigDecimal b2 = service.getNumberByAddressAndContract(a2, TronscanContract.TRX);
 		System.out.println("a2 TRX余额: " + b2.toPlainString());
 
-		BigDecimal value = new BigDecimal("0.1");
+		BigDecimal value = new BigDecimal("1");
 		System.out.println("a1 向 a2 转 " + value.toPlainString() + " trx");
-		TransferResult transfer = service.transfer(ac1, "TKvrXAzmCJs1AFDhoLxEWZRHSrEiqzBHd9", TronscanContract.TRX, value);
+		TransferResult transfer = service.transfer(ac1, ac3.getAddress(), TronscanContract.TRX, value);
 
 		if (!transfer.getSuccess()) {
 			System.out.println("转账失败: " + JsonUtil.toJson(transfer));
@@ -116,9 +125,9 @@ public class Transfer {
 		BigDecimal b2 = service.getNumberByAddressAndContract(a2, trz);
 		System.out.println("a2 trz余额: " + b2.toPlainString());
 
-		BigDecimal value = new BigDecimal("0.1");
+		BigDecimal value = new BigDecimal("1");
 		System.out.println("a1 向 a2 转 " + value.toPlainString() + " trz");
-		TransferResult transfer = service.transfer(ac1, "TKvrXAzmCJs1AFDhoLxEWZRHSrEiqzBHd9", trz, value);
+		TransferResult transfer = service.transfer(ac1, ac3.getAddress(), trz, value);
 
 		if (!transfer.getSuccess()) {
 			System.out.println("转账失败: " + JsonUtil.toJson(transfer));
@@ -142,9 +151,9 @@ public class Transfer {
 		BigDecimal b2 = service.getNumberByAddressAndContract(a2, usdj);
 		System.out.println("a2 usdj余额: " + b2.toPlainString());
 
-		BigDecimal value = new BigDecimal("50");
+		BigDecimal value = new BigDecimal("1");
 		System.out.println("a1 向 a2 转 " + value.toPlainString() + " usdj");
-		TransferResult transfer = service.transfer(ac1, "TKvrXAzmCJs1AFDhoLxEWZRHSrEiqzBHd9", usdj, value);
+		TransferResult transfer = service.transfer(ac1, ac3.getAddress(), usdj, value);
 
 		if (!transfer.getSuccess()) {
 			System.out.println("转账失败: " + JsonUtil.toJson(transfer));

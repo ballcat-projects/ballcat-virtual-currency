@@ -43,15 +43,15 @@ public class TransferResult {
 				.setHash(hash);
 	}
 
-	public static TransferResult error(String message) {
-		return error(message, null);
+	public static TransferResult failed(String message) {
+		return failed(message, null);
 	}
 
-	public static TransferResult error(Throwable e) {
-		return error(e.getMessage(), e);
+	public static TransferResult failed(Throwable e) {
+		return failed(e.getMessage(), e);
 	}
 
-	public static TransferResult error(String message, Throwable e) {
+	public static TransferResult failed(String message, Throwable e) {
 		return new TransferResult()
 				// 成功
 				.setSuccess(false)
@@ -59,6 +59,10 @@ public class TransferResult {
 				.setMessage(message)
 				// Exception
 				.setException(e);
+	}
+
+	public static TransferResult failed(TransactionGenerate generate) {
+		return failed(generate.getMessage(), generate.getException());
 	}
 
 }

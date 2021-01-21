@@ -24,6 +24,7 @@ import org.tron.tronj.crypto.SECP256K1;
 import org.tron.tronj.crypto.tuweniTypes.Bytes32;
 import live.lingting.virtual.currency.Account;
 import live.lingting.virtual.currency.Transaction;
+import live.lingting.virtual.currency.TransactionGenerate;
 import live.lingting.virtual.currency.TransferParams;
 import live.lingting.virtual.currency.TransferResult;
 import live.lingting.virtual.currency.contract.Contract;
@@ -252,24 +253,28 @@ public class TronscanServiceImpl implements PlatformService {
 	}
 
 	@Override
-	public TransferResult transfer(Account from, String to, Contract contract, BigDecimal value, TransferParams params)
-			throws Throwable {
+	public TransactionGenerate transactionGenerate(Account from, String to, Contract contract, BigDecimal value,
+			TransferParams params) throws Throwable {
+		if (value.compareTo(BigDecimal.ZERO) <= 0) {
+			return TransactionGenerate.failed("转账金额必须大于0!");
+		}
+		if (!from.getAddress().equals(TronscanUtil.getHexAddressByPublicKey(from.getPublicKey()))) {
+			return TransactionGenerate.failed("由公钥推导出的地址与传入地址不符!");
+		}
 		// 计算转账数量
 		BigInteger amount = valueToBalanceByContract(value, contract);
 		String txId;
 		RawData rawData;
 		String rawDataHex;
+		BigInteger feeLimit = null;
+		BigInteger callValue = null;
 		// trx 转账
 		if (contract == TronscanContract.TRX) {
 			TriggerResult.TrxTransferGenerateResult generateResult = TriggerRequest
 					.trxTransferGenerate(endpoints, from, to, amount, contract).exec();
 
 			if (StrUtil.isNotBlank(generateResult.getError())) {
-				return new TransferResult()
-						// 错误信息
-						.setMessage(generateResult.getError())
-						// 失败
-						.setSuccess(false);
+				return TransactionGenerate.failed(generateResult.getError());
 			}
 			txId = generateResult.getTxId();
 			rawData = generateResult.getRawData();
@@ -280,11 +285,7 @@ public class TronscanServiceImpl implements PlatformService {
 			Trc10TransferGenerateResult generateResult = TriggerRequest
 					.trc10TransferGenerate(endpoints, from, to, amount, contract).exec();
 			if (StrUtil.isNotBlank(generateResult.getError())) {
-				return new TransferResult()
-						// 错误信息
-						.setMessage(generateResult.getError())
-						// 失败
-						.setSuccess(false);
+				return TransactionGenerate.failed(generateResult.getError());
 			}
 			txId = generateResult.getTxId();
 			rawData = generateResult.getRawData();
@@ -292,8 +293,8 @@ public class TronscanServiceImpl implements PlatformService {
 		}
 		// 触发trc20 转账合约
 		else {
-			BigInteger feeLimit = params.getFeeLimit() != null ? params.getFeeLimit() : BigInteger.TEN.pow(9);
-			BigInteger callValue = params.getCallValue() != null ? params.getCallValue() : BigInteger.ZERO;
+			feeLimit = params.getFeeLimit() != null ? params.getFeeLimit() : BigInteger.TEN.pow(9);
+			callValue = params.getCallValue() != null ? params.getCallValue() : BigInteger.ZERO;
 			Trc20TransferGenerateResult generateResult = TriggerRequest
 					.trc20TransferGenerate(endpoints, from, to, amount, contract, feeLimit, callValue).exec();
 
@@ -302,15 +303,37 @@ public class TronscanServiceImpl implements PlatformService {
 			rawData = transaction.getRawData();
 			rawDataHex = transaction.getRawDataHex();
 		}
+		return TransactionGenerate.success(from, to, amount, contract,
+				new TransactionGenerate.Tronscan(txId, rawData, rawDataHex, feeLimit, callValue));
+	}
 
+	@Override
+	public TransactionGenerate transactionSign(TransactionGenerate generate) throws Throwable {
+		// 如果上一步失败则直接返回
+		if (!generate.getSuccess()) {
+			return generate;
+		}
 		// 创建密钥对
-		SECP256K1.KeyPair keyPair = SECP256K1.KeyPair.create(SECP256K1.PrivateKey.create(from.getPrivateKey()));
+		SECP256K1.KeyPair keyPair = SECP256K1.KeyPair
+				.create(SECP256K1.PrivateKey.create(generate.getFrom().getPrivateKey()));
 		// 对 txId 进行签名
-		SECP256K1.Signature sign = SECP256K1.sign(Bytes32.wrap(Hex.decode(txId)), keyPair);
+		SECP256K1.Signature sign = SECP256K1.sign(Bytes32.wrap(Hex.decode(generate.getTronscan().getTxId())), keyPair);
 
+		// 保存数据
+		return generate.setSignHex(sign.encodedBytes().toHexString());
+	}
+
+	@Override
+	public TransferResult transactionBroadcast(TransactionGenerate generate) throws Throwable {
+		// 如果上一步失败则直接返回
+		if (!generate.getSuccess()) {
+			return TransferResult.failed(generate);
+		}
+		TransactionGenerate.Tronscan tronscan = generate.getTronscan();
+		String txId = tronscan.getTxId();
 		// 广播交易
-		TransferBroadcastResult broadcastResult = TriggerRequest
-				.trc10TransferBroadcast(endpoints, txId, rawData, rawDataHex, sign.encodedBytes().toHexString()).exec();
+		TransferBroadcastResult broadcastResult = TriggerRequest.trc10TransferBroadcast(endpoints, txId,
+				tronscan.getRawData(), tronscan.getRawDataHex(), generate.getSignHex()).exec();
 
 		// 设置返回结果
 		TransferResult result = new TransferResult().setHash(txId);

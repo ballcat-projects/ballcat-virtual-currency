@@ -13,8 +13,8 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.MathContext;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -36,12 +36,12 @@ import org.bitcoinj.core.Utils;
 import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptBuilder;
-import org.bitcoinj.script.ScriptError;
-import org.bitcoinj.script.ScriptException;
+import org.bitcoinj.script.ScriptChunk;
 import org.bitcoinj.script.ScriptPattern;
 import org.bouncycastle.util.encoders.Hex;
 import live.lingting.virtual.currency.Account;
 import live.lingting.virtual.currency.Transaction;
+import live.lingting.virtual.currency.TransactionGenerate;
 import live.lingting.virtual.currency.TransferParams;
 import live.lingting.virtual.currency.TransferResult;
 import live.lingting.virtual.currency.bitcoin.Balance;
@@ -54,7 +54,6 @@ import live.lingting.virtual.currency.contract.OmniContract;
 import live.lingting.virtual.currency.endpoints.Endpoints;
 import live.lingting.virtual.currency.enums.TransactionStatus;
 import live.lingting.virtual.currency.enums.VcPlatform;
-import live.lingting.virtual.currency.exception.VirtualCurrencyException;
 import live.lingting.virtual.currency.omni.Balances;
 import live.lingting.virtual.currency.omni.Domain;
 import live.lingting.virtual.currency.omni.PushTx;
@@ -254,11 +253,16 @@ public class BtcOmniServiceImpl implements PlatformService {
 	}
 
 	@Override
-	public TransferResult transfer(Account from, String to, Contract contract, BigDecimal value, TransferParams params)
-			throws Throwable {
+	public TransactionGenerate transactionGenerate(Account from, String to, Contract contract, BigDecimal value,
+			TransferParams params) throws Throwable {
+		if (value.compareTo(BigDecimal.ZERO) <= 0) {
+			return TransactionGenerate.failed("转账金额必须大于0!");
+		}
 		NetworkParameters np = properties.getNp();
 		// BTC 转账数量
 		Coin btcAmount;
+		// 转账合约数量
+		BigInteger contractAmount = BigInteger.ZERO;
 		// 转账比特
 		if (contract == OmniContract.BTC) {
 			btcAmount = BitcoinUtil.btcToCoin(value);
@@ -302,7 +306,7 @@ public class BtcOmniServiceImpl implements PlatformService {
 		// 找零输出
 		if (fs.getZero()) {
 			tx.addOutput(
-					// 找零 = 输出数量 - 手续费 - 转账数量
+					// 找零 = 输出数量 - 总手续费 - 转账数量
 					fs.getOutNumber().subtract(fs.getFee()).subtract(btcAmount),
 					// 找零给自己
 					fromAddress);
@@ -310,8 +314,7 @@ public class BtcOmniServiceImpl implements PlatformService {
 
 		// 转账合约输出
 		if (contract != OmniContract.BTC) {
-			// 转账合约数量
-			BigInteger number = valueToBalanceByContract(value, contract);
+			contractAmount = valueToBalanceByContract(value, contract);
 			// 构筑输出hex
 			String contractHex = StrUtil.format("{}{}{}",
 					// 合约转账 开头字符串
@@ -319,7 +322,7 @@ public class BtcOmniServiceImpl implements PlatformService {
 					// 合约hash 的 十六进制 前面补0 到 16位
 					StrUtil.padPre(new BigInteger(contract.getHash()).toString(16), 16, "0"),
 					// 转账数量 的 十六进制 前面补0 到 16位
-					StrUtil.padPre(number.toString(16), 16, "0"));
+					StrUtil.padPre(contractAmount.toString(16), 16, "0"));
 
 			// 加入输出
 			tx.addOutput(Coin.ZERO, new Script(Utils.HEX.decode(contractHex)));
@@ -335,62 +338,60 @@ public class BtcOmniServiceImpl implements PlatformService {
 					Coin.valueOf(spent.getValue().longValue()));
 			tx.addInput(input);
 		}
+		return TransactionGenerate.success(from, to,
+				// 转账数量配置
+				contract != OmniContract.BTC ? contractAmount : BitcoinUtil.coinToBtcBalance(btcAmount), contract,
+				new TransactionGenerate.Bitcoin(tx, fs.getFee()));
+	}
 
-		List<TransactionInput> inputs = tx.getInputs();
+	@Override
+	public TransactionGenerate transactionSign(TransactionGenerate generate) throws Throwable {
+		// 如果上一步失败则直接返回
+		if (!generate.getSuccess()) {
+			return generate;
+		}
+		org.bitcoinj.core.Transaction tx = generate.getBitcoin().getTransaction();
+		Account from = generate.getFrom();
+
+		// 初始密钥
+		List<ECKey> keys = getEcKeysByFrom(from);
 		// 签名输入
-		for (int inputIndex = 0; inputIndex < inputs.size(); inputIndex++) {
+		for (int inputIndex = 0; inputIndex < tx.getInputs().size(); inputIndex++) {
 			TransactionInput txIn = tx.getInput(inputIndex);
 			Script script = txIn.getScriptSig();
-			// p2sh处理
-			if (ScriptPattern.isP2SH(script)) {
+			// p2sh处理 或者 非 第一次签名
+			if (!generate.getBitcoin().getFirstSign() || ScriptPattern.isP2SH(script)) {
 				List<TransactionSignature> signatures;
-				List<String> publicKeys;
-				List<ECKey> keys;
-				// 多签
-				if (from.getMulti()) {
-					keys = new ArrayList<>(from.getPublicKeyArray().size());
-					publicKeys = new ArrayList<>(from.getPublicKeyArray().size());
-					List<String> publicKeyArray = from.getPublicKeyArray();
-					for (int keyIndex = 0; keyIndex < publicKeyArray.size(); keyIndex++) {
-						// 保存public key
-						publicKeys.add(publicKeyArray.get(keyIndex));
-						// 私钥为空
-						if (StrUtil.isBlank(from.getPrivateKeyArray().get(keyIndex))) {
-							keys.add(ECKey.fromPublicOnly(Hex.decode(publicKeyArray.get(keyIndex))));
-						}
-						// 私钥不为空
-						else {
-							ECKey ecKey = ECKey.fromPrivate(Hex.decode(from.getPrivateKeyArray().get(keyIndex)));
-							keys.add(ecKey);
-							// 验证公钥
-							if (!ecKey.getPublicKeyAsHex().equals(publicKeyArray.get(keyIndex))) {
-								throw new VirtualCurrencyException(
-										StrUtil.format("转换账号密钥索引{}, 通过私钥推导的公钥与对应公钥不一致, 请检查数据!", keyIndex));
+				signatures = new ArrayList<>(from.getMultiNum());
+
+				// 非第一次签名脚本创建
+				if (!generate.getBitcoin().getFirstSign()) {
+					Iterator<ScriptChunk> sci = txIn.getScriptSig().getChunks().iterator();
+
+					while (sci.hasNext()) {
+						ScriptChunk sc = sci.next();
+						// 如果是 op code 不为0
+						if (sc.opcode != 0) {
+							// 如果不是最后一个, 表示这是一个签名
+							if (sci.hasNext()) {
+								// 解析签名
+								TransactionSignature signature = TransactionSignature.decodeFromBitcoin(sc.data, true,
+										true);
+								signatures.add(signature);
 							}
 						}
 					}
 				}
-				// 单签
-				else {
-					keys = ListUtil.toList(ECKey.fromPrivate(Hex.decode(from.getPrivateKey())));
-					publicKeys = ListUtil.toList(from.getPublicKey());
-				}
-
-				// 验证 public key hash
-				if (!Arrays.equals(script.getPubKeyHash(),
-						BitcoinUtil.generateMultiPublicKeyHash(from.getMultiNum(), publicKeys))) {
-					throw new VirtualCurrencyException(
-							"解析出来的 public key hash 与输入脚本的 public key hash 不一致, 请检查转账账号数据(公钥顺序是否正确, 最小签名数量是否正确, 地址是否正确等)");
-				}
-
-				// 创建脚本
 				script = ScriptBuilder.createMultiSigOutputScript(from.getMultiNum(), keys);
-				signatures = new ArrayList<>(keys.size());
-				for (ECKey key : keys) {
-					if (key.hasPrivKey()) {
+				for (ECKey ecKey : keys) {
+					// 如果要求的签名数量与已有签名数量一致, 则停止插入签名
+					if (signatures.size() == from.getMultiNum()) {
+						continue;
+					}
+					if (ecKey.hasPrivKey()) {
 						signatures.add(new TransactionSignature(
 								// 签名
-								key.sign(
+								ecKey.sign(
 										// 生成hash
 										tx.hashForSignature(inputIndex, script, SigHash.ALL, false)),
 								SigHash.ALL, false)
@@ -404,14 +405,7 @@ public class BtcOmniServiceImpl implements PlatformService {
 				continue;
 			}
 
-			ECKey key = ECKey.fromPrivate(Hex.decode(from.getPrivateKey()));
-
-			// 验证 public key hash
-			if (!Arrays.equals(script.getPubKeyHash(), key.getPubKeyHash())) {
-				throw new VirtualCurrencyException(
-						"通过私钥解析出来的public key hash 与 输入脚本中的 public key hash 不一致, 请检查转账账号地址与私钥是否匹配!");
-			}
-
+			ECKey key = keys.get(0);
 			if (ScriptPattern.isP2WPKH(script)) {
 				script = ScriptBuilder.createP2PKHOutputScript(key);
 				TransactionSignature signature = tx.calculateWitnessSignature(inputIndex, key, script, txIn.getValue(),
@@ -430,29 +424,36 @@ public class BtcOmniServiceImpl implements PlatformService {
 				txIn.setScriptSig(ScriptBuilder.createInputScript(txSignature, key));
 			}
 			else {
-				throw new ScriptException(ScriptError.SCRIPT_ERR_UNKNOWN_ERROR,
-						"Unable to sign this scriptPubKey: " + script);
+				return TransactionGenerate.failed("无法解析此脚本!");
 			}
 		}
 
 		// 验证
 		tx.verify();
 		// 创建上下文
-		Context.getOrCreate(np);
+		Context.getOrCreate(properties.getNp());
 		// 设置来源
 		tx.getConfidence().setSource(TransactionConfidence.Source.SELF);
 
 		tx.setPurpose(Purpose.USER_PAYMENT);
 		// 生成用于广播的hex字符串
 		String raw = Hex.toHexString(tx.bitcoinSerialize());
-		System.out.println(raw);
+		return generate.setSignHex(raw);
+	}
+
+	@Override
+	public TransferResult transactionBroadcast(TransactionGenerate generate) throws Throwable {
+		// 如果上一步失败则直接返回
+		if (!generate.getSuccess()) {
+			return TransferResult.failed(generate);
+		}
 		// 广播交易, 返回 交易hash
-		PushTx pushTx = properties.getBroadcastTransaction().apply(raw, omniEndpoints);
+		PushTx pushTx = properties.getBroadcastTransaction().apply(generate.getSignHex(), omniEndpoints);
 		if (!pushTx.isSuccess()) {
 			if (pushTx.getE() != null) {
-				return TransferResult.error(pushTx.getE());
+				return TransferResult.failed(pushTx.getE());
 			}
-			return TransferResult.error("转账失败");
+			return TransferResult.failed("转账失败");
 		}
 		return TransferResult.success(pushTx.getTxId());
 	}
@@ -587,6 +588,31 @@ public class BtcOmniServiceImpl implements PlatformService {
 			inInfos.put(out.getAddr(), getNumberByBalanceAndContract(out.getValue(), OmniContract.BTC));
 		}
 		return sumIn;
+	}
+
+	private List<ECKey> getEcKeysByFrom(Account from) {
+		List<ECKey> keys;
+		// 多签
+		if (from.getMulti()) {
+			keys = new ArrayList<>(from.getPublicKeyArray().size());
+			List<String> publicKeyArray = from.getPublicKeyArray();
+			for (int keyIndex = 0; keyIndex < publicKeyArray.size(); keyIndex++) {
+				// 私钥为空
+				if (StrUtil.isBlank(from.getPrivateKeyArray().get(keyIndex))) {
+					keys.add(ECKey.fromPublicOnly(Hex.decode(publicKeyArray.get(keyIndex))));
+				}
+				// 私钥不为空
+				else {
+					ECKey ecKey = ECKey.fromPrivate(Hex.decode(from.getPrivateKeyArray().get(keyIndex)));
+					keys.add(ecKey);
+				}
+			}
+		}
+		// 单签
+		else {
+			keys = ListUtil.toList(ECKey.fromPrivate(Hex.decode(from.getPrivateKey())));
+		}
+		return keys;
 	}
 
 }

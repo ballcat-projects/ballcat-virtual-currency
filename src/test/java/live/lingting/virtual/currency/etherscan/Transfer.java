@@ -1,10 +1,6 @@
 package live.lingting.virtual.currency.etherscan;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import java.math.BigDecimal;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import lombok.SneakyThrows;
 import org.junit.Test;
 import live.lingting.virtual.currency.Account;
@@ -44,6 +40,8 @@ public class Transfer {
 
 	private static final Account ac2;
 
+	private static final Account ac3;
+
 	static {
 		service = new InfuraServiceImpl(new InfuraProperties()
 				// 节点
@@ -64,10 +62,13 @@ public class Transfer {
 		pr2 = "3a1477cd2b3f8bdb47a419760cd11d24b50ac9e2a80cc6e4f7ff902d8871978f";
 		ac2 = EtherscanUtil.getAccountOfKey(a2, pr2);
 
+		ac3 = EtherscanUtil.getAccountOfKey("0xf7ac254d7a558c87925d89bd05273426a58244b7",
+				"ff450f315d0942d27b2fa447a9e987e44b5e970aeb114e1459b523a383c23b0a");
 	}
 
-	public static void main(String[] args) throws InvalidAlgorithmParameterException, NoSuchAlgorithmException,
-			NoSuchProviderException, JsonProcessingException {
+	@Test
+	@SneakyThrows
+	public void run() {
 		String s = "{\"address\":\"0xb84286ea170661e25d8ef5f52cc18066e175b5ba\"," + "\"publicKey"
 				+ "\":\"58b75ffb6bdb54ca16a94c4eb2ddd603c9b61e8df1b8eab2366a106eb587b1f311f512aade1cb5ffc8baa433a679ed29274a677d8ef40b54e90ce0572fe75e64\",\"privateKey\":\"dc8b697056d14dbe7c7ed431f9e9c2dd34ee93663425750bbd3907c549107d7a\",\"multi\":false}\n";
 
@@ -76,6 +77,9 @@ public class Transfer {
 
 		String s3 = "{\"address\":\"0xfc2be74e45af57049fa5cc8ea1923fc9e3927577\"," + "\"publicKey"
 				+ "\":\"bbf6f69003aaf2db4f8f8bed14656a0ab982c46506009de5dacefa0da0b04d9ef9886cf8dfc1d9a87c8872fd3fe2569cc8c367e19163ced038a8aefefce8d3e6\",\"privateKey\":\"e921173570bb99a11639bcb028ce45fc051ab63d3aa6e9b3a5617dd5ecdea50d\",\"multi\":false}";
+
+		String s4 = "{\"address\":\"0xf7ac254d7a558c87925d89bd05273426a58244b7\"," + "\"publicKey"
+				+ "\":\"6e831e54ba2a76c0dff3bbbdfe42fc714078cddf6fa24d2c1592ef133d44469cd2b6a75efe3a71427df1e6c4f15e67c5112be8d11f54df400232b0be8004ed82\",\"privateKey\":\"ff450f315d0942d27b2fa447a9e987e44b5e970aeb114e1459b523a383c23b0a\",\"multi\":false}\n";
 		System.out.println(JsonUtil.toJson(EtherscanUtil.createAccount()));
 	}
 
@@ -90,10 +94,9 @@ public class Transfer {
 		BigDecimal b2 = service.getNumberByAddressAndContract(a2, EtherscanContract.ETH);
 		System.out.println("a2 ETH余额: " + b2.toPlainString());
 
-		BigDecimal value = new BigDecimal("1.5");
+		BigDecimal value = new BigDecimal("1");
 		System.out.println("a1 向 a2 转 " + value.toPlainString() + " eth");
-		TransferResult transfer = service.transfer(ac2, "0xfc2be74e45af57049fa5cc8ea1923fc9e3927577",
-				EtherscanContract.ETH, value);
+		TransferResult transfer = service.transfer(ac2, ac3.getAddress(), EtherscanContract.ETH, value);
 
 		if (!transfer.getSuccess()) {
 			System.out.println("转账失败: " + JsonUtil.toJson(transfer));
@@ -117,10 +120,10 @@ public class Transfer {
 		BigDecimal b2 = service.getNumberByAddressAndContract(a2, cl);
 		System.out.println("a2 cl余额: " + b2.toPlainString());
 
-		BigDecimal value = new BigDecimal("10");
+		BigDecimal value = new BigDecimal("1");
 		System.out.println("a1 向 a2 转 " + value.toPlainString() + " cl");
 		// TransferResult transfer = service.transfer(ac1, a2, cl, value);
-		TransferResult transfer = service.transfer(ac1, "0xfc2be74e45af57049fa5cc8ea1923fc9e3927577", cl, value);
+		TransferResult transfer = service.transfer(ac1, ac3.getAddress(), cl, value);
 
 		if (!transfer.getSuccess()) {
 			System.out.println("转账失败: " + JsonUtil.toJson(transfer));

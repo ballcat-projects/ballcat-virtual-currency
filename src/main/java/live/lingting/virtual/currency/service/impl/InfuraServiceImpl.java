@@ -26,11 +26,13 @@ import org.web3j.abi.datatypes.Type;
 import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.abi.datatypes.generated.Uint8;
 import org.web3j.crypto.Credentials;
+import org.web3j.crypto.Keys;
 import org.web3j.crypto.RawTransaction;
 import org.web3j.crypto.TransactionEncoder;
 import org.web3j.utils.Numeric;
 import live.lingting.virtual.currency.Account;
 import live.lingting.virtual.currency.Transaction;
+import live.lingting.virtual.currency.TransactionGenerate;
 import live.lingting.virtual.currency.TransferParams;
 import live.lingting.virtual.currency.TransferResult;
 import live.lingting.virtual.currency.contract.Contract;
@@ -210,12 +212,14 @@ public class InfuraServiceImpl implements PlatformService {
 	}
 
 	@Override
-	public TransferResult transfer(Account from, String to, Contract contract, BigDecimal value, TransferParams params)
-			throws Throwable {
-		// 合约地址
-		String cHash = contract.getHash();
-		// 获取账户信息
-		Credentials credentials = Credentials.create(from.getPrivateKey(), from.getPublicKey());
+	public TransactionGenerate transactionGenerate(Account from, String to, Contract contract, BigDecimal value,
+			TransferParams params) throws Throwable {
+		if (value.compareTo(BigDecimal.ZERO) <= 0) {
+			return TransactionGenerate.failed("转账金额必须大于0!");
+		}
+		if (!EtherscanUtil.addStart(Keys.getAddress(from.getPublicKey())).equals(from.getAddress())) {
+			return TransactionGenerate.failed("由公钥推导出的地址与传入地址不符!");
+		}
 		// 计算转账数量
 		BigInteger amount = valueToBalanceByContract(value, contract);
 		// nonce, 由于要保证每笔交易递增, 所以直接使用eth数量
@@ -247,16 +251,37 @@ public class InfuraServiceImpl implements PlatformService {
 			// 编码
 			String fData = FunctionEncoder.encode(function);
 			// 获取交易原始数据
-			rawTransaction = RawTransaction.createTransaction(nonce, gasPrice, gasLimit, cHash, fData);
+			rawTransaction = RawTransaction.createTransaction(nonce, gasPrice, gasLimit, contract.getHash(), fData);
 		}
+		return TransactionGenerate.success(from, to, amount, contract,
+				new TransactionGenerate.Etherscan(nonce, gasPrice, gasLimit, rawTransaction));
+	}
+
+	@Override
+	public TransactionGenerate transactionSign(TransactionGenerate generate) throws Throwable {
+		// 如果上一步失败则直接返回
+		if (!generate.getSuccess()) {
+			return generate;
+		}
+		Credentials credentials = Credentials.create(generate.getFrom().getPrivateKey(),
+				generate.getFrom().getPublicKey());
 
 		// 签名
-		byte[] sign = TransactionEncoder.signMessage(rawTransaction, credentials);
+		byte[] sign = TransactionEncoder.signMessage(generate.getEtherscan().getRawTransaction(), credentials);
 		// 转16进制
 		String hex = Numeric.toHexString(sign);
+		// 返回结果
+		return generate.setSignHex(hex);
+	}
 
+	@Override
+	public TransferResult transactionBroadcast(TransactionGenerate generate) throws Throwable {
+		// 如果上一步失败则直接返回
+		if (!generate.getSuccess()) {
+			return TransferResult.failed(generate);
+		}
 		// 广播交易
-		String hash = client.invoke("eth_sendRawTransaction", String.class, hex);
+		String hash = client.invoke("eth_sendRawTransaction", String.class, generate.getSignHex());
 
 		return TransferResult.success(hash);
 	}

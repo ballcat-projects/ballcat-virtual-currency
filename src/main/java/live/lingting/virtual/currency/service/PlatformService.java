@@ -6,6 +6,7 @@ import java.math.MathContext;
 import java.util.Optional;
 import live.lingting.virtual.currency.Account;
 import live.lingting.virtual.currency.Transaction;
+import live.lingting.virtual.currency.TransactionGenerate;
 import live.lingting.virtual.currency.TransferParams;
 import live.lingting.virtual.currency.TransferResult;
 import live.lingting.virtual.currency.contract.Contract;
@@ -114,6 +115,38 @@ public interface PlatformService {
 	}
 
 	/**
+	 * 转账生成
+	 * @param from 转出账号
+	 * @param to 转入地址
+	 * @param contract 合约
+	 * @param value 转账金额, 单位 个
+	 * @param params 转账参数
+	 * @exception Throwable 异常
+	 * @return boolean
+	 * @author lingting 2020-12-22 16:14
+	 */
+	TransactionGenerate transactionGenerate(Account from, String to, Contract contract, BigDecimal value,
+			TransferParams params) throws Throwable;
+
+	/**
+	 * 对交易进行签名
+	 * @param generate 通过 transactionGenerate 方法生成的数据
+	 * @return live.lingting.virtual.currency.TransactionGenerate
+	 * @author lingting 2021-01-20 17:07
+	 * @exception Throwable 异常
+	 */
+	TransactionGenerate transactionSign(TransactionGenerate generate) throws Throwable;
+
+	/**
+	 * 广播交易
+	 * @param generate 通过 transactionSign 方法生成的数据
+	 * @return live.lingting.virtual.currency.TransferResult
+	 * @author lingting 2021-01-20 17:10
+	 * @exception Throwable 异常
+	 */
+	TransferResult transactionBroadcast(TransactionGenerate generate) throws Throwable;
+
+	/**
 	 * 转账
 	 * @param from 转出账号
 	 * @param to 转入地址
@@ -124,8 +157,10 @@ public interface PlatformService {
 	 * @return boolean
 	 * @author lingting 2020-12-22 16:14
 	 */
-	TransferResult transfer(Account from, String to, Contract contract, BigDecimal value, TransferParams params)
-			throws Throwable;
+	default TransferResult transfer(Account from, String to, Contract contract, BigDecimal value, TransferParams params)
+			throws Throwable {
+		return transactionBroadcast(transactionSign(transactionGenerate(from, to, contract, value, params)));
+	}
 
 	/**
 	 * 校验地址是否正确
