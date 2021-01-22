@@ -27,6 +27,9 @@ import live.lingting.virtual.currency.util.BitcoinUtil;
 @AllArgsConstructor
 public class FeeAndSpent {
 
+	/**
+	 * 总手续费
+	 */
 	private Coin fee;
 
 	private Coin outNumber;

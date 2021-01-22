@@ -1,6 +1,6 @@
 # 比特转账使用提示
 
-由于我目前使用的获取未花费输出接口不支持 原生隔离地址, 所以 P2WPKH 相关我没有进行测试, 如果要使用,请先进行测试
+当前版本 bitcoinj 不支持 p2sh-p2wpkh脚本, 所以在 https://github.com/bitcoinj/bitcoinj/pull/1987 被合并之前. 无法使用 p2sh-p2wpkh 类型地址转账
 
 # 功能
 

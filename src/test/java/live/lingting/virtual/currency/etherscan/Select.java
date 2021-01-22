@@ -23,7 +23,7 @@ public class Select {
 				// 节点
 				.setEndpoints(InfuraEndpoints.MAINNET)
 				// project Id
-				.setProjectId("b6066b4cfce54e7384ea38d52f9260ac"));
+				.setProjectId("9d0efcd0739f4d2f8dae3da3a49051f0"));
 	}
 
 	@Test
@@ -82,6 +82,14 @@ public class Select {
 			System.out.println(transaction.getStatus());
 			System.out.println(transaction.getTime());
 		}
+	}
+
+	@Test
+	@SneakyThrows
+	public void valid() {
+		System.out.println(service.validate("2131231231"));
+		System.out.println(service.validate("0x41c559f4f785664371ffe3ff489029126488849c"));
+		System.out.println(service.validate("0x5fa7e29ffcd685f9fd31d7fe6940be5ef7cb6358"));
 	}
 
 }

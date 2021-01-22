@@ -49,7 +49,7 @@ public class TronscanUtil {
 			// 收款人
 			String to = decodeAddressParam(array[0]);
 			// 数量
-			BigInteger amount = new BigInteger(AbiUtil.removePreZero(array[1]), 16);
+			BigInteger amount = decodeIntParam(array[1]);
 			return new Trc20Data().setAmount(amount).setTo(to);
 		});
 
@@ -78,7 +78,7 @@ public class TronscanUtil {
 					// 收款人
 					.setTo(decodeAddressParam(array[0]))
 					// 数量
-					.setAmount(new BigInteger(array[1], 16))
+					.setAmount(decodeIntParam(array[1]))
 					// 合约地址
 					.setContract(contract);
 		});
@@ -88,7 +88,7 @@ public class TronscanUtil {
 				str = str.substring((AbiMethod.SEND_MULTI_SIG.getMethodId()).length());
 			}
 			String[] array = AbiUtil.stringToArrayBy64(str);
-			return new Trc20Data().setTo(decodeAddressParam(array[0])).setAmount(new BigInteger(array[1], 16));
+			return new Trc20Data().setTo(decodeAddressParam(array[0])).setAmount(decodeIntParam(array[1]));
 		});
 
 		METHOD_HANDLER.put(AbiMethod.TRANSFER_FROM.getMethodId(), str -> {
@@ -102,7 +102,7 @@ public class TronscanUtil {
 					// 收款人
 					.setTo(decodeAddressParam(array[1]))
 					// 数量
-					.setAmount(new BigInteger(array[2], 16));
+					.setAmount(decodeIntParam(array[2]));
 		});
 	}
 
@@ -122,13 +122,28 @@ public class TronscanUtil {
 		throw new VirtualCurrencyException("未支持此方法, 请手动处理");
 	}
 
+	public static BigInteger decodeIntParam(String param) {
+		String str = AbiUtil.removePreZero(param);
+		if (StrUtil.isBlank(str)) {
+			return BigInteger.ZERO;
+		}
+		return new BigInteger(str, 16);
+	}
+
 	/**
 	 * 解析地址类型参数
 	 * @author lingting 2020-12-25 17:00
 	 */
 	public static String decodeAddressParam(String param) {
 		String str = AbiUtil.removePreZero(param);
-		if (!str.startsWith(HEX_ADDRESS_PREFIX)) {
+
+		// 不带 41 的长度
+		if (str.length() < 40) {
+			str = StrUtil.padPre(str, 40, "0");
+		}
+
+		// 带 41的长度
+		if (str.length() < 42) {
 			str = HEX_ADDRESS_PREFIX + str;
 		}
 		return TronscanUtil.hexToString(str);
@@ -171,20 +186,26 @@ public class TronscanUtil {
 	 * 新增账号
 	 * @author lingting 2020-12-25 20:35
 	 */
-	public static Account create() {
+	public static Account createAccount() {
 		// 生成密钥对
-		SECP256K1.KeyPair keyPair = SECP256K1.KeyPair.generate();
+		return createAccount(SECP256K1.KeyPair.generate());
+	}
 
-		// 公钥
-		SECP256K1.PublicKey publicKey = keyPair.getPublicKey();
-		String pubKey = publicKey.toString().substring(2);
-		// 私钥
-		SECP256K1.PrivateKey privateKey = keyPair.getPrivateKey();
-		String priKey = privateKey.toString().substring(2);
+	public static Account createAccount(SECP256K1.KeyPair keyPair) {
+		String pubKey = keyPair.getPublicKey().toString().substring(2);
+		String priKey = keyPair.getPrivateKey().toString().substring(2);
 
+		return createAccount(pubKey, priKey);
+	}
+
+	public static Account createAccount(String publicKey, String privateKey) {
+		return new Account(getHexAddressByPublicKey(publicKey), publicKey, privateKey);
+	}
+
+	public static String getHexAddressByPublicKey(String publicKey) {
 		Keccak.Digest256 digest = new Keccak.Digest256();
 		// 对公钥进行hash
-		byte[] hash = digest.digest(publicKey.getEncoded());
+		byte[] hash = digest.digest(Hex.decode(publicKey));
 		// 提取最后20个字节
 		byte[] hash20 = ArrayUtil.sub(hash, hash.length - 20, hash.length);
 		// 初识地址
@@ -194,8 +215,7 @@ public class TronscanUtil {
 		// 添加其他数据
 		System.arraycopy(hash20, 0, initAddress, 1, 20);
 		// 生成地址
-		String address = Base58Check.bytesToBase58(initAddress);
-		return new Account(address, pubKey, priKey);
+		return Base58Check.bytesToBase58(initAddress);
 	}
 
 	/**

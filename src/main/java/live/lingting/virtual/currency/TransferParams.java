@@ -14,6 +14,10 @@ import org.bitcoinj.core.Coin;
 @Accessors(chain = true)
 public class TransferParams {
 
+	public static TransferParams empty() {
+		return new TransferParams();
+	}
+
 	/**
 	 * Etherscan转账费用配置, wei 为单位
 	 */

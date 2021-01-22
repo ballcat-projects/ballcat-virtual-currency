@@ -18,7 +18,7 @@ import live.lingting.virtual.currency.util.JsonUtil;
 @Slf4j
 public class Select {
 
-	private static final PlatformService service;
+	private static PlatformService service;
 
 	static {
 		service = new BtcOmniServiceImpl(new OmniProperties().setOmniEndpoints(OmniEndpoints.MAINNET)
@@ -82,6 +82,16 @@ public class Select {
 			System.out.println(transaction.getStatus());
 			System.out.println(transaction.getTime());
 		}
+	}
+
+	@Test
+	@SneakyThrows
+	public void valid() {
+		service = new BtcOmniServiceImpl(new OmniProperties().setOmniEndpoints(OmniEndpoints.MAINNET)
+				.setBitcoinEndpoints(BitcoinEndpoints.TEST));
+		System.out.println(service.validate("fasdgasdfasdgasdfdafgasdfsa"));
+		System.out.println(service.validate("2N2vMRNmBiSJQtu3wv2onGPE2museEg9nLw"));
+		System.out.println(service.validate("tb1qdhgxl3vjcg9djhd30zykmz83x63nau4rtmahmd"));
 	}
 
 }

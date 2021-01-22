@@ -1,5 +1,6 @@
 package live.lingting.virtual.currency.enums;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -15,8 +16,21 @@ public enum EtherscanReceiptStatus {
 	/**
 	 * 交易状态
 	 */
-	SUCCESS("0x1"),;
+	SUCCESS("0x1"),
+
+	;
 
 	private final String value;
+
+	@JsonCreator
+	public static EtherscanReceiptStatus of(String str) {
+		EtherscanReceiptStatus[] enums = EtherscanReceiptStatus.values();
+		for (EtherscanReceiptStatus e : enums) {
+			if (e.toString().equals(str)) {
+				return e;
+			}
+		}
+		return null;
+	}
 
 }

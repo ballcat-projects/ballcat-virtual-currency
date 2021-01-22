@@ -33,7 +33,7 @@ public class TransferResult {
 	/**
 	 * 对应异常数据, 可能为 null
 	 */
-	private Exception exception;
+	private Throwable exception;
 
 	public static TransferResult success(String hash) {
 		return new TransferResult()
@@ -41,6 +41,28 @@ public class TransferResult {
 				.setSuccess(true)
 				// hash
 				.setHash(hash);
+	}
+
+	public static TransferResult failed(String message) {
+		return failed(message, null);
+	}
+
+	public static TransferResult failed(Throwable e) {
+		return failed(e.getMessage(), e);
+	}
+
+	public static TransferResult failed(String message, Throwable e) {
+		return new TransferResult()
+				// 成功
+				.setSuccess(false)
+				// message
+				.setMessage(message)
+				// Exception
+				.setException(e);
+	}
+
+	public static TransferResult failed(TransactionGenerate generate) {
+		return failed(generate.getMessage(), generate.getException());
 	}
 
 }

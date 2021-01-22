@@ -98,11 +98,14 @@ public class EtherscanUtil {
 	 */
 	public static Account createAccount()
 			throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException {
-		ECKeyPair keyPair = Keys.createEcKeyPair();
+		return createAccount(Keys.createEcKeyPair());
+	}
+
+	public static Account createAccount(ECKeyPair keyPair) {
 		// 私钥
-		String privateKey = KeyUtil.keyDeserialization(keyPair.getPrivateKey());
+		String privateKey = keyDeserialization(keyPair.getPrivateKey());
 		// 公钥
-		String publicKey = KeyUtil.keyDeserialization(keyPair.getPublicKey());
+		String publicKey = keyDeserialization(keyPair.getPublicKey());
 
 		// 获取钱包地址
 		String address = addStart(Keys.getAddress(keyPair));
@@ -138,9 +141,9 @@ public class EtherscanUtil {
 		Account account = new Account(address, publicKey, privateKey);
 		// 公钥不存在
 		if (StrUtil.isBlank(publicKey)) {
-			ECKeyPair keyPair = ECKeyPair.create(KeyUtil.keySerialization(privateKey));
+			ECKeyPair keyPair = ECKeyPair.create(keySerialization(privateKey));
 			// 计算公钥
-			publicKey = KeyUtil.keyDeserialization(keyPair.getPublicKey());
+			publicKey = keyDeserialization(keyPair.getPublicKey());
 		}
 		// 设置公钥
 		account.setPublicKey(publicKey);
@@ -163,6 +166,22 @@ public class EtherscanUtil {
 			str = START + str;
 		}
 		return str;
+	}
+
+	/**
+	 * 序列化key
+	 * @author lingting 2020-12-22 19:20
+	 */
+	public static BigInteger keySerialization(String key) {
+		return new BigInteger(key, 16);
+	}
+
+	/**
+	 * 反序列化key
+	 * @author lingting 2020-12-22 19:20
+	 */
+	public static String keyDeserialization(BigInteger key) {
+		return key.toString(16);
 	}
 
 }
