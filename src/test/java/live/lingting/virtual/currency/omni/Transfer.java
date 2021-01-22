@@ -347,7 +347,6 @@ public class Transfer {
 
 		Transaction tx = new Transaction(np, Hex.decode(raw));
 
-
 		System.out.println(tx.getTxId().toString());
 	}
 
