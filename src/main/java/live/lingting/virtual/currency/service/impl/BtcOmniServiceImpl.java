@@ -227,7 +227,7 @@ public class BtcOmniServiceImpl implements PlatformService {
 		}
 		for (Balances.Balance balance : balances.getBalance()) {
 			// 协助缓存精度
-			if (!CONTRACT_DECIMAL_CACHE.containsKey(contract.getHash())) {
+			if (!CONTRACT_DECIMAL_CACHE.containsKey(balance.getId())) {
 				CONTRACT_DECIMAL_CACHE.put(contract.getHash(),
 						getDecimalsByString(balance.getPropertyInfo().getTotalTokens()));
 			}
