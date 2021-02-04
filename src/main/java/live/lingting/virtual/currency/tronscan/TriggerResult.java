@@ -19,7 +19,7 @@ public class TriggerResult {
 
 	@Getter
 	@Setter
-	public static class Trc20DecimalsResult extends TriggerResult {
+	public static class TriggerConstantResult extends TriggerResult {
 
 		private String code;
 
@@ -40,7 +40,6 @@ public class TriggerResult {
 			private Boolean result;
 
 		}
-
 	}
 
 	@Getter

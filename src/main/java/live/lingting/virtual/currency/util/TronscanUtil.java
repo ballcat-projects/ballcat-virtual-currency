@@ -284,7 +284,7 @@ public class TronscanUtil {
 	 * @author lingting 2020-12-25 19:36
 	 */
 	public static Integer getDecimalByTrc20(Endpoints endpoints, Contract contract) throws JsonProcessingException {
-		TriggerResult.Trc20DecimalsResult result = TriggerRequest.decimals(endpoints, contract).exec();
+		TriggerResult.TriggerConstantResult result = TriggerRequest.trc20Decimals(endpoints, contract).exec();
 		return Integer.valueOf(result.getConstantResult().get(0), 16);
 	}
 

@@ -192,6 +192,14 @@ public class TronscanServiceImpl implements PlatformService {
 
 	@Override
 	public BigInteger getBalanceByAddressAndContract(String address, Contract contract) throws JsonProcessingException {
+		// 独立处理trc20余额查询
+		if (isTrc20(contract.getHash())) {
+			TriggerResult.TriggerConstantResult triggerResult = TriggerRequest
+					.trc20BalanceOf(endpoints, contract, address).exec();
+
+			return new BigInteger(triggerResult.getConstantResult().get(0), 16);
+		}
+
 		live.lingting.virtual.currency.tronscan.Account account = live.lingting.virtual.currency.tronscan.Account
 				.of(endpoints, address);
 

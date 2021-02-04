@@ -17,8 +17,8 @@ import live.lingting.virtual.currency.endpoints.Endpoints;
 import live.lingting.virtual.currency.tronscan.Transaction.RawData;
 import live.lingting.virtual.currency.tronscan.TriggerResult.TransferBroadcastResult;
 import live.lingting.virtual.currency.tronscan.TriggerResult.Trc10TransferGenerateResult;
-import live.lingting.virtual.currency.tronscan.TriggerResult.Trc20DecimalsResult;
 import live.lingting.virtual.currency.tronscan.TriggerResult.Trc20TransferGenerateResult;
+import live.lingting.virtual.currency.tronscan.TriggerResult.TriggerConstantResult;
 import live.lingting.virtual.currency.tronscan.TriggerResult.TrxTransferGenerateResult;
 import live.lingting.virtual.currency.util.AbiUtil;
 import live.lingting.virtual.currency.util.JsonUtil;
@@ -114,10 +114,10 @@ public class TriggerRequest<T extends TriggerResult> {
 	@JsonProperty("signature")
 	private List<String> signature = null;
 
-	public static TriggerRequest<Trc20DecimalsResult> decimals(Endpoints endpoints, Contract contract) {
-		return new TriggerRequest<Trc20DecimalsResult>()
+	public static TriggerRequest<TriggerConstantResult> trc20Decimals(Endpoints endpoints, Contract contract) {
+		return new TriggerRequest<TriggerConstantResult>()
 				// 目标类型
-				.setTarget(Trc20DecimalsResult.class)
+				.setTarget(TriggerConstantResult.class)
 				// url
 				.setUrl(endpoints.getHttpUrl("wallet/triggerconstantcontract"))
 				// owner_address
@@ -126,6 +126,31 @@ public class TriggerRequest<T extends TriggerResult> {
 				.setContractAddress(contract.getHash())
 				// function_selector
 				.setFunctionSelector("decimals()");
+	}
+
+	/**
+	 * 查询指定地址, 指定trc20合约余额
+	 * @param endpoints 节点
+	 * @param contract 合约
+	 * @param address 地址
+	 * @return live.lingting.virtual.currency.tronscan.TriggerRequest<live.lingting.virtual.currency.tronscan.TriggerResult.TriggerConstantResult>
+	 * @author lingting 2021-02-04 14:52
+	 */
+	public static TriggerRequest<TriggerConstantResult> trc20BalanceOf(Endpoints endpoints, Contract contract,
+			String address) {
+		return new TriggerRequest<TriggerConstantResult>()
+				// 目标类型
+				.setTarget(TriggerConstantResult.class)
+				// url
+				.setUrl(endpoints.getHttpUrl("wallet/triggerconstantcontract"))
+				// owner_address
+				.setOwnerAddress("T9yD14Nj9j7xAB4dbGeiX9h8unkKHxuWwb")
+				// contract_address
+				.setContractAddress(contract.getHash())
+				// function_selector
+				.setFunctionSelector("balanceOf(address)")
+				// 参数, 查询目标
+				.setParameter(TronscanUtil.encodeAddressParam(address));
 	}
 
 	/**
