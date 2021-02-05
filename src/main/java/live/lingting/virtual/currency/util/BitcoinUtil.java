@@ -278,28 +278,24 @@ public class BitcoinUtil {
 	}
 
 	/**
-	 * 私钥转 wif格式
-	 * @param pk 私钥
+	 * 私钥转wif格式
+	 * @param np 网络
+	 * @param bytes 私钥字节
+	 * @param compressed 是否压缩 true 表示转为压缩格式 wif
 	 * @return java.lang.String
-	 * @author lingting 2021-01-19 17:36
+	 * @author lingting 2021-02-05 10:35
 	 */
-	public static String toWif(NetworkParameters np, String pk) {
-		return toWif(np, ECKey.fromPrivate(Hex.decode(pk)));
+	public static String hexToWif(NetworkParameters np, byte[] bytes, boolean compressed) {
+		// 要转为压缩格式
+		if (compressed) {
+			bytes = ArrayUtil.addAll(bytes, new byte[] { 1 });
+		}
+
+		return Base58.encodeChecked(np.getDumpedPrivateKeyHeader(), bytes);
 	}
 
 	/**
-	 * 私钥转 wif格式
-	 * @param np 环境
-	 * @param key 私钥
-	 * @return java.lang.String
-	 * @author lingting 2021-01-19 17:36
-	 */
-	public static String toWif(NetworkParameters np, ECKey key) {
-		return key.getPrivateKeyAsWiF(np);
-	}
-
-	/**
-	 * wif私钥格式转 16进制私钥
+	 * wif私钥格式(压缩与非压缩都可以)转 16进制私钥
 	 * @param np 环境
 	 * @param wif wif私钥
 	 * @return java.lang.String
@@ -310,7 +306,7 @@ public class BitcoinUtil {
 	}
 
 	/**
-	 * wif私钥格式转 ecKey
+	 * wif私钥格式(压缩与非压缩都可以)转 ecKey
 	 * @param np 环境
 	 * @param wif wif私钥
 	 * @return java.lang.String
