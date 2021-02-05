@@ -193,7 +193,7 @@ public class TronscanServiceImpl implements PlatformService {
 	@Override
 	public BigInteger getBalanceByAddressAndContract(String address, Contract contract) throws JsonProcessingException {
 		// 独立处理trc20余额查询
-		if (isTrc20(contract.getHash())) {
+		if (contract != TronscanContract.TRX && isTrc20(contract.getHash())) {
 			TriggerResult.TriggerConstantResult triggerResult = TriggerRequest
 					.trc20BalanceOf(endpoints, contract, address).exec();
 
@@ -213,32 +213,16 @@ public class TronscanServiceImpl implements PlatformService {
 			return data.getBalance();
 		}
 
-		// trc20
-		if (isTrc20(contract.getHash())) {
-			if (CollectionUtil.isEmpty(data.getTrc20())) {
-				return BigInteger.ZERO;
-			}
-			// 从trc20中寻找
-			for (Map<String, BigInteger> map : data.getTrc20()) {
-				for (Map.Entry<String, BigInteger> entry : map.entrySet()) {
-					// 如果指定合约的hash 与当前trc20 key相同
-					if (entry.getKey().equals(contract.getHash())) {
-						return entry.getValue();
-					}
-				}
-			}
+		// trc10 处理
+		if (CollectionUtil.isEmpty(data.getAssetV2())) {
+			return BigInteger.ZERO;
 		}
-		// 非 trc20
-		else {
-			if (CollectionUtil.isEmpty(data.getAssetV2())) {
-				return BigInteger.ZERO;
-			}
-			// 从assetV2中寻找
-			for (live.lingting.virtual.currency.tronscan.Account.Data.AssetV2 v2 : data.getAssetV2()) {
-				// 如果指定合约的hash 与当前v2数据相同
-				if (v2.getKey().equals(contract.getHash())) {
-					return v2.getValue();
-				}
+
+		// 从assetV2中寻找
+		for (live.lingting.virtual.currency.tronscan.Account.Data.AssetV2 v2 : data.getAssetV2()) {
+			// 如果指定合约的hash 与当前v2数据相同
+			if (v2.getKey().equals(contract.getHash())) {
+				return v2.getValue();
 			}
 		}
 
