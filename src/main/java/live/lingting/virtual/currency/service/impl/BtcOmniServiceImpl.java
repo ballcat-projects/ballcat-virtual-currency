@@ -177,7 +177,7 @@ public class BtcOmniServiceImpl implements PlatformService {
 
 				.setValue(response.getAmount())
 
-				.setVcPlatform(VcPlatform.OMNI)
+				.setVcPlatform(VcPlatform.BITCOIN)
 
 				.setTime(response.getBlockTime())
 
@@ -545,7 +545,7 @@ public class BtcOmniServiceImpl implements PlatformService {
 
 				.setHash(rawTransaction.getHash())
 
-				.setVcPlatform(VcPlatform.OMNI)
+				.setVcPlatform(VcPlatform.BITCOIN)
 
 				.setTime(rawTransaction.getTime())
 				// btc 详情

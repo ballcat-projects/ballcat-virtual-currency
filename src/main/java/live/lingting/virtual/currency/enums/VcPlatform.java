@@ -18,7 +18,7 @@ public enum VcPlatform {
 	/**
 	 * 比特
 	 */
-	OMNI,
+	BITCOIN,
 	/**
 	 * 波场
 	 */
