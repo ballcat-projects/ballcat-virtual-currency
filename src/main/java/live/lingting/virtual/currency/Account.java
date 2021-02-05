@@ -35,11 +35,6 @@ public class Account {
 	private String privateKey;
 
 	/**
-	 * keystore 内容
-	 */
-	private String keystore;
-
-	/**
 	 * 是否多签地址
 	 */
 	private Boolean multi = false;
