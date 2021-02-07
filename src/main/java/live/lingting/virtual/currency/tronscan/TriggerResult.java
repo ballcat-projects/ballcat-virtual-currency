@@ -40,6 +40,7 @@ public class TriggerResult {
 			private Boolean result;
 
 		}
+
 	}
 
 	@Getter
