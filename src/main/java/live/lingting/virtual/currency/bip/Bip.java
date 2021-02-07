@@ -70,7 +70,7 @@ public class Bip {
 	/**
 	 * 从根路径开始, 获取指定路径下的节点
 	 * @param path 路径 类似于 m/44'/0'/0'/0/0 或者 0/0, 具体看 测试用例
-	 * {@link live.lingting.virtual.currency.core.MnemonicTest}
+	 * {@link live.lingting.virtual.currency.core.BipTest}
 	 * @return org.bitcoinj.crypto.DeterministicKey
 	 * @author lingting 2021-02-07 10:44
 	 */
@@ -95,7 +95,7 @@ public class Bip {
 	/**
 	 * 从根路径开始, 获取指定路径下的key
 	 * @param path 路径 类似于 m/44'/0'/0'/0/0 或者 0/0, 具体看 测试用例
-	 * {@link live.lingting.virtual.currency.core.MnemonicTest}
+	 * {@link live.lingting.virtual.currency.core.BipTest}
 	 * @return org.bitcoinj.crypto.DeterministicKey
 	 * @author lingting 2021-02-07 10:44
 	 */
