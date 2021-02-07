@@ -17,11 +17,6 @@ public class Bip44Constant {
 	public static final String PATH_BITCOIN = "m/44'/0'/0'/0";
 
 	/**
-	 * 助记词生成 bitcoin 密钥对 标准路径 . 这个路径是 imtoken 通过助记词生成 兼容性隔离见证地址(就是imToken中的隔离见证地址选项) 默认路径
-	 */
-	public static final String PATH_BITCOIN_IMTOKEN = "m/49'/0'/0'/0";
-
-	/**
 	 * 助记词生成 etherscan 密钥对 标准路径
 	 */
 	public static final String PATH_ETHERSCAN = "m/44'/60'/0'/0";
