@@ -21,7 +21,7 @@ public enum ApiPlatform {
 	/**
 	 * 比特 https://omniexplorer.info/ 请使用 {@link OmniProperties} 类进行配置
 	 */
-	OMNI(VcPlatform.OMNI),
+	OMNI(VcPlatform.BITCOIN),
 	/**
 	 * 波场 https://tronscan.org/ 请使用 {@link TronscanProperties} 类进行配置
 	 */

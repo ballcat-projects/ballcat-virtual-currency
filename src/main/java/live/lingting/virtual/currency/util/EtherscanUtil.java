@@ -9,6 +9,7 @@ import java.security.NoSuchProviderException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
+import org.bitcoinj.crypto.DeterministicKey;
 import org.web3j.crypto.ECKeyPair;
 import org.web3j.crypto.Keys;
 import live.lingting.virtual.currency.AbiMethod;
@@ -111,6 +112,10 @@ public class EtherscanUtil {
 		String address = addStart(Keys.getAddress(keyPair));
 		// 生成 account 对象
 		return new Account(address, publicKey, privateKey);
+	}
+
+	public static Account createAccount(DeterministicKey key) {
+		return createAccount(ECKeyPair.create(key.getPrivKeyBytes()));
 	}
 
 	/**
