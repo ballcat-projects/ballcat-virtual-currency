@@ -13,6 +13,7 @@ import java.util.function.Function;
 import java.util.regex.Pattern;
 import lombok.SneakyThrows;
 import org.bitcoinj.core.Base58;
+import org.bitcoinj.crypto.DeterministicKey;
 import org.bouncycastle.jcajce.provider.digest.Keccak;
 import org.bouncycastle.util.encoders.Hex;
 import org.tron.tronj.crypto.SECP256K1;
@@ -200,6 +201,10 @@ public class TronscanUtil {
 
 	public static Account createAccount(String publicKey, String privateKey) {
 		return new Account(getHexAddressByPublicKey(publicKey), publicKey, privateKey);
+	}
+
+	public static Account createAccount(DeterministicKey key) {
+		return createAccount(SECP256K1.KeyPair.create(SECP256K1.PrivateKey.create(key.getPrivKey())));
 	}
 
 	public static String getHexAddressByPublicKey(String publicKey) {

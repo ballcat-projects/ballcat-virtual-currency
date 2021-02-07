@@ -197,4 +197,19 @@ public class Mnemonic {
 		return bip.getKeyByPath(path);
 	}
 
+	/**
+	 * 提供地址前部分 和 下一级的 索引. 返回对应的key
+	 * @param path 地址前部分, 参考 测试用例
+	 * {@link live.lingting.virtual.currency.core.BipTest#standard()}
+	 * @param index 下一级索引
+	 * @return org.bitcoinj.crypto.DeterministicKey
+	 * @author lingting 2021-02-07 14:11
+	 */
+	public DeterministicKey getKeyByPathAndIndexFromRoot(String path, int index) {
+		if (!path.endsWith(Bip.PATH_SPLIT_FLAG)) {
+			path = path + Bip.PATH_SPLIT_FLAG;
+		}
+		return getKeyByPathFromRoot(path + index);
+	}
+
 }
