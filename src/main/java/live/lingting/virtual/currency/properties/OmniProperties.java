@@ -51,7 +51,7 @@ public class OmniProperties implements PlatformProperties {
 	 */
 	public BiFunction<String, Endpoints, List<Unspent>> unspent = (address, endpoints) -> {
 		try {
-			return Unspent.of(UnspentRes.of(endpoints, getConfirmationsMin(), address));
+			return UnspentRes.of(endpoints, getConfirmationsMin(), address).toUnspentList();
 		}
 		catch (Exception e) {
 			log.error("获取未花费输出异常!", e);
@@ -71,8 +71,8 @@ public class OmniProperties implements PlatformProperties {
 
 	/**
 	 * 网络环境
-	 * @see MainNetParams.get() 主网
-	 * @see TestNet3Params.get() 测试网
+	 * @see MainNetParams#get() 主网
+	 * @see TestNet3Params#get() 测试网
 	 */
 	private NetworkParameters np = MainNetParams.get();
 

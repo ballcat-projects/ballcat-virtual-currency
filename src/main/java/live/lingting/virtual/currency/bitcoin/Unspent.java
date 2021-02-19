@@ -15,24 +15,6 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 public class Unspent {
 
-	public static List<Unspent> of(UnspentRes res) {
-		if (res == null || CollectionUtil.isEmpty(res.getUnspentList())) {
-			return Collections.emptyList();
-		}
-		List<Unspent> list = new ArrayList<>(res.getUnspentList().size());
-
-		for (UnspentRes.Unspent un : res.getUnspentList()) {
-			list.add(of(un));
-		}
-
-		return list;
-	}
-
-	public static Unspent of(UnspentRes.Unspent un) {
-		return new Unspent().setHash(un.getTxHashBigEndian()).setConfirmations(un.getConfirmations())
-				.setOut(un.getTxOutputN()).setScript(un.getScript()).setValue(new BigInteger(un.getValue()));
-	}
-
 	/**
 	 * 交易hash
 	 */

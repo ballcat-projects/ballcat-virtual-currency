@@ -259,12 +259,8 @@ public class Transfer {
 				})
 				// 获取未花费输出
 				.setUnspent((address, endpoints) -> {
-					if (address.startsWith("t")) {
-						return listUnspent(client, address);
-					}
-
 					try {
-						return Unspent.of(UnspentRes.of(endpoints, 6, address));
+						return UnspentRes.of(endpoints, 6, address).toUnspentList();
 					}
 					catch (Exception e) {
 						return Collections.emptyList();
@@ -275,7 +271,9 @@ public class Transfer {
 				// omni 节点
 				.setOmniEndpoints(OmniEndpoints.MAINNET)
 				// 比特 节点
-				.setBitcoinEndpoints(BitcoinEndpoints.TEST));
+				.setBitcoinEndpoints(BitcoinEndpoints.SOCHAIN_TEST)
+		// .setBitcoinEndpoints(BitcoinEndpoints.TEST)
+		);
 	}
 
 	public static List<Unspent> listUnspent(JsonRpcClient client, String address) {
