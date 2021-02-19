@@ -1,7 +1,3 @@
-# 比特转账使用提示
-
-当前版本 bitcoinj 不支持 p2sh-p2wpkh脚本, 所以在 https://github.com/bitcoinj/bitcoinj/pull/1987 被合并之前. 无法使用 p2sh-p2wpkh 类型地址转账
-
 # 功能
 
 1. 支持三种平台交易查询(支持多种abi转账方法处理, 可自定义新的abi方法处理)
