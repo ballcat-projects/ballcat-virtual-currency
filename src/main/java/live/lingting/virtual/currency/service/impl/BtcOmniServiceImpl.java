@@ -352,6 +352,7 @@ public class BtcOmniServiceImpl implements PlatformService {
 		}
 		org.bitcoinj.core.Transaction tx = generate.getBitcoin().getTransaction();
 		Account from = generate.getFrom();
+		NetworkParameters np = properties.getNp();
 
 		// 初始密钥
 		List<ECKey> keys = getEcKeysByFrom(from);
@@ -359,8 +360,10 @@ public class BtcOmniServiceImpl implements PlatformService {
 		for (int inputIndex = 0; inputIndex < tx.getInputs().size(); inputIndex++) {
 			TransactionInput txIn = tx.getInput(inputIndex);
 			Script script = txIn.getScriptSig();
-			// p2sh处理 或者 非 第一次签名
-			if (!generate.getBitcoin().getFirstSign() || ScriptPattern.isP2SH(script)) {
+			// 多签 并且是 p2sh处理 或者 非 第一次签名
+			boolean isNativeP2sh = from.getMulti()
+					&& (!generate.getBitcoin().getFirstSign() || ScriptPattern.isP2SH(script));
+			if (isNativeP2sh) {
 				List<TransactionSignature> signatures;
 				signatures = new ArrayList<>(from.getMultiNum());
 
@@ -406,6 +409,21 @@ public class BtcOmniServiceImpl implements PlatformService {
 			}
 
 			ECKey key = keys.get(0);
+
+			// p2sh-p2wpkh
+			if (ScriptPattern.isP2SH(script)) {
+				// 脚本
+				Script redeemScript = ScriptBuilder.createP2WPKHOutputScript(key);
+				Script witnessScript = ScriptBuilder.createP2PKHOutputScript(key);
+
+				TransactionSignature signature = tx.calculateWitnessSignature(inputIndex, key, witnessScript,
+						txIn.getValue(), SigHash.ALL, false);
+
+				txIn.setWitness(TransactionWitness.redeemP2WPKH(signature, key));
+				txIn.setScriptSig(new ScriptBuilder().data(redeemScript.getProgram()).build());
+				continue;
+			}
+
 			if (ScriptPattern.isP2WPKH(script)) {
 				script = ScriptBuilder.createP2PKHOutputScript(key);
 				TransactionSignature signature = tx.calculateWitnessSignature(inputIndex, key, script, txIn.getValue(),
@@ -431,7 +449,7 @@ public class BtcOmniServiceImpl implements PlatformService {
 		// 验证
 		tx.verify();
 		// 创建上下文
-		Context.getOrCreate(properties.getNp());
+		Context.getOrCreate(np);
 		// 设置来源
 		tx.getConfidence().setSource(TransactionConfidence.Source.SELF);
 

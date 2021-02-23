@@ -11,7 +11,6 @@ import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.crypto.HDKeyDerivation;
 import org.bitcoinj.crypto.HDUtils;
 import org.bitcoinj.wallet.DeterministicSeed;
-import org.bouncycastle.util.encoders.Hex;
 import live.lingting.virtual.currency.bip.Bip;
 import live.lingting.virtual.currency.exception.VirtualCurrencyException;
 
@@ -117,7 +116,7 @@ public class Mnemonic {
 	 * @author lingting 2021-02-05 14:46
 	 */
 	public static Mnemonic of(List<String> mnemonics, byte[] seed, String password, long creationTimeSeconds) {
-		return new Mnemonic(new DeterministicSeed(mnemonics, seed, password, creationTimeSeconds));
+		return of(new DeterministicSeed(mnemonics, seed, password, creationTimeSeconds));
 	}
 
 	/**
@@ -161,9 +160,8 @@ public class Mnemonic {
 	 * 生成 master key
 	 */
 	public DeterministicKey generateMasterKey() {
-		byte[] hmacSha512 = HDUtils.hmacSha512("Bitcoin seed".getBytes(StandardCharsets.UTF_8), getSeedBytes());
 		// hmac sha512
-		System.out.println(Hex.toHexString(hmacSha512));
+		byte[] hmacSha512 = HDUtils.hmacSha512("Bitcoin seed".getBytes(StandardCharsets.UTF_8), getSeedBytes());
 		// 分成两段
 		byte[][] split = ArrayUtil.split(hmacSha512, 32);
 		// 主密码 字节

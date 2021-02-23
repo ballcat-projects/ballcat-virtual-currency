@@ -22,6 +22,16 @@ public enum BitcoinEndpoints implements Endpoints {
 	 */
 	TEST("https://testnet.blockchain.info/", "测试节点"),
 
+	/**
+	 * 主节点 https://sochain.com/api
+	 */
+	SOCHAIN_MAINNET("https://sochain.com/api/", "主节点"),
+
+	/**
+	 * 测试节点 https://sochain.com/api
+	 */
+	SOCHAIN_TEST("https://sochain.com/api/", "测试节点"),
+
 	;
 
 	private final String http;

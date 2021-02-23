@@ -7,6 +7,7 @@ import org.junit.Test;
 import live.lingting.virtual.currency.Account;
 import live.lingting.virtual.currency.bip.Bip;
 import live.lingting.virtual.currency.bip.Bip44Constant;
+import live.lingting.virtual.currency.bip.Bip49Constant;
 import live.lingting.virtual.currency.util.BitcoinUtil;
 import live.lingting.virtual.currency.util.EtherscanUtil;
 import live.lingting.virtual.currency.util.TronscanUtil;
@@ -78,7 +79,7 @@ public class BipTest {
 		System.out.println("私钥WIF压缩: " + BitcoinUtil.hexToWif(np, Hex.decode(legacy.getPrivateKeyAsHex()), true));
 		System.out.println("普通地址: " + BitcoinUtil.createLegacyAddress(np, legacy).getAddress());
 
-		DeterministicKey segwit = mnemonic.getKeyByPathAndIndexFromRoot(Bip44Constant.PATH_BITCOIN_IMTOKEN, 0);
+		DeterministicKey segwit = mnemonic.getKeyByPathAndIndexFromRoot(Bip49Constant.PATH_BITCOIN, 0);
 		System.out.println("-----------bitcoin隔离见证地址-----------");
 		System.out.println("公钥: " + segwit.getPublicKeyAsHex());
 		System.out.println("私钥: " + segwit.getPrivateKeyAsHex());
