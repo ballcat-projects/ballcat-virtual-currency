@@ -1,11 +1,12 @@
 package live.lingting.virtual.currency.core;
 
+import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.params.MainNetParams;
 import org.bouncycastle.util.encoders.Hex;
 import org.junit.Test;
 import live.lingting.virtual.currency.Account;
-import live.lingting.virtual.currency.bip.Bip;
+import live.lingting.virtual.currency.bip.Bip32;
 import live.lingting.virtual.currency.bip.Bip44Constant;
 import live.lingting.virtual.currency.bip.Bip49Constant;
 import live.lingting.virtual.currency.util.BitcoinUtil;
@@ -15,7 +16,7 @@ import live.lingting.virtual.currency.util.TronscanUtil;
 /**
  * @author lingting 2021/2/7 13:38
  */
-public class BipTest {
+public class Bip32Test {
 
 	String mnemonicStr = "alter shoot teach paper shock retreat easy parade couch midnight novel stable";
 
@@ -30,20 +31,20 @@ public class BipTest {
 	@Test
 	public void path() {
 		Mnemonic 老板拥有的助记词 = Mnemonic.of(mnemonicStr, seedBytes, "", 0);
-		Bip 老板节点 = 老板拥有的助记词.getBip();
+		Bip32 老板节点 = 老板拥有的助记词.getBip();
 
-		Bip 研发节点 = 老板节点.getBipByPath("m/44'/0'/0'");
-		Bip 研发1节点 = 研发节点.getBipByPath("0");
-		Bip 研发2节点 = 研发节点.getBipByPath("1");
+		Bip32 研发节点 = 老板节点.getBipByPath("m/44'/0'/0'");
+		Bip32 研发1节点 = 研发节点.getBipByPath("0");
+		Bip32 研发2节点 = 研发节点.getBipByPath("1");
 
 		System.out.println("研发1第一个地址公钥: " + 研发1节点.getKeyByPath("0").getPublicKeyAsHex());
 		System.out.println("研发1第一个地址私钥: " + 研发1节点.getKeyByPath("0").getPrivateKeyAsHex());
 		System.out.println("研发2第一个地址公钥: " + 研发2节点.getKeyByPath("0").getPublicKeyAsHex());
 		System.out.println("研发2第一个地址私钥: " + 研发2节点.getKeyByPath("0").getPrivateKeyAsHex());
 
-		Bip 运营节点 = 老板节点.getBipByPath("m/44'/0'/1'");
-		Bip 运营1节点 = 运营节点.getBipByPath("0");
-		Bip 运营2节点 = 运营节点.getBipByPath("1");
+		Bip32 运营节点 = 老板节点.getBipByPath("m/44'/0'/1'");
+		Bip32 运营1节点 = 运营节点.getBipByPath("0");
+		Bip32 运营2节点 = 运营节点.getBipByPath("1");
 
 		System.out.println("运营1第一个地址公钥: " + 运营1节点.getKeyByPath("0").getPublicKeyAsHex());
 		System.out.println("运营1第一个地址私钥: " + 运营1节点.getKeyByPath("0").getPrivateKeyAsHex());
@@ -51,9 +52,34 @@ public class BipTest {
 		System.out.println("运营2第一个地址私钥: " + 运营2节点.getKeyByPath("0").getPrivateKeyAsHex());
 
 		System.out.println("运营1叛变了, 老板要把钱全部拿出来");
-		Bip 老板生成的运营1节点 = 老板节点.getBipByPath("m/44'/0'/1'/0");
+		Bip32 老板生成的运营1节点 = 老板节点.getBipByPath("m/44'/0'/1'/0");
 		System.out.println("老板获取到的运营1第一个地址公钥: " + 老板生成的运营1节点.getKeyByPath("0").getPublicKeyAsHex());
 		System.out.println("老板获取到的运营1第一个地址私钥: " + 老板生成的运营1节点.getKeyByPath("0").getPrivateKeyAsHex());
+	}
+
+	@Test
+	public void extPub(){
+		MainNetParams np = MainNetParams.get();
+		Mnemonic m = Mnemonic.of(mnemonicStr, seedBytes, "", 0);
+		Bip32 rootBip = m.getBip();
+		String path = "m/44'/0'/0'/0";
+		Bip32 extBip = rootBip.getBipByPath(path);
+		DeterministicKey extKey = extBip.getKey();
+		System.out.println(extKey.getPublicKeyAsHex());
+		System.out.println(extKey.getPrivateKeyAsHex());
+		System.out.println(extBip.getExtPrivate(np));
+		System.out.println(extBip.getExtPublicKey(np));
+		System.out.println("-----------------------------");
+		DeterministicKey path1 = extBip.getKeyByPath("0");
+		Account account1 = BitcoinUtil.createLegacyAddress(np, path1);
+		System.out.println(account1.getAddress());
+
+		System.out.println("-----------------------------");
+		//Bip bip = Bip.create("xprv9zusQfxwpgYTsTFPAAZSTJNu7bJ45tsB8NJB9qtWT2K5zX4Y8LBvRXZjtwiA3CNZ1XzfiqrPckZk4Q6ByPdFhgQP9Q59zb9wkxP1JZb5p3h", np);
+		Bip32 bip = Bip32.create("xpub6DuDpBVqf46m5wKrGC6SpSKdfd8YVMb2VbDmxEJ81Mr4sKPgfsWAyKtDkDTyWqSFsfGNe9ga7coxPs3EMW5feGDZZsTuE3FTJjD7ALGMnBz", np);
+		DeterministicKey path2 = bip.getKeyByPath("0");
+		//Account account2 = BitcoinUtil.createLegacyAddress(np, path2);
+		System.out.println(LegacyAddress.fromKey(np, path2).toString());
 	}
 
 	@Test

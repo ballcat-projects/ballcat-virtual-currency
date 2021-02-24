@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.Getter;
+import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.crypto.ChildNumber;
 import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.crypto.HDKeyDerivation;
@@ -16,7 +17,7 @@ import org.bitcoinj.crypto.HDKeyDerivation;
  *
  * @author lingting 2021/2/7 11:18
  */
-public class Bip {
+public class Bip32 {
 
 	/**
 	 * 根路径标志
@@ -42,14 +43,25 @@ public class Bip {
 	/**
 	 * 使用线程安全map存储
 	 */
-	private final Map<ChildNumber, Bip> map = new ConcurrentHashMap<>();
+	private final Map<ChildNumber, Bip32> map = new ConcurrentHashMap<>();
 
-	private Bip(DeterministicKey key) {
+	private Bip32(DeterministicKey key) {
 		this.key = key;
 	}
 
-	public static Bip create(DeterministicKey key) {
-		return new Bip(key);
+	public static Bip32 create(DeterministicKey key) {
+		return new Bip32(key);
+	}
+
+	/**
+	 * 通过 扩展 公钥或私钥 生成bip
+	 * @param extKey 扩展 公钥或私钥
+	 * @param np 环境
+	 * @return live.lingting.virtual.currency.bip.Bip
+	 * @author lingting 2021-02-24 17:56
+	 */
+	public static Bip32 create(String extKey, NetworkParameters np) {
+		return create(DeterministicKey.deserializeB58(extKey, np));
 	}
 
 	/**
@@ -58,11 +70,11 @@ public class Bip {
 	 * @return live.lingting.virtual.currency.bip.BipNode
 	 * @author lingting 2021-02-07 11:27
 	 */
-	public Bip getByChildNumber(ChildNumber child) {
+	public Bip32 getByChildNumber(ChildNumber child) {
 		if (map.containsKey(child)) {
 			return map.get(child);
 		}
-		Bip node = create(HDKeyDerivation.deriveChildKey(key, child));
+		Bip32 node = create(HDKeyDerivation.deriveChildKey(key, child));
 		map.put(child, node);
 		return node;
 	}
@@ -74,7 +86,7 @@ public class Bip {
 	 * @return org.bitcoinj.crypto.DeterministicKey
 	 * @author lingting 2021-02-07 10:44
 	 */
-	public Bip getBipByPath(String path) {
+	public Bip32 getBipByPath(String path) {
 		List<ChildNumber> list = getChildListByPath(path);
 
 		// 没有解析出路径, 返回根路径key
@@ -83,7 +95,7 @@ public class Bip {
 		}
 
 		// 获取地址的最后一个节点
-		Bip node = this;
+		Bip32 node = this;
 
 		for (ChildNumber child : list) {
 			node = node.getByChildNumber(child);
@@ -138,6 +150,26 @@ public class Bip {
 		}
 	}
 
+	/**
+	 * 获取当前bip的扩展公钥 - 仅用于生成子公钥, 无法生成子私钥
+	 * @param np 环境
+	 * @return java.lang.String
+	 * @author lingting 2021-02-24 17:54
+	 */
+	public String getExtPublicKey(NetworkParameters np) {
+		return getKey().serializePubB58(np);
+	}
+
+	/**
+	 * 获取当前bip的扩展私钥 - 可以用于生成子公钥和子私钥
+	 * @param np 环境
+	 * @return java.lang.String
+	 * @author lingting 2021-02-24 17:55
+	 */
+	public String getExtPrivate(NetworkParameters np) {
+		return getKey().serializePrivB58(np);
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) {
@@ -146,7 +178,7 @@ public class Bip {
 		if (o == null || getClass() != o.getClass()) {
 			return false;
 		}
-		return Objects.equals(key, ((Bip) o).key);
+		return Objects.equals(key, ((Bip32) o).key);
 	}
 
 	@Override

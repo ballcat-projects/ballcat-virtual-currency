@@ -11,7 +11,7 @@ import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.crypto.HDKeyDerivation;
 import org.bitcoinj.crypto.HDUtils;
 import org.bitcoinj.wallet.DeterministicSeed;
-import live.lingting.virtual.currency.bip.Bip;
+import live.lingting.virtual.currency.bip.Bip32;
 import live.lingting.virtual.currency.exception.VirtualCurrencyException;
 
 /**
@@ -59,11 +59,11 @@ public class Mnemonic {
 	private final DeterministicSeed seed;
 
 	@Getter
-	private final Bip bip;
+	private final Bip32 bip;
 
 	private Mnemonic(DeterministicSeed seed) {
 		this.seed = seed;
-		this.bip = Bip.create(generateMasterKey());
+		this.bip = Bip32.create(generateMasterKey());
 	}
 
 	/**
@@ -204,8 +204,8 @@ public class Mnemonic {
 	 * @author lingting 2021-02-07 14:11
 	 */
 	public DeterministicKey getKeyByPathAndIndexFromRoot(String path, int index) {
-		if (!path.endsWith(Bip.PATH_SPLIT_FLAG)) {
-			path = path + Bip.PATH_SPLIT_FLAG;
+		if (!path.endsWith(Bip32.PATH_SPLIT_FLAG)) {
+			path = path + Bip32.PATH_SPLIT_FLAG;
 		}
 		return getKeyByPathFromRoot(path + index);
 	}
