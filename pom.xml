@@ -5,7 +5,7 @@
     <groupId>live.lingting</groupId>
     <artifactId>virtual-currency</artifactId>
     <packaging>pom</packaging>
-    <version>0.3.4</version>
+    <version>${revision}</version>
     <modules>
         <module>virtual-currency-core</module>
         <module>virtual-currency-etherscan</module>
@@ -19,6 +19,7 @@
     <url>https://github.com/lingting-gzm/VirtualCurrency</url>
 
     <properties>
+        <revision>0.4.0-SNAPSHOT</revision>
         <scm.url>git@github.com:lingting-gzm/VirtualCurrency.git</scm.url>
 
         <java.version>1.8</java.version>
@@ -32,6 +33,7 @@
         <maven-gpg-plugin.version>1.6</maven-gpg-plugin.version>
         <maven-source-plugin.version>3.1.0</maven-source-plugin.version>
         <maven-javadoc-plugin.version>3.1.1</maven-javadoc-plugin.version>
+        <flatten-maven-plugin.version>1.2.5</flatten-maven-plugin.version>
 
         <lombok.version>1.18.12</lombok.version>
         <hutool.version>5.4.1</hutool.version>
@@ -326,6 +328,11 @@
                     <artifactId>maven-gpg-plugin</artifactId>
                     <version>${maven-gpg-plugin.version}</version>
                 </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>flatten-maven-plugin</artifactId>
+                    <version>${flatten-maven-plugin.version}</version>
+                </plugin>
             </plugins>
         </pluginManagement>
         <plugins>
@@ -360,6 +367,30 @@
                         <inherited>true</inherited>
                         <goals>
                             <goal>validate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>flatten-maven-plugin</artifactId>
+                <configuration>
+                    <updatePomFile>true</updatePomFile>
+                    <flattenMode>resolveCiFriendliesOnly</flattenMode>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>flatten</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>flatten</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>flatten.clean</id>
+                        <phase>clean</phase>
+                        <goals>
+                            <goal>clean</goal>
                         </goals>
                     </execution>
                 </executions>
