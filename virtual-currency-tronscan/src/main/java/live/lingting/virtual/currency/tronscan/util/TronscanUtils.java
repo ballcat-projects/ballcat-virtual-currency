@@ -4,8 +4,6 @@ import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 import java.math.BigInteger;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
@@ -29,6 +27,10 @@ import live.lingting.virtual.currency.tronscan.model.Trc20Data;
  * @author lingting 2020/12/23 20:37
  */
 public class TronscanUtils {
+
+	public static final String BASE_ADDRESS_PREFIX = "T";
+
+	public static final int BASE_ADDRESS_LENGTH = 34;
 
 	public static final String HEX_ADDRESS_PREFIX = "41";
 
@@ -144,7 +146,7 @@ public class TronscanUtils {
 		if (str.length() < 42) {
 			str = HEX_ADDRESS_PREFIX + str;
 		}
-		return TronscanUtils.hexToString(str);
+		return TronscanUtils.hexToBase(str);
 	}
 
 	/**
@@ -159,14 +161,7 @@ public class TronscanUtils {
 		}
 		// base58编码地址
 		else {
-			// base58反序列化
-			byte[] bytes = Base58.decode(address);
-			// 需要 移除后4个字节 以及 第一个字节
-			byte[] initAddress = new byte[bytes.length - 5];
-			// 复制除 后4个字节 以及 第一个字节 以外的字符
-			System.arraycopy(bytes, 1, initAddress, 0, initAddress.length);
-			// 转十六进制
-			address = Hex.toHexString(initAddress);
+			address = baseToHex(address);
 		}
 		return AbiUtils.addZeroTo64InPre(address);
 	}
@@ -197,14 +192,14 @@ public class TronscanUtils {
 	}
 
 	public static Account createAccount(String publicKey, String privateKey) {
-		return new Account(getHexAddressByPublicKey(publicKey), publicKey, privateKey);
+		return new Account(getBaseAddressByPublicKey(publicKey), publicKey, privateKey);
 	}
 
 	public static Account createAccount(DeterministicKey key) {
 		return createAccount(SECP256K1.KeyPair.create(SECP256K1.PrivateKey.create(key.getPrivKey())));
 	}
 
-	public static String getHexAddressByPublicKey(String publicKey) {
+	public static String getBaseAddressByPublicKey(String publicKey) {
 		Keccak.Digest256 digest = new Keccak.Digest256();
 		// 对公钥进行hash
 		byte[] hash = digest.digest(Hex.decode(publicKey));
@@ -256,29 +251,38 @@ public class TronscanUtils {
 	}
 
 	/**
-	 * 十六进制地址转为字符串地址
+	 * 十六进制地址转为base58地址
 	 * @author lingting 2020-12-25 11:40
 	 */
 	@SneakyThrows
-	public static String hexToString(String hex) {
-		return addressByteToString(Hex.decode(hex));
+	public static String hexToBase(String hex) {
+		return Base58Check.bytesToBase58((Hex.decode(hex)));
 	}
 
 	/**
-	 * 字节地址转为字符串地址
-	 * @author lingting 2020-12-25 11:40
+	 * base58地址转 hex 地址
+	 * @author lingting 2021-03-01 10:02
 	 */
-	public static String addressByteToString(byte[] address) throws NoSuchAlgorithmException {
-		// 使用sha256对地址进行两次hash
-		MessageDigest digest = MessageDigest.getInstance("SHA-256");
-		byte[] addressHash1 = digest.digest(address);
-		byte[] addressHash2 = digest.digest(addressHash1);
-		// 将前4个字节作为验证码
-		byte[] code = { addressHash2[0], addressHash2[1], addressHash2[2], addressHash2[3] };
-		// 将验证码添加到 初始地址 的末尾
-		byte[] addressByte = ArrayUtil.addAll(address, code);
-		// 通过base58获得 base58check编码
-		return Base58.encode(addressByte);
+	public static String baseToHex(String address) {
+		// base58反序列化
+		byte[] bytes = Base58.decode(address);
+		// 需要 移除后4个字节 以及 第一个字节
+		byte[] initAddress = new byte[bytes.length - 5];
+		// 复制除 后4个字节 以及 第一个字节 以外的字符
+		System.arraycopy(bytes, 1, initAddress, 0, initAddress.length);
+		// 转十六进制
+		return Hex.toHexString(initAddress);
+	}
+
+	/**
+	 * 判断地址是否为 16 进制地址
+	 * @author lingting 2021-03-01 09:55
+	 */
+	public static boolean isHexAddress(String add) {
+		if (add.startsWith(BASE_ADDRESS_PREFIX) && add.length() == BASE_ADDRESS_LENGTH) {
+			return false;
+		}
+		return true;
 	}
 
 }

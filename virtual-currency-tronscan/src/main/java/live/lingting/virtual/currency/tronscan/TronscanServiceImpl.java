@@ -248,7 +248,7 @@ public class TronscanServiceImpl implements PlatformService<TronscanTransactionG
 		if (value.compareTo(BigDecimal.ZERO) <= 0) {
 			return TronscanTransactionGenerate.failed("转账金额必须大于0!");
 		}
-		if (!from.getAddress().equals(TronscanUtils.getHexAddressByPublicKey(from.getPublicKey()))) {
+		if (!from.getAddress().equals(TronscanUtils.getBaseAddressByPublicKey(from.getPublicKey()))) {
 			return TronscanTransactionGenerate.failed("由公钥推导出的地址与传入地址不符!");
 		}
 		// 计算转账数量
