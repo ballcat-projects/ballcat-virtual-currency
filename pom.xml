@@ -37,10 +37,13 @@
         <hutool.version>5.4.1</hutool.version>
         <jackson.version>2.11.2</jackson.version>
         <spring-javaformat-checkstyle.version>0.0.26</spring-javaformat-checkstyle.version>
-        <web3j.version>5.0.0</web3j.version>
+        <web3j.version>4.8.2</web3j.version>
         <bitcoinj.version>0.15.9</bitcoinj.version>
         <junit.version>4.13</junit.version>
         <slf4j.version>1.7.25</slf4j.version>
+        <tronj.version>0.1.1</tronj.version>
+        <guava.version>29.0-jre</guava.version>
+        <jsonrpc4j.version>1.5.3</jsonrpc4j.version>
     </properties>
 
     <dependencies>
@@ -95,7 +98,7 @@
             <dependency>
                 <groupId>org.web3j</groupId>
                 <artifactId>crypto</artifactId>
-                <version>4.8.2</version>
+                <version>${web3j.version}</version>
                 <exclusions>
                     <exclusion>
                         <artifactId>jackson-databind</artifactId>
@@ -135,12 +138,13 @@
             <dependency>
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
-                <version>29.0-jre</version>
+                <version>${guava.version}</version>
             </dependency>
+
             <dependency>
                 <groupId>org.tron.tronj</groupId>
                 <artifactId>utils</artifactId>
-                <version>0.1.1</version>
+                <version>${tronj.version}</version>
                 <exclusions>
                     <exclusion>
                         <artifactId>jackson-core</artifactId>
@@ -156,7 +160,7 @@
             <dependency>
                 <groupId>com.github.briandilley.jsonrpc4j</groupId>
                 <artifactId>jsonrpc4j</artifactId>
-                <version>1.5.3</version>
+                <version>${jsonrpc4j.version}</version>
                 <exclusions>
                     <exclusion>
                         <artifactId>slf4j-api</artifactId>
