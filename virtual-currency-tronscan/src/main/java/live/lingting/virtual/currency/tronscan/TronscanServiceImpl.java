@@ -19,15 +19,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.util.encoders.Hex;
 import org.tron.tronj.crypto.SECP256K1;
 import org.tron.tronj.crypto.tuweniTypes.Bytes32;
-import live.lingting.virtual.currency.core.model.Account;
 import live.lingting.virtual.currency.core.Contract;
 import live.lingting.virtual.currency.core.Endpoints;
+import live.lingting.virtual.currency.core.PlatformService;
 import live.lingting.virtual.currency.core.enums.TransactionStatus;
 import live.lingting.virtual.currency.core.enums.VirtualCurrencyPlatform;
+import live.lingting.virtual.currency.core.model.Account;
 import live.lingting.virtual.currency.core.model.TransactionInfo;
 import live.lingting.virtual.currency.core.model.TransferParams;
 import live.lingting.virtual.currency.core.model.TransferResult;
-import live.lingting.virtual.currency.core.PlatformService;
 import live.lingting.virtual.currency.core.util.AbiUtils;
 import live.lingting.virtual.currency.core.util.JacksonUtils;
 import live.lingting.virtual.currency.tronscan.contract.TronscanContract;
@@ -175,7 +175,8 @@ public class TronscanServiceImpl implements PlatformService<TronscanTransactionG
 
 		// trc20 查询
 		if (TronscanUtils.isTrc20(contract.getHash())) {
-			decimals = TronscanUtils.getDecimalByTrc20(endpoints, contract);
+			TriggerResult.TriggerConstantResult result = TriggerRequest.trc20Decimals(endpoints, contract).exec();
+			decimals = Integer.valueOf(result.getConstantResult().get(0), 16);
 		}
 		// trc10 查询
 		else {

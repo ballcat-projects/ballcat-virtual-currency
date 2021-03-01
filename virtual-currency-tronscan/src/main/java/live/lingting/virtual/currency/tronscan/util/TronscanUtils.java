@@ -3,7 +3,6 @@ package live.lingting.virtual.currency.tronscan.util;
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -18,16 +17,13 @@ import org.bouncycastle.jcajce.provider.digest.Keccak;
 import org.bouncycastle.util.encoders.Hex;
 import org.tron.tronj.crypto.SECP256K1;
 import org.tron.tronj.utils.Base58Check;
-import live.lingting.virtual.currency.core.model.Account;
 import live.lingting.virtual.currency.core.Contract;
-import live.lingting.virtual.currency.core.Endpoints;
 import live.lingting.virtual.currency.core.enums.AbiMethod;
 import live.lingting.virtual.currency.core.exception.VirtualCurrencyException;
+import live.lingting.virtual.currency.core.model.Account;
 import live.lingting.virtual.currency.core.util.AbiUtils;
 import live.lingting.virtual.currency.tronscan.contract.TronscanContract;
 import live.lingting.virtual.currency.tronscan.model.Trc20Data;
-import live.lingting.virtual.currency.tronscan.model.TriggerRequest;
-import live.lingting.virtual.currency.tronscan.model.TriggerResult;
 
 /**
  * @author lingting 2020/12/23 20:37
@@ -283,15 +279,6 @@ public class TronscanUtils {
 		byte[] addressByte = ArrayUtil.addAll(address, code);
 		// 通过base58获得 base58check编码
 		return Base58.encode(addressByte);
-	}
-
-	/**
-	 * 获取trc20合约精度
-	 * @author lingting 2020-12-25 19:36
-	 */
-	public static Integer getDecimalByTrc20(Endpoints endpoints, Contract contract) throws JsonProcessingException {
-		TriggerResult.TriggerConstantResult result = TriggerRequest.trc20Decimals(endpoints, contract).exec();
-		return Integer.valueOf(result.getConstantResult().get(0), 16);
 	}
 
 }
