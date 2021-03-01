@@ -248,9 +248,17 @@ public class TronscanServiceImpl implements PlatformService<TronscanTransactionG
 		if (value.compareTo(BigDecimal.ZERO) <= 0) {
 			return TronscanTransactionGenerate.failed("转账金额必须大于0!");
 		}
-		if (!from.getAddress().equals(TronscanUtils.getBaseAddressByPublicKey(from.getPublicKey()))) {
+		String baseAddress = TronscanUtils.getBaseAddressByPublicKey(from.getPublicKey());
+		// 传入 base58 地址. 与base58地址比对
+		if (TronscanUtils.isHexAddress(from.getAddress()) && !from.getAddress().equals(baseAddress)) {
 			return TronscanTransactionGenerate.failed("由公钥推导出的地址与传入地址不符!");
 		}
+		// 传入 hex 地址. 与 hex地址比对
+		else if (!from.getAddress().equals(TronscanUtils.baseToHex(baseAddress))) {
+			return TronscanTransactionGenerate.failed("由公钥推导出的地址与传入地址不符!");
+		}
+		// 以 base58 地址为基准
+		from.setAddress(baseAddress);
 		// 计算转账数量
 		BigInteger amount = valueToBalanceByContract(value, contract);
 		String txId;

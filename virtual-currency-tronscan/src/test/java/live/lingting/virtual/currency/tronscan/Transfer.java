@@ -1,10 +1,12 @@
 package live.lingting.virtual.currency.tronscan;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import lombok.SneakyThrows;
 import org.junit.Test;
 import live.lingting.virtual.currency.core.model.Account;
 import live.lingting.virtual.currency.core.Contract;
+import live.lingting.virtual.currency.core.model.TransferParams;
 import live.lingting.virtual.currency.core.model.TransferResult;
 import live.lingting.virtual.currency.core.util.AbiUtils;
 import live.lingting.virtual.currency.core.util.JacksonUtils;
@@ -151,7 +153,7 @@ public class Transfer {
 
 		BigDecimal value = new BigDecimal("1");
 		System.out.println("a1 向 a2 转 " + value.toPlainString() + " usdj");
-		TransferResult transfer = service.transfer(ac1, ac3.getAddress(), usdj, value);
+		TransferResult transfer = service.transfer(ac1, ac3.getAddress(), usdj, value, new TransferParams().setCallValue(BigInteger.TEN));
 
 		if (!transfer.getSuccess()) {
 			System.out.println("转账失败: " + JacksonUtils.toJson(transfer));

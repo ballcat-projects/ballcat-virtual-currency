@@ -25,7 +25,7 @@ public class TransferParams {
 	BigInteger gasLimit;
 
 	/**
-	 * Tronscan 转账费用, 以 sun 为单位 1trx = 10^6 sun, 最大值为 10^sun 即 1000TRX
+	 * Tronscan 转账费用, 以 sun 为单位 1trx = 10^6 sun, 最大值为 10^9 sun 即 1000TRX
 	 */
 	BigInteger feeLimit;
 

@@ -7,6 +7,7 @@ import java.math.BigInteger;
 import java.util.List;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 import live.lingting.virtual.currency.core.Endpoints;
 import live.lingting.virtual.currency.core.util.JacksonUtils;
 
@@ -66,6 +67,7 @@ public class Transaction {
 		@JsonProperty("contract")
 		private List<Contract> contract;
 
+		@Accessors(chain = true)
 		@NoArgsConstructor
 		@Data
 		public static class Contract {
@@ -76,6 +78,7 @@ public class Transaction {
 			@JsonProperty("type")
 			private String type;
 
+			@Accessors(chain = true)
 			@NoArgsConstructor
 			@Data
 			public static class Parameter {
@@ -86,6 +89,7 @@ public class Transaction {
 				@JsonProperty("type_url")
 				private String typeUrl;
 
+				@Accessors(chain = true)
 				@NoArgsConstructor
 				@Data
 				public static class Value {
@@ -97,6 +101,9 @@ public class Transaction {
 
 					@JsonProperty("amount")
 					private BigInteger amount;
+
+					@JsonProperty("call_value")
+					private BigInteger callValue;
 
 					@JsonProperty("asset_name")
 					private String assetName;
