@@ -39,8 +39,8 @@ public class BlockchainUnspentRes extends UnspentRes {
 		List<Unspent> list = new ArrayList<>(unspentList.size());
 
 		for (BlockchainUnspent un : unspentList) {
-			list.add(new Unspent().setHash(un.txHashBigEndian).setConfirmations(un.confirmations)
-					.setOut(un.txOutputN).setScript(un.script).setValue(un.value));
+			list.add(new Unspent().setHash(un.txHashBigEndian).setConfirmations(un.confirmations).setOut(un.txOutputN)
+					.setScript(un.script).setValue(un.value));
 		}
 
 		return list;

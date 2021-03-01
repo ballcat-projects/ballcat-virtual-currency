@@ -172,8 +172,7 @@ public class Transfer {
 					}
 				})
 				// 比特 节点
-				.setEndpoints(BitcoinEndpoints.SOCHAIN_TEST)
-		);
+				.setEndpoints(BitcoinEndpoints.SOCHAIN_TEST));
 	}
 
 	public static List<Unspent> listUnspent(JsonRpcClient client, String address) {

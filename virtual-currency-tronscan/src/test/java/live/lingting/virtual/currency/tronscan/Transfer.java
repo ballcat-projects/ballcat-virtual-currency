@@ -153,7 +153,8 @@ public class Transfer {
 
 		BigDecimal value = new BigDecimal("1");
 		System.out.println("a1 向 a2 转 " + value.toPlainString() + " usdj");
-		TransferResult transfer = service.transfer(ac1, ac3.getAddress(), usdj, value, new TransferParams().setCallValue(BigInteger.TEN));
+		TransferResult transfer = service.transfer(ac1, ac3.getAddress(), usdj, value,
+				new TransferParams().setCallValue(BigInteger.TEN));
 
 		if (!transfer.getSuccess()) {
 			System.out.println("转账失败: " + JacksonUtils.toJson(transfer));
