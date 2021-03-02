@@ -5,7 +5,6 @@ import static live.lingting.virtual.currency.tronscan.model.Transaction.Ret;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.MathContext;
@@ -28,7 +27,6 @@ import live.lingting.virtual.currency.core.model.TransactionInfo;
 import live.lingting.virtual.currency.core.model.TransferParams;
 import live.lingting.virtual.currency.core.model.TransferResult;
 import live.lingting.virtual.currency.core.util.AbiUtils;
-import live.lingting.virtual.currency.core.util.JacksonUtils;
 import live.lingting.virtual.currency.tronscan.contract.TronscanContract;
 import live.lingting.virtual.currency.tronscan.model.Transaction;
 import live.lingting.virtual.currency.tronscan.model.Transaction.RawData;
@@ -352,16 +350,16 @@ public class TronscanServiceImpl implements PlatformService<TronscanTransactionG
 	@Override
 	public boolean validate(String address) {
 		try {
-			String response = TronscanModelUtils.post(properties, "wallet/validateaddress",
-					"{\"address\": \"" + address + "\"}", String.class);
-			Map<String, String> map = JacksonUtils.toObj(response, new TypeReference<Map<String, String>>() {
-			});
-			if ("true".equals(map.get("result"))) {
+			Map response = TronscanModelUtils.post(properties, "wallet/validateaddress",
+					"{\"address\": \"" + address + "\"}", Map.class);
+			Object result = response.get("result");
+			if ("true".equals(result) || result.equals(true)) {
 				return true;
 			}
 			return false;
 		}
 		catch (Exception e) {
+			log.error("验证地址出错!", e);
 			return false;
 		}
 	}
