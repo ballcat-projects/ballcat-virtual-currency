@@ -11,13 +11,13 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import org.bouncycastle.util.encoders.Hex;
 import live.lingting.virtual.currency.core.Contract;
-import live.lingting.virtual.currency.core.Endpoints;
 import live.lingting.virtual.currency.core.enums.AbiMethod;
 import live.lingting.virtual.currency.core.model.TransferParams;
 import live.lingting.virtual.currency.core.util.AbiUtils;
 import live.lingting.virtual.currency.tronscan.contract.TronscanContract;
 import live.lingting.virtual.currency.tronscan.model.NodeInfo;
 import live.lingting.virtual.currency.tronscan.model.Transaction;
+import live.lingting.virtual.currency.tronscan.properties.TronscanProperties;
 import live.lingting.virtual.currency.tronscan.util.TronscanUtils;
 
 /**
@@ -37,14 +37,14 @@ public class TransactionBuilder {
 	 */
 	static final long EXPIRATION_TIME = 60 * 1000;
 
-	private final Endpoints endpoints;
+	private final TronscanProperties properties;
 
 	private final Transaction transaction;
 
 	private final Transaction.RawData rawData;
 
-	public TransactionBuilder(Endpoints endpoints) {
-		this.endpoints = endpoints;
+	public TransactionBuilder(TronscanProperties properties) {
+		this.properties = properties;
 		transaction = new Transaction();
 		this.rawData = new Transaction.RawData();
 		transaction.setRawData(rawData);
@@ -167,7 +167,7 @@ public class TransactionBuilder {
 
 	public Transaction build() {
 		if (StrUtil.isBlank(rawData.getRefBlockBytes()) || StrUtil.isBlank(rawData.getRefBlockHash())) {
-			NodeInfo nodeInfo = NodeInfo.of(endpoints);
+			NodeInfo nodeInfo = NodeInfo.of(properties);
 			// 切割
 			String[] split = nodeInfo.getSolidityBlock().split(COMMA);
 			refBlock(new BigInteger(split[0].split(COLON)[1]), split[1].split(COLON)[1]);

@@ -1,14 +1,13 @@
 package live.lingting.virtual.currency.tronscan.model;
 
-import cn.hutool.http.HttpRequest;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.math.BigInteger;
 import java.util.List;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
-import live.lingting.virtual.currency.core.Endpoints;
-import live.lingting.virtual.currency.core.util.JacksonUtils;
+import live.lingting.virtual.currency.tronscan.properties.TronscanProperties;
+import live.lingting.virtual.currency.tronscan.util.TronscanModelUtils;
 
 /**
  * @author lingting 2021/2/26 18:06
@@ -22,10 +21,8 @@ public class Block {
 	 * @author lingting 2021-02-26 18:12
 	 */
 	@SneakyThrows
-	public Block solidityNow(Endpoints endpoints) {
-		HttpRequest request = HttpRequest.get(endpoints.getHttpUrl("walletsolidity/getnowblock"));
-		String res = request.execute().body();
-		return JacksonUtils.toObj(res, Block.class);
+	public Block solidityNow(TronscanProperties properties) {
+		return TronscanModelUtils.get(properties, "walletsolidity/getnowblock", Block.class);
 	}
 
 	@JsonProperty("blockID")

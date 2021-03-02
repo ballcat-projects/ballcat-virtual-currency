@@ -17,7 +17,8 @@ public class Select {
 	private static final TronscanServiceImpl service;
 
 	static {
-		service = new TronscanServiceImpl(new TronscanProperties().setEndpoints(TronscanEndpoints.MAINNET));
+		service = new TronscanServiceImpl(new TronscanProperties().setEndpoints(TronscanEndpoints.MAINNET)
+				.setApiKey("1dbdc72e-e69c-4909-bc27-861348b1031e"));
 	}
 
 	@Test

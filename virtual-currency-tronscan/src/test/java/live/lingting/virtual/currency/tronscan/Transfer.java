@@ -1,12 +1,10 @@
 package live.lingting.virtual.currency.tronscan;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import lombok.SneakyThrows;
 import org.junit.Test;
-import live.lingting.virtual.currency.core.model.Account;
 import live.lingting.virtual.currency.core.Contract;
-import live.lingting.virtual.currency.core.model.TransferParams;
+import live.lingting.virtual.currency.core.model.Account;
 import live.lingting.virtual.currency.core.model.TransferResult;
 import live.lingting.virtual.currency.core.util.AbiUtils;
 import live.lingting.virtual.currency.core.util.JacksonUtils;
@@ -45,7 +43,8 @@ public class Transfer {
 	private static final Account ac3;
 
 	static {
-		service = new TronscanServiceImpl(new TronscanProperties().setEndpoints(TronscanEndpoints.NILE));
+		service = new TronscanServiceImpl(new TronscanProperties().setEndpoints(TronscanEndpoints.NILE)
+				.setApiKey("1dbdc72e-e69c-4909-bc27-861348b1031e"));
 
 		// NILE 测试网的 trc10 合约
 		trz = AbiUtils.createContract("1000016");
@@ -153,8 +152,7 @@ public class Transfer {
 
 		BigDecimal value = new BigDecimal("1");
 		System.out.println("a1 向 a2 转 " + value.toPlainString() + " usdj");
-		TransferResult transfer = service.transfer(ac1, ac3.getAddress(), usdj, value,
-				new TransferParams().setCallValue(BigInteger.TEN));
+		TransferResult transfer = service.transfer(ac1, ac3.getAddress(), usdj, value);
 
 		if (!transfer.getSuccess()) {
 			System.out.println("转账失败: " + JacksonUtils.toJson(transfer));

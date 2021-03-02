@@ -1,6 +1,5 @@
 package live.lingting.virtual.currency.tronscan.model;
 
-import cn.hutool.http.HttpRequest;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.math.BigInteger;
@@ -8,8 +7,8 @@ import java.util.List;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
-import live.lingting.virtual.currency.core.Endpoints;
-import live.lingting.virtual.currency.core.util.JacksonUtils;
+import live.lingting.virtual.currency.tronscan.properties.TronscanProperties;
+import live.lingting.virtual.currency.tronscan.util.TronscanModelUtils;
 
 /**
  * @author lingting 2020/12/25 14:33
@@ -35,11 +34,10 @@ public class Transaction {
 	@JsonProperty("signature")
 	private List<String> signature;
 
-	public static Transaction of(Endpoints endpoints, String address) throws JsonProcessingException {
+	public static Transaction of(TronscanProperties properties, String address) {
 		// 固化块api, 仅能查询到已确认交易
-		HttpRequest request = HttpRequest.post(endpoints.getHttpUrl("walletsolidity/gettransactionbyid"));
-		request.body("{\"value\":\"" + address + "\",\"visible\":true}");
-		return JacksonUtils.toObj(request.execute().body(), Transaction.class);
+		return TronscanModelUtils.post(properties, "walletsolidity/gettransactionbyid",
+				"{\"value\":\"" + address + "\",\"visible\":true}", Transaction.class);
 	}
 
 	@NoArgsConstructor

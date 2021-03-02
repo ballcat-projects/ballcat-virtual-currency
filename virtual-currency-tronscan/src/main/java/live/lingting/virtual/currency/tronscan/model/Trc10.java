@@ -1,13 +1,12 @@
 package live.lingting.virtual.currency.tronscan.model;
 
-import cn.hutool.http.HttpRequest;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.math.BigInteger;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import live.lingting.virtual.currency.core.Endpoints;
-import live.lingting.virtual.currency.core.util.JacksonUtils;
+import live.lingting.virtual.currency.tronscan.properties.TronscanProperties;
+import live.lingting.virtual.currency.tronscan.util.TronscanModelUtils;
 
 /**
  * @author lingting 2020/12/25 18:44
@@ -52,10 +51,9 @@ public class Trc10 {
 	@JsonProperty("id")
 	private String id;
 
-	public static Trc10 of(Endpoints endpoints, String address) throws JsonProcessingException {
-		HttpRequest request = HttpRequest.post(endpoints.getHttpUrl("wallet/getassetissuebyid"));
-		request.body("{\"value\":\"" + address + "\",\"visible\":true}");
-		return JacksonUtils.toObj(request.execute().body(), Trc10.class);
+	public static Trc10 of(TronscanProperties properties, String address) throws JsonProcessingException {
+		return TronscanModelUtils.post(properties, "wallet/getassetissuebyid",
+				"{\"value\":\"" + address + "\",\"visible\":true}", Trc10.class);
 	}
 
 }

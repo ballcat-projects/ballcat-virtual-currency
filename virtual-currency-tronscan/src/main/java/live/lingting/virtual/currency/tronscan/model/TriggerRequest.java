@@ -1,6 +1,5 @@
 package live.lingting.virtual.currency.tronscan.model;
 
-import cn.hutool.http.HttpRequest;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -11,9 +10,8 @@ import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-import live.lingting.virtual.currency.core.model.Account;
 import live.lingting.virtual.currency.core.Contract;
-import live.lingting.virtual.currency.core.Endpoints;
+import live.lingting.virtual.currency.core.model.Account;
 import live.lingting.virtual.currency.core.util.AbiUtils;
 import live.lingting.virtual.currency.core.util.JacksonUtils;
 import live.lingting.virtual.currency.tronscan.model.Transaction.RawData;
@@ -22,11 +20,13 @@ import live.lingting.virtual.currency.tronscan.model.TriggerResult.Trc10Transfer
 import live.lingting.virtual.currency.tronscan.model.TriggerResult.Trc20TransferGenerateResult;
 import live.lingting.virtual.currency.tronscan.model.TriggerResult.TriggerConstantResult;
 import live.lingting.virtual.currency.tronscan.model.TriggerResult.TrxTransferGenerateResult;
+import live.lingting.virtual.currency.tronscan.properties.TronscanProperties;
+import live.lingting.virtual.currency.tronscan.util.TronscanModelUtils;
 import live.lingting.virtual.currency.tronscan.util.TronscanUtils;
 
 /**
- * 使用请参考 <a href=
- * "https://cn.developers.tron.network/reference#%E8%A7%A6%E5%8F%91%E6%99%BA%E8%83%BD%E5%90%88%E7%BA%A6">文档</a>
+ * 使用请参考
+ * https://cn.developers.tron.network/reference#%E8%A7%A6%E5%8F%91%E6%99%BA%E8%83%BD%E5%90%88%E7%BA%A6"
  *
  * @author lingting 2020/12/25 20:56
  */
@@ -36,10 +36,13 @@ import live.lingting.virtual.currency.tronscan.util.TronscanUtils;
 public class TriggerRequest<T extends TriggerResult> {
 
 	/**
-	 * 请求的url
+	 * 请求的url 后缀
 	 */
 	@JsonIgnore
-	private String url;
+	private String suffix;
+
+	@JsonIgnore
+	private TronscanProperties properties;
 
 	/**
 	 * 返回值转换的类
@@ -114,12 +117,15 @@ public class TriggerRequest<T extends TriggerResult> {
 	@JsonProperty("signature")
 	private List<String> signature = null;
 
-	public static TriggerRequest<TriggerConstantResult> trc20Decimals(Endpoints endpoints, Contract contract) {
+	public static TriggerRequest<TriggerConstantResult> trc20Decimals(TronscanProperties properties,
+			Contract contract) {
 		return new TriggerRequest<TriggerConstantResult>()
 				// 目标类型
 				.setTarget(TriggerConstantResult.class)
 				// url
-				.setUrl(endpoints.getHttpUrl("wallet/triggerconstantcontract"))
+				.setSuffix("wallet/triggerconstantcontract")
+				// properties
+				.setProperties(properties)
 				// owner_address
 				.setOwnerAddress("T9yD14Nj9j7xAB4dbGeiX9h8unkKHxuWwb")
 				// contract_address
@@ -130,19 +136,21 @@ public class TriggerRequest<T extends TriggerResult> {
 
 	/**
 	 * 查询指定地址, 指定trc20合约余额
-	 * @param endpoints 节点
+	 * @param properties 配置属性
 	 * @param contract 合约
 	 * @param address 地址
 	 * @return live.lingting.virtual.currency.tronscan.model.TriggerRequest<live.lingting.virtual.currency.tronscan.model.TriggerResult.TriggerConstantResult>
 	 * @author lingting 2021-02-04 14:52
 	 */
-	public static TriggerRequest<TriggerConstantResult> trc20BalanceOf(Endpoints endpoints, Contract contract,
+	public static TriggerRequest<TriggerConstantResult> trc20BalanceOf(TronscanProperties properties, Contract contract,
 			String address) {
 		return new TriggerRequest<TriggerConstantResult>()
 				// 目标类型
 				.setTarget(TriggerConstantResult.class)
 				// url
-				.setUrl(endpoints.getHttpUrl("wallet/triggerconstantcontract"))
+				.setSuffix("wallet/triggerconstantcontract")
+				// properties
+				.setProperties(properties)
 				// owner_address
 				.setOwnerAddress("T9yD14Nj9j7xAB4dbGeiX9h8unkKHxuWwb")
 				// contract_address
@@ -163,14 +171,16 @@ public class TriggerRequest<T extends TriggerResult> {
 	 * @param callValue 支付给合约的费用
 	 * @author lingting 2020-12-25 20:50
 	 */
-	public static TriggerRequest<Trc20TransferGenerateResult> trc20TransferGenerate(Endpoints endpoints, Account from,
-			String to, BigInteger amount, Contract contract, BigInteger feeLimit, BigInteger callValue) {
+	public static TriggerRequest<Trc20TransferGenerateResult> trc20TransferGenerate(TronscanProperties properties,
+			Account from, String to, BigInteger amount, Contract contract, BigInteger feeLimit, BigInteger callValue) {
 
 		return new TriggerRequest<Trc20TransferGenerateResult>()
 				// 目标
 				.setTarget(Trc20TransferGenerateResult.class)
 				// url
-				.setUrl(endpoints.getHttpUrl("wallet/triggersmartcontract"))
+				.setSuffix("wallet/triggersmartcontract")
+				// properties
+				.setProperties(properties)
 				// 合约地址
 				.setContractAddress(contract.getHash())
 				// 方法
@@ -191,7 +201,7 @@ public class TriggerRequest<T extends TriggerResult> {
 
 	/**
 	 * 广播交易
-	 * @param endpoints 节点
+	 * @param properties 配置属性
 	 * @param txId txId
 	 * @param rawData rawData
 	 * @param rawDataHex rawDataHex
@@ -199,13 +209,15 @@ public class TriggerRequest<T extends TriggerResult> {
 	 * @return live.lingting.virtual.currency.tronscan.model.TriggerRequest
 	 * @author lingting 2020-12-25 22:57
 	 */
-	public static TriggerRequest<TransferBroadcastResult> trc10TransferBroadcast(Endpoints endpoints, String txId,
-			RawData rawData, String rawDataHex, String signature) {
+	public static TriggerRequest<TransferBroadcastResult> trc10TransferBroadcast(TronscanProperties properties,
+			String txId, RawData rawData, String rawDataHex, String signature) {
 		return new TriggerRequest<TransferBroadcastResult>()
 				// 目标
 				.setTarget(TransferBroadcastResult.class)
 				// url
-				.setUrl(endpoints.getHttpUrl("wallet/broadcasttransaction"))
+				.setSuffix("wallet/broadcasttransaction")
+				// properties
+				.setProperties(properties)
 				// tx id
 				.setTxId(txId)
 				// raw data
@@ -224,14 +236,16 @@ public class TriggerRequest<T extends TriggerResult> {
 	 * @param contract 触发合约
 	 * @author lingting 2020-12-25 20:50
 	 */
-	public static TriggerRequest<Trc10TransferGenerateResult> trc10TransferGenerate(Endpoints endpoints, Account from,
-			String to, BigInteger amount, Contract contract) {
+	public static TriggerRequest<Trc10TransferGenerateResult> trc10TransferGenerate(TronscanProperties properties,
+			Account from, String to, BigInteger amount, Contract contract) {
 
 		return new TriggerRequest<Trc10TransferGenerateResult>()
 				// 目标
 				.setTarget(Trc10TransferGenerateResult.class)
 				// url
-				.setUrl(endpoints.getHttpUrl("wallet/transferasset"))
+				.setSuffix("wallet/transferasset")
+				// properties
+				.setProperties(properties)
 				// 合约地址
 				.setAssetName(contract.getHash())
 				// 转账人
@@ -250,14 +264,16 @@ public class TriggerRequest<T extends TriggerResult> {
 	 * @param contract 触发合约
 	 * @author lingting 2020-12-25 20:50
 	 */
-	public static TriggerRequest<TrxTransferGenerateResult> trxTransferGenerate(Endpoints endpoints, Account from,
-			String to, BigInteger amount, Contract contract) {
+	public static TriggerRequest<TrxTransferGenerateResult> trxTransferGenerate(TronscanProperties properties,
+			Account from, String to, BigInteger amount, Contract contract) {
 
 		return new TriggerRequest<TrxTransferGenerateResult>()
 				// 目标
 				.setTarget(TrxTransferGenerateResult.class)
 				// url
-				.setUrl(endpoints.getHttpUrl("wallet/createtransaction"))
+				.setSuffix("wallet/createtransaction")
+				// properties
+				.setProperties(properties)
 				// 转账人
 				.setOwnerAddress(from.getAddress())
 				// 收款人
@@ -279,13 +295,7 @@ public class TriggerRequest<T extends TriggerResult> {
 	 * @author lingting 2020-12-25 21:04
 	 */
 	public T exec() throws JsonProcessingException {
-		// 执行请求
-		HttpRequest request = HttpRequest.post(url).body(JacksonUtils.toJson(this));
-		String response = request.execute().body();
-
-		T obj = JacksonUtils.toObj(response, target);
-		obj.setResponse(response);
-		return obj;
+		return TronscanModelUtils.post(properties, suffix, JacksonUtils.toJson(this), target);
 	}
 
 }

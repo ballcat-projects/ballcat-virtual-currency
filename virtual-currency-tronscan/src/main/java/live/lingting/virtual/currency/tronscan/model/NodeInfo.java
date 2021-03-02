@@ -9,8 +9,10 @@ import java.util.Map;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
-import live.lingting.virtual.currency.core.Endpoints;
+import live.lingting.virtual.currency.tronscan.properties.TronscanProperties;
 import live.lingting.virtual.currency.core.util.JacksonUtils;
+import live.lingting.virtual.currency.tronscan.properties.TronscanProperties;
+import live.lingting.virtual.currency.tronscan.util.TronscanModelUtils;
 
 /**
  * @author lingting 2021/2/26 18:13
@@ -20,10 +22,8 @@ import live.lingting.virtual.currency.core.util.JacksonUtils;
 public class NodeInfo {
 
 	@SneakyThrows
-	public static NodeInfo of(Endpoints endpoints) {
-		HttpRequest request = HttpRequest.get(endpoints.getHttpUrl("wallet/getnodeinfo"));
-		String body = request.execute().body();
-		return JacksonUtils.toObj(body, NodeInfo.class);
+	public static NodeInfo of(TronscanProperties properties) {
+		return TronscanModelUtils.get(properties,"wallet/getnodeinfo",  NodeInfo.class);
 	}
 
 	@JsonProperty("activeConnectCount")

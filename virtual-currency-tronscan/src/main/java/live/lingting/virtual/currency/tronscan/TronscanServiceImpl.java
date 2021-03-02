@@ -4,7 +4,6 @@ import static live.lingting.virtual.currency.tronscan.model.Transaction.Ret;
 
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.http.HttpRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import java.math.BigDecimal;
@@ -41,6 +40,7 @@ import live.lingting.virtual.currency.tronscan.model.TriggerResult.TransferBroad
 import live.lingting.virtual.currency.tronscan.model.TriggerResult.Trc10TransferGenerateResult;
 import live.lingting.virtual.currency.tronscan.model.TriggerResult.Trc20TransferGenerateResult;
 import live.lingting.virtual.currency.tronscan.properties.TronscanProperties;
+import live.lingting.virtual.currency.tronscan.util.TronscanModelUtils;
 import live.lingting.virtual.currency.tronscan.util.TronscanUtils;
 
 /**
@@ -70,7 +70,7 @@ public class TronscanServiceImpl implements PlatformService<TronscanTransactionG
 
 	@Override
 	public Optional<TransactionInfo> getTransactionByHash(String hash) throws Throwable {
-		Transaction transaction = Transaction.of(endpoints, hash);
+		Transaction transaction = Transaction.of(properties, hash);
 
 		// 没有返回txId 表示此交易未被确认 或 不存在
 		if (StrUtil.isBlank(transaction.getTxId())) {
@@ -141,7 +141,7 @@ public class TronscanServiceImpl implements PlatformService<TronscanTransactionG
 
 		// 获取交易详细信息
 		live.lingting.virtual.currency.tronscan.model.TransactionInfo info = live.lingting.virtual.currency.tronscan.model.TransactionInfo
-				.of(endpoints, hash);
+				.of(properties, hash);
 		vcTransactionInfo
 				// 块高度
 				.setBlock(info.getBlockNumber())
@@ -175,12 +175,12 @@ public class TronscanServiceImpl implements PlatformService<TronscanTransactionG
 
 		// trc20 查询
 		if (TronscanUtils.isTrc20(contract.getHash())) {
-			TriggerResult.TriggerConstantResult result = TriggerRequest.trc20Decimals(endpoints, contract).exec();
+			TriggerResult.TriggerConstantResult result = TriggerRequest.trc20Decimals(properties, contract).exec();
 			decimals = Integer.valueOf(result.getConstantResult().get(0), 16);
 		}
 		// trc10 查询
 		else {
-			Trc10 trc10 = Trc10.of(endpoints, contract.getHash());
+			Trc10 trc10 = Trc10.of(properties, contract.getHash());
 			decimals = trc10.getPrecision() == null ? 0 : trc10.getPrecision();
 		}
 
@@ -193,13 +193,13 @@ public class TronscanServiceImpl implements PlatformService<TronscanTransactionG
 		// 独立处理trc20余额查询
 		if (contract != TronscanContract.TRX && TronscanUtils.isTrc20(contract.getHash())) {
 			TriggerResult.TriggerConstantResult triggerResult = TriggerRequest
-					.trc20BalanceOf(endpoints, contract, address).exec();
+					.trc20BalanceOf(properties, contract, address).exec();
 
 			return new BigInteger(triggerResult.getConstantResult().get(0), 16);
 		}
 
 		live.lingting.virtual.currency.tronscan.model.Account account = live.lingting.virtual.currency.tronscan.model.Account
-				.of(endpoints, address);
+				.of(properties, address);
 
 		// 搜索拥有的数据
 		if (CollectionUtil.isEmpty(account.getData())) {
@@ -270,7 +270,7 @@ public class TronscanServiceImpl implements PlatformService<TronscanTransactionG
 		// trx 转账
 		if (contract == TronscanContract.TRX) {
 			TriggerResult.TrxTransferGenerateResult generateResult = TriggerRequest
-					.trxTransferGenerate(endpoints, from, to, amount, contract).exec();
+					.trxTransferGenerate(properties, from, to, amount, contract).exec();
 
 			if (StrUtil.isNotBlank(generateResult.getError())) {
 				return TronscanTransactionGenerate.failed(generateResult.getError());
@@ -282,7 +282,7 @@ public class TronscanServiceImpl implements PlatformService<TronscanTransactionG
 		// trc10 转账
 		else if (!TronscanUtils.isTrc20(contract.getHash())) {
 			Trc10TransferGenerateResult generateResult = TriggerRequest
-					.trc10TransferGenerate(endpoints, from, to, amount, contract).exec();
+					.trc10TransferGenerate(properties, from, to, amount, contract).exec();
 			if (StrUtil.isNotBlank(generateResult.getError())) {
 				return TronscanTransactionGenerate.failed(generateResult.getError());
 			}
@@ -295,7 +295,7 @@ public class TronscanServiceImpl implements PlatformService<TronscanTransactionG
 			feeLimit = params.getFeeLimit() != null ? params.getFeeLimit() : BigInteger.TEN.pow(9);
 			callValue = params.getCallValue() != null ? params.getCallValue() : BigInteger.ZERO;
 			Trc20TransferGenerateResult generateResult = TriggerRequest
-					.trc20TransferGenerate(endpoints, from, to, amount, contract, feeLimit, callValue).exec();
+					.trc20TransferGenerate(properties, from, to, amount, contract, feeLimit, callValue).exec();
 
 			live.lingting.virtual.currency.tronscan.model.Transaction transaction = generateResult.getTransaction();
 			txId = transaction.getTxId();
@@ -332,7 +332,7 @@ public class TronscanServiceImpl implements PlatformService<TronscanTransactionG
 		TronscanTransactionGenerate.Tronscan tronscan = generate.getTronscan();
 		String txId = tronscan.getTxId();
 		// 广播交易
-		TransferBroadcastResult broadcastResult = TriggerRequest.trc10TransferBroadcast(endpoints, txId,
+		TransferBroadcastResult broadcastResult = TriggerRequest.trc10TransferBroadcast(properties, txId,
 				tronscan.getRawData(), tronscan.getRawDataHex(), generate.getSignHex()).exec();
 
 		// 设置返回结果
@@ -351,10 +351,9 @@ public class TronscanServiceImpl implements PlatformService<TronscanTransactionG
 
 	@Override
 	public boolean validate(String address) {
-		HttpRequest request = HttpRequest.post(endpoints.getHttpUrl("wallet/validateaddress"));
-		request.body("{\"address\": \"" + address + "\"}");
 		try {
-			String response = request.execute().body();
+			String response = TronscanModelUtils.post(properties, "wallet/validateaddress",
+					"{\"address\": \"" + address + "\"}", String.class);
 			Map<String, String> map = JacksonUtils.toObj(response, new TypeReference<Map<String, String>>() {
 			});
 			if ("true".equals(map.get("result"))) {

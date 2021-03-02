@@ -25,6 +25,11 @@ public class TronscanProperties {
 	private Integer confirmationsMin = 19;
 
 	/**
+	 * tron api key.
+	 */
+	private String apiKey;
+
+	/**
 	 * 自定义url, 可为空
 	 */
 	private String url;

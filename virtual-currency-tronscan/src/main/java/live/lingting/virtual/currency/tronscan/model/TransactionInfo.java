@@ -1,14 +1,12 @@
 package live.lingting.virtual.currency.tronscan.model;
 
-import cn.hutool.http.HttpRequest;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import java.math.BigInteger;
 import java.util.List;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import live.lingting.virtual.currency.core.Endpoints;
-import live.lingting.virtual.currency.core.util.JacksonUtils;
+import live.lingting.virtual.currency.tronscan.properties.TronscanProperties;
+import live.lingting.virtual.currency.tronscan.util.TronscanModelUtils;
 
 /**
  * @author lingting 2020/12/25 17:35
@@ -41,10 +39,9 @@ public class TransactionInfo {
 	@JsonProperty("log")
 	private List<Log> log;
 
-	public static TransactionInfo of(Endpoints endpoints, String address) throws JsonProcessingException {
-		HttpRequest request = HttpRequest.post(endpoints.getHttpUrl("wallet/gettransactioninfobyid"));
-		request.body("{\"value\":\"" + address + "\",\"visible\":true}");
-		return JacksonUtils.toObj(request.execute().body(), TransactionInfo.class);
+	public static TransactionInfo of(TronscanProperties properties, String address) {
+		return TronscanModelUtils.post(properties, "wallet/gettransactioninfobyid",
+				"{\"value\":\"" + address + "\",\"visible\":true}", TransactionInfo.class);
 	}
 
 	@NoArgsConstructor
