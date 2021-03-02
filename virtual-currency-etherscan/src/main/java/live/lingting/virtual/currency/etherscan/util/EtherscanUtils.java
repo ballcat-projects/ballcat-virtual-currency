@@ -12,9 +12,11 @@ import java.util.function.Consumer;
 import org.bitcoinj.crypto.DeterministicKey;
 import org.web3j.crypto.ECKeyPair;
 import org.web3j.crypto.Keys;
-import live.lingting.virtual.currency.core.model.Account;
 import live.lingting.virtual.currency.core.enums.AbiMethod;
+import live.lingting.virtual.currency.core.exception.AbiMethodNotSupportException;
+import live.lingting.virtual.currency.core.exception.InsufficientBalanceException;
 import live.lingting.virtual.currency.core.exception.VirtualCurrencyException;
+import live.lingting.virtual.currency.core.model.Account;
 import live.lingting.virtual.currency.core.util.AbiUtils;
 import live.lingting.virtual.currency.etherscan.contract.EtherscanContract;
 import live.lingting.virtual.currency.etherscan.model.Input;
@@ -81,13 +83,13 @@ public class EtherscanUtils {
 	 *
 	 * @author lingting 2020-09-02 14:23
 	 */
-	public static Input resolve(String inputString) throws VirtualCurrencyException {
+	public static Input resolve(String inputString) throws AbiMethodNotSupportException {
 		// 获取方法id
 		String methodId = inputString.substring(2, 10);
 		Input input = new Input().setMethod(AbiMethod.getById(methodId)).setData(inputString);
 
 		if (!METHOD_HANDLER.containsKey(methodId)) {
-			throw new VirtualCurrencyException("无法正确解析input data 请额外开发支持");
+			throw new AbiMethodNotSupportException(methodId);
 		}
 		// 处理
 		METHOD_HANDLER.get(methodId).accept(input);

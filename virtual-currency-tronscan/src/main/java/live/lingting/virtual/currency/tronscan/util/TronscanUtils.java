@@ -17,7 +17,7 @@ import org.tron.tronj.crypto.SECP256K1;
 import org.tron.tronj.utils.Base58Check;
 import live.lingting.virtual.currency.core.Contract;
 import live.lingting.virtual.currency.core.enums.AbiMethod;
-import live.lingting.virtual.currency.core.exception.VirtualCurrencyException;
+import live.lingting.virtual.currency.core.exception.AbiMethodNotSupportException;
 import live.lingting.virtual.currency.core.model.Account;
 import live.lingting.virtual.currency.core.util.AbiUtils;
 import live.lingting.virtual.currency.tronscan.contract.TronscanContract;
@@ -110,16 +110,14 @@ public class TronscanUtils {
 	 * 解析数据 为 trc20 Data
 	 * @author lingting 2020-12-25 19:08
 	 */
-	public static Trc20Data resolve(String rawData) throws VirtualCurrencyException {
-		for (String s : METHOD_HANDLER.keySet()) {
-			if (rawData.startsWith(s)) {
-				Trc20Data data = METHOD_HANDLER.get(s).apply(rawData);
-				// 保存原始数据
-				return data.setRawData(rawData);
-			}
+	public static Trc20Data resolve(String rawData) throws AbiMethodNotSupportException {
+		String methodId = rawData.substring(0, 8);
+		if (!METHOD_HANDLER.containsKey(methodId)) {
+			throw new AbiMethodNotSupportException(methodId);
 		}
 
-		throw new VirtualCurrencyException("未支持此方法, 请手动处理");
+		Trc20Data trc20Data = METHOD_HANDLER.get(methodId).apply(rawData);
+		return trc20Data.setRawData(rawData);
 	}
 
 	public static BigInteger decodeIntParam(String param) {

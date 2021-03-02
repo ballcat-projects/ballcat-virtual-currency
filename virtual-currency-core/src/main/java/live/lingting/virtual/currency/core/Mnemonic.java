@@ -12,7 +12,7 @@ import org.bitcoinj.crypto.HDKeyDerivation;
 import org.bitcoinj.crypto.HDUtils;
 import org.bitcoinj.wallet.DeterministicSeed;
 import live.lingting.virtual.currency.core.bip.Bip32;
-import live.lingting.virtual.currency.core.exception.VirtualCurrencyException;
+import live.lingting.virtual.currency.core.exception.MnemonicNumberException;
 
 /**
  * 助记词.
@@ -86,7 +86,7 @@ public class Mnemonic {
 	@SneakyThrows
 	public static Mnemonic create(int quantity, String password) {
 		if (quantity <= QUANTITY_MIN || quantity % QUANTITY_3 != 0 || quantity > QUANTITY_MAX) {
-			throw new VirtualCurrencyException("助记词数量必须为3的倍数且大于11且小于等于" + QUANTITY_MAX);
+			throw new MnemonicNumberException();
 		}
 
 		// 生成助记词信息

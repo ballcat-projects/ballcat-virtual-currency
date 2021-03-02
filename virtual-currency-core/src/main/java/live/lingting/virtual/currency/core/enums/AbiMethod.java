@@ -44,7 +44,7 @@ public enum AbiMethod {
 	 */
 	private final String methodId;
 
-	public static AbiMethod getById(String data) throws VirtualCurrencyException {
+	public static AbiMethod getById(String data) {
 		for (AbiMethod e : AbiMethod.values()) {
 			if (data.startsWith(e.getMethodId())) {
 				return e;

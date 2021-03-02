@@ -13,9 +13,9 @@ import org.bitcoinj.core.Coin;
 import live.lingting.virtual.currency.bitcoin.contract.OmniContract;
 import live.lingting.virtual.currency.bitcoin.util.BitcoinUtils;
 import live.lingting.virtual.currency.core.Contract;
-import live.lingting.virtual.currency.core.exception.VirtualCurrencyException;
-import live.lingting.virtual.currency.core.model.TransferParams;
 import live.lingting.virtual.currency.core.PlatformService;
+import live.lingting.virtual.currency.core.exception.InsufficientBalanceException;
+import live.lingting.virtual.currency.core.model.TransferParams;
 
 /**
  * 手续费和使用的余额
@@ -128,7 +128,7 @@ public class FeeAndSpent {
 			}
 			// 小于
 			else {
-				throw new VirtualCurrencyException("余额不足 " + coin.add(amount).toPlainString());
+				throw new InsufficientBalanceException(coin);
 			}
 		}
 
