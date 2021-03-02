@@ -41,6 +41,9 @@ public class TronscanModelUtils {
 		else {
 			s = HttpUtils.post(properties.getEndpoints(), suffix, body, getHeader(properties));
 		}
+		if (t.isAssignableFrom(String.class)){
+			return (T) s;
+		}
 		return JacksonUtils.toObj(s, (Type) t);
 	}
 

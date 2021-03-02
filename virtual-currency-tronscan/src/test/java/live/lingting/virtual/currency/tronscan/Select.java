@@ -1,5 +1,6 @@
 package live.lingting.virtual.currency.tronscan;
 
+import cn.hutool.core.lang.Assert;
 import java.util.Optional;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -112,8 +113,8 @@ public class Select {
 	@SneakyThrows
 	@Test
 	public void valid() {
-		System.out.println(service.validate("sfasdagsdfs"));
-		System.out.println(service.validate("TAVvnk5WwMGYPyF8LpSPkQcmghMuUoR813"));
+		Assert.isFalse(service.validate("sfasdagsdfs"));
+		Assert.isTrue(service.validate("TAVvnk5WwMGYPyF8LpSPkQcmghMuUoR813"));
 	}
 
 }
