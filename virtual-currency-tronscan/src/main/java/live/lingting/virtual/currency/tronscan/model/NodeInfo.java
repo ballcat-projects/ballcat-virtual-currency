@@ -23,7 +23,7 @@ public class NodeInfo {
 
 	@SneakyThrows
 	public static NodeInfo of(TronscanProperties properties) {
-		return TronscanModelUtils.get(properties,"wallet/getnodeinfo",  NodeInfo.class);
+		return TronscanModelUtils.get(properties, "wallet/getnodeinfo", NodeInfo.class);
 	}
 
 	@JsonProperty("activeConnectCount")
