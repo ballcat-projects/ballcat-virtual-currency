@@ -83,7 +83,6 @@ rebel*
 logs/
 admin-log/
 *.lck
-*.log
 
 ~$$*
 .flattened-pom.xml

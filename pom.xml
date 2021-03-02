@@ -4,14 +4,22 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>live.lingting</groupId>
     <artifactId>virtual-currency</artifactId>
-    <packaging>jar</packaging>
-    <version>0.3.4</version>
+    <packaging>pom</packaging>
+    <version>${revision}</version>
+    <modules>
+        <module>virtual-currency-core</module>
+        <module>virtual-currency-etherscan</module>
+        <module>virtual-currency-tronscan</module>
+        <module>virtual-currency-bitcoin</module>
+        <module>virtual-currency-all</module>
+    </modules>
 
     <name>virtual-currency</name>
     <description>虚拟货币处理</description>
     <url>https://github.com/lingting-gzm/VirtualCurrency</url>
 
     <properties>
+        <revision>0.4.0</revision>
         <scm.url>git@github.com:lingting-gzm/VirtualCurrency.git</scm.url>
 
         <java.version>1.8</java.version>
@@ -25,13 +33,19 @@
         <maven-gpg-plugin.version>1.6</maven-gpg-plugin.version>
         <maven-source-plugin.version>3.1.0</maven-source-plugin.version>
         <maven-javadoc-plugin.version>3.1.1</maven-javadoc-plugin.version>
+        <flatten-maven-plugin.version>1.2.5</flatten-maven-plugin.version>
 
         <lombok.version>1.18.12</lombok.version>
         <hutool.version>5.4.1</hutool.version>
         <jackson.version>2.11.2</jackson.version>
         <spring-javaformat-checkstyle.version>0.0.26</spring-javaformat-checkstyle.version>
-        <web3j.version>5.0.0</web3j.version>
+        <web3j.version>4.8.2</web3j.version>
         <bitcoinj.version>0.15.9</bitcoinj.version>
+        <junit.version>4.13</junit.version>
+        <slf4j.version>1.7.25</slf4j.version>
+        <tronj.version>0.1.1</tronj.version>
+        <guava.version>29.0-jre</guava.version>
+        <jsonrpc4j.version>1.5.3</jsonrpc4j.version>
     </properties>
 
     <dependencies>
@@ -51,111 +65,125 @@
             <artifactId>hutool-core</artifactId>
             <version>${hutool.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.13</version>
+            <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
-
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>${jackson.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-core</artifactId>
-            <version>${jackson.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-annotations</artifactId>
-            <version>${jackson.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.web3j</groupId>
-            <artifactId>crypto</artifactId>
-            <version>4.8.2</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>jackson-databind</artifactId>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>bcprov-jdk15on</artifactId>
-                    <groupId>org.bouncycastle</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>org.bitcoinj</groupId>
-            <artifactId>bitcoinj-core</artifactId>
-            <version>${bitcoinj.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.google.guava</groupId>
-                    <artifactId>guava</artifactId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>slf4j-api</artifactId>
-                    <groupId>org.slf4j</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>okhttp</artifactId>
-                    <groupId>com.squareup.okhttp3</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>29.0-jre</version>
-        </dependency>
-        <dependency>
-            <groupId>org.tron.tronj</groupId>
-            <artifactId>utils</artifactId>
-            <version>0.1.1</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>jackson-core</artifactId>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>jackson-databind</artifactId>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>com.github.briandilley.jsonrpc4j</groupId>
-            <artifactId>jsonrpc4j</artifactId>
-            <version>1.5.3</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>slf4j-api</artifactId>
-                    <groupId>org.slf4j</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>jackson-annotations</artifactId>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>jackson-core</artifactId>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>jackson-databind</artifactId>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
     </dependencies>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-core</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-annotations</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.web3j</groupId>
+                <artifactId>crypto</artifactId>
+                <version>${web3j.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <artifactId>jackson-databind</artifactId>
+                        <groupId>com.fasterxml.jackson.core</groupId>
+                    </exclusion>
+                    <exclusion>
+                        <artifactId>bcprov-jdk15on</artifactId>
+                        <groupId>org.bouncycastle</groupId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-api</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>org.bitcoinj</groupId>
+                <artifactId>bitcoinj-core</artifactId>
+                <version>${bitcoinj.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.google.guava</groupId>
+                        <artifactId>guava</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <artifactId>slf4j-api</artifactId>
+                        <groupId>org.slf4j</groupId>
+                    </exclusion>
+                    <exclusion>
+                        <artifactId>okhttp</artifactId>
+                        <groupId>com.squareup.okhttp3</groupId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>${guava.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.tron.tronj</groupId>
+                <artifactId>utils</artifactId>
+                <version>${tronj.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <artifactId>jackson-core</artifactId>
+                        <groupId>com.fasterxml.jackson.core</groupId>
+                    </exclusion>
+                    <exclusion>
+                        <artifactId>jackson-databind</artifactId>
+                        <groupId>com.fasterxml.jackson.core</groupId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>com.github.briandilley.jsonrpc4j</groupId>
+                <artifactId>jsonrpc4j</artifactId>
+                <version>${jsonrpc4j.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <artifactId>slf4j-api</artifactId>
+                        <groupId>org.slf4j</groupId>
+                    </exclusion>
+                    <exclusion>
+                        <artifactId>jackson-annotations</artifactId>
+                        <groupId>com.fasterxml.jackson.core</groupId>
+                    </exclusion>
+                    <exclusion>
+                        <artifactId>jackson-core</artifactId>
+                        <groupId>com.fasterxml.jackson.core</groupId>
+                    </exclusion>
+                    <exclusion>
+                        <artifactId>jackson-databind</artifactId>
+                        <groupId>com.fasterxml.jackson.core</groupId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <developers>
         <developer>
@@ -300,6 +328,11 @@
                     <artifactId>maven-gpg-plugin</artifactId>
                     <version>${maven-gpg-plugin.version}</version>
                 </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>flatten-maven-plugin</artifactId>
+                    <version>${flatten-maven-plugin.version}</version>
+                </plugin>
             </plugins>
         </pluginManagement>
         <plugins>
@@ -334,6 +367,30 @@
                         <inherited>true</inherited>
                         <goals>
                             <goal>validate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>flatten-maven-plugin</artifactId>
+                <configuration>
+                    <updatePomFile>true</updatePomFile>
+                    <flattenMode>resolveCiFriendliesOnly</flattenMode>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>flatten</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>flatten</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>flatten.clean</id>
+                        <phase>clean</phase>
+                        <goals>
+                            <goal>clean</goal>
                         </goals>
                     </execution>
                 </executions>
