@@ -250,11 +250,12 @@ public class TronscanServiceImpl implements PlatformService<TronscanTransactionG
 		}
 		String baseAddress = TronscanUtils.getBaseAddressByPublicKey(from.getPublicKey());
 		// 传入 base58 地址. 与base58地址比对
-		if (TronscanUtils.isHexAddress(from.getAddress()) && !from.getAddress().equals(baseAddress)) {
+		boolean isHexAddress = TronscanUtils.isHexAddress(from.getAddress());
+		if (!isHexAddress && !from.getAddress().equals(baseAddress)) {
 			return TronscanTransactionGenerate.failed("由公钥推导出的地址与传入地址不符!");
 		}
 		// 传入 hex 地址. 与 hex地址比对
-		else if (!from.getAddress().equals(TronscanUtils.baseToHex(baseAddress))) {
+		else if (isHexAddress && !from.getAddress().equals(TronscanUtils.baseToHex(baseAddress))) {
 			return TronscanTransactionGenerate.failed("由公钥推导出的地址与传入地址不符!");
 		}
 		// 以 base58 地址为基准
