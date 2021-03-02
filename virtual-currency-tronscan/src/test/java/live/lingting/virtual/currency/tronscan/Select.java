@@ -48,10 +48,8 @@ public class Select {
 		Optional<TransactionInfo> optional = service
 				.getTransactionByHash("96b57737c419bf5fde63119be4c116e57fb2fb0607d3cc257f7664a655af345d");
 
-
 		Assert.isFalse(optional.isPresent());
 		optional = service.getTransactionByHash("0f4fee870b87988aaf31cce1e8abeec2897efa0186b953b0a0e0738dc4aef361");
-
 
 		Assert.isTrue(optional.isPresent());
 		TransactionInfo info = optional.get();
