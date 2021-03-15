@@ -5,22 +5,22 @@ import lombok.Getter;
 import live.lingting.virtual.currency.core.Endpoints;
 
 /**
- * https://www.blockcypher.com/dev/bitcoin/
- * @author lingting 2021/1/19 16:48
+ *
+ * @author lingting 2020-09-02 17:04
  */
 @Getter
 @AllArgsConstructor
-public enum BitcoinCypherEndpoints implements Endpoints {
+public enum BitcoinSochainEndpoints implements Endpoints {
 
 	/**
-	 * MAINNET
+	 * 主节点 https://sochain.com/api
 	 */
-	MAINNET("https://api.blockcypher.com/v1/btc/main", "主节点"),
+	MAINNET("https://sochain.com/api/", "主节点"),
 
 	/**
-	 * Test
+	 * 测试节点 https://sochain.com/api
 	 */
-	TEST("https://api.blockcypher.com/v1/btc/test3", "测试节点"),
+	TEST("https://sochain.com/api/", "测试节点"),
 
 	;
 

@@ -1,7 +1,7 @@
 package live.lingting.virtual.currency.core;
 
 /**
- * 节点枚举类需实现
+ * 节点枚举类需实现, 用于区分不同的第三方api
  *
  * @author lingting 2020-09-01 17:06
  */

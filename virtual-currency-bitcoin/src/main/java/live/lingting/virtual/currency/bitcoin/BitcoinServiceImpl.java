@@ -39,13 +39,17 @@ import org.bitcoinj.script.ScriptBuilder;
 import org.bitcoinj.script.ScriptChunk;
 import org.bitcoinj.script.ScriptPattern;
 import org.bouncycastle.util.encoders.Hex;
-import live.lingting.virtual.currency.bitcoin.endpoints.OmniEndpoints;
 import live.lingting.virtual.currency.bitcoin.contract.OmniContract;
-import live.lingting.virtual.currency.bitcoin.model.cupher.Balance;
+import live.lingting.virtual.currency.bitcoin.endpoints.BitcoinCypherEndpoints;
+import live.lingting.virtual.currency.bitcoin.endpoints.BitcoinEndpoints;
+import live.lingting.virtual.currency.bitcoin.endpoints.BitcoinSochainEndpoints;
+import live.lingting.virtual.currency.bitcoin.endpoints.BlockchainEndpoints;
+import live.lingting.virtual.currency.bitcoin.endpoints.OmniEndpoints;
 import live.lingting.virtual.currency.bitcoin.model.FeeAndSpent;
+import live.lingting.virtual.currency.bitcoin.model.Unspent;
 import live.lingting.virtual.currency.bitcoin.model.blockchain.LatestBlock;
 import live.lingting.virtual.currency.bitcoin.model.blockchain.RawTransaction;
-import live.lingting.virtual.currency.bitcoin.model.Unspent;
+import live.lingting.virtual.currency.bitcoin.model.cypher.Balance;
 import live.lingting.virtual.currency.bitcoin.model.omni.Balances;
 import live.lingting.virtual.currency.bitcoin.model.omni.Domain;
 import live.lingting.virtual.currency.bitcoin.model.omni.PushTx;
@@ -53,15 +57,15 @@ import live.lingting.virtual.currency.bitcoin.model.omni.TokenHistory;
 import live.lingting.virtual.currency.bitcoin.model.omni.TransactionByHash;
 import live.lingting.virtual.currency.bitcoin.properties.BitcoinProperties;
 import live.lingting.virtual.currency.bitcoin.util.BitcoinUtils;
-import live.lingting.virtual.currency.core.model.Account;
-import live.lingting.virtual.currency.core.Contract;
 import live.lingting.virtual.currency.core.Endpoints;
+import live.lingting.virtual.currency.core.Contract;
+import live.lingting.virtual.currency.core.PlatformService;
 import live.lingting.virtual.currency.core.enums.TransactionStatus;
 import live.lingting.virtual.currency.core.enums.VirtualCurrencyPlatform;
+import live.lingting.virtual.currency.core.model.Account;
 import live.lingting.virtual.currency.core.model.TransactionInfo;
 import live.lingting.virtual.currency.core.model.TransferParams;
 import live.lingting.virtual.currency.core.model.TransferResult;
-import live.lingting.virtual.currency.core.PlatformService;
 import live.lingting.virtual.currency.core.util.AbiUtils;
 
 /**
@@ -95,34 +99,36 @@ public class BitcoinServiceImpl implements PlatformService<BitcoinTransactionGen
 
 	private final BitcoinProperties properties;
 
-	private final Endpoints omniEndpoints;
+	private final	NetworkParameters np ;
 
-	private final Endpoints bitcoinEndpoints;
+	private final BlockchainEndpoints blockchainEndpoints;
+
+	private final OmniEndpoints omniEndpoints = OmniEndpoints.MAINNET;
+
+	private final BitcoinCypherEndpoints cypherEndpoints;
+
+	private final BitcoinSochainEndpoints sochainEndpoints;
 
 	public BitcoinServiceImpl(BitcoinProperties properties) {
 		this.properties = properties;
-		// 自定义 omni url
-		if (StrUtil.isNotBlank(properties.getOmniUrl())) {
-			omniEndpoints = properties::getOmniUrl;
+		this.np = properties.getNp();
+
+		if (properties.getEndpoints() == BitcoinEndpoints.MAINNET) {
+			blockchainEndpoints = BlockchainEndpoints.MAINNET;
+			cypherEndpoints = BitcoinCypherEndpoints.MAINNET;
+			sochainEndpoints = BitcoinSochainEndpoints.MAINNET;
 		}
-		// 未自定义 omni url
 		else {
-			omniEndpoints = OmniEndpoints.MAINNET;
-		}
-		// 自定义 bitcoin url
-		if (StrUtil.isNotBlank(properties.getOmniUrl())) {
-			bitcoinEndpoints = properties::getBitcoinUrl;
-		}
-		// 未自定义 bitcoin url
-		else {
-			bitcoinEndpoints = properties.getEndpoints();
+			blockchainEndpoints = BlockchainEndpoints.TEST;
+			cypherEndpoints = BitcoinCypherEndpoints.TEST;
+			sochainEndpoints = BitcoinSochainEndpoints.TEST;
 		}
 
 	}
 
 	@Override
 	public Optional<TransactionInfo> getTransactionByHash(String hash) throws Throwable {
-		RawTransaction rawTransaction = RawTransaction.of(bitcoinEndpoints, hash);
+		RawTransaction rawTransaction = RawTransaction.of(blockchainEndpoints, hash);
 
 		if (rawTransaction == null || StrUtil.isBlank(rawTransaction.getHash())
 				|| CollectionUtil.isEmpty(rawTransaction.getOuts())) {
@@ -215,7 +221,7 @@ public class BitcoinServiceImpl implements PlatformService<BitcoinTransactionGen
 	@Override
 	public BigInteger getBalanceByAddressAndContract(String address, Contract contract) throws JsonProcessingException {
 		if (contract == OmniContract.BTC) {
-			Balance balance = Balance.of(bitcoinEndpoints, address);
+			Balance balance = Balance.of(cypherEndpoints, address);
 			if (balance == null || StrUtil.isNotBlank(balance.getError()) || balance.getFinalBalance() == null) {
 				return BigInteger.ZERO;
 			}
@@ -258,7 +264,6 @@ public class BitcoinServiceImpl implements PlatformService<BitcoinTransactionGen
 		if (value.compareTo(BigDecimal.ZERO) <= 0) {
 			return BitcoinTransactionGenerate.failed("转账金额必须大于0!");
 		}
-		NetworkParameters np = properties.getNp();
 		// BTC 转账数量
 		Coin btcAmount;
 		// 转账合约数量
@@ -287,7 +292,7 @@ public class BitcoinServiceImpl implements PlatformService<BitcoinTransactionGen
 				// 参数
 				params,
 				// 未使用余额
-				properties.getUnspent().apply(from.getAddress(), bitcoinEndpoints),
+				properties.getUnspent().apply(from.getAddress(), properties.getEndpoints()),
 				// 转账数量
 				btcAmount,
 				// 最小确认数
@@ -352,7 +357,6 @@ public class BitcoinServiceImpl implements PlatformService<BitcoinTransactionGen
 		}
 		org.bitcoinj.core.Transaction tx = generate.getBitcoin().getTransaction();
 		Account from = generate.getFrom();
-		NetworkParameters np = properties.getNp();
 
 		// 初始密钥
 		List<ECKey> keys = getEcKeysByFrom(from);
@@ -479,7 +483,7 @@ public class BitcoinServiceImpl implements PlatformService<BitcoinTransactionGen
 
 	@Override
 	public boolean validate(String address) throws JsonProcessingException {
-		Balance balance = Balance.of(bitcoinEndpoints, address);
+		Balance balance = Balance.of(cypherEndpoints, address);
 		return StrUtil.isBlank(balance.getError());
 	}
 
@@ -578,7 +582,7 @@ public class BitcoinServiceImpl implements PlatformService<BitcoinTransactionGen
 		// 计算确认数
 		else {
 			// 获取最新区块
-			LatestBlock block = LatestBlock.of(bitcoinEndpoints);
+			LatestBlock block = LatestBlock.of(blockchainEndpoints);
 			// 计算确认数
 			BigInteger confirmationNumber = block.getHeight().subtract(transactionInfo.getBlock());
 			transactionInfo.setStatus(
