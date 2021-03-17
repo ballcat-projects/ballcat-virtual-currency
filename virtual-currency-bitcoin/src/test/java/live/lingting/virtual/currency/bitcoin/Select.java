@@ -1,9 +1,12 @@
 package live.lingting.virtual.currency.bitcoin;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.List;
 import java.util.Optional;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import lombok.var;
 import org.junit.Test;
 import live.lingting.virtual.currency.bitcoin.endpoints.BitcoinEndpoints;
 import live.lingting.virtual.currency.bitcoin.properties.BitcoinProperties;
@@ -61,6 +64,80 @@ public class Select {
 		AssertUtils.isFalse(service.validate("fasdgasdfasdgasdfdafgasdfsa"));
 		AssertUtils.isTrue(service.validate("2N2vMRNmBiSJQtu3wv2onGPE2museEg9nLw"));
 		AssertUtils.isTrue(service.validate("tb1qdhgxl3vjcg9djhd30zykmz83x63nau4rtmahmd"));
+	}
+
+	@Test
+	@SneakyThrows
+	public void history() {
+		List<TransactionInfo> list;
+		int i = 0;
+		int page = 0;
+
+		// 预计有两个交易要查询
+		while (i < 2) {
+			page++;
+			list = service.listHistoryByAddress(new BitcoinHistoryQueryParams()
+					//
+					.setAddress("3BPAodH6WkNQC8TUrnwFKhETiFacNUi68X")
+					// 查询方案一
+					.setOnlyOmni(false).setPageIndex(page));
+
+			if (list.isEmpty()) {
+				throw new IllegalArgumentException("请手动检查地址是否拥有交易");
+			}
+
+			for (var info : list) {
+				if (info.getHash().equals("7845a0012b1fabd7065287a51913731a17158aaacd83204db48dabecdbcbea19")
+						|| info.getHash().equals("ec0c39afbc25181d50a35fae5a5a4a157640eb5448709e91f46b1bdc6f7120d6")) {
+					i++;
+
+					if (info.getHash().equals("7845a0012b1fabd7065287a51913731a17158aaacd83204db48dabecdbcbea19")) {
+						AssertUtils.equals(info.getFrom(), "32rHHtPae37urNavtgqkHkB5womt8f2S9t");
+						AssertUtils.equals(info.getTo(), "3BPAodH6WkNQC8TUrnwFKhETiFacNUi68X");
+						AssertUtils.equals(info.getBlock(), new BigInteger("674827"));
+					}
+					else {
+						AssertUtils.equals(info.getFrom(), "1CUCsHmhDBE4j7dnEGwqsnqP1Ji9vceBc2");
+						AssertUtils.equals(info.getTo(), "3BPAodH6WkNQC8TUrnwFKhETiFacNUi68X");
+						AssertUtils.equals(info.getBlock(), new BigInteger("674827"));
+					}
+				}
+			}
+		}
+
+		i = 0;
+		// 预计有两个交易要查询
+		while (i < 2) {
+			page++;
+			list = service.listHistoryByAddress(new BitcoinHistoryQueryParams()
+					//
+					.setAddress("3BPAodH6WkNQC8TUrnwFKhETiFacNUi68X")
+					// 查询方案二
+					.setOnlyOmni(true).setPageIndex(page));
+
+			if (list.isEmpty()) {
+				throw new IllegalArgumentException("请手动检查地址是否拥有交易");
+			}
+
+			for (var info : list) {
+				if (info.getHash().equals("7845a0012b1fabd7065287a51913731a17158aaacd83204db48dabecdbcbea19")
+						|| info.getHash().equals("ec0c39afbc25181d50a35fae5a5a4a157640eb5448709e91f46b1bdc6f7120d6")) {
+					i++;
+
+					if (info.getHash().equals("7845a0012b1fabd7065287a51913731a17158aaacd83204db48dabecdbcbea19")) {
+						AssertUtils.equals(info.getFrom(), "32rHHtPae37urNavtgqkHkB5womt8f2S9t");
+						AssertUtils.equals(info.getTo(), "3BPAodH6WkNQC8TUrnwFKhETiFacNUi68X");
+						AssertUtils.equals(info.getBlock(), new BigInteger("674827"));
+					}
+					else {
+						AssertUtils.equals(info.getFrom(), "1CUCsHmhDBE4j7dnEGwqsnqP1Ji9vceBc2");
+						AssertUtils.equals(info.getTo(), "3BPAodH6WkNQC8TUrnwFKhETiFacNUi68X");
+						AssertUtils.equals(info.getBlock(), new BigInteger("674827"));
+					}
+				}
+			}
+		}
+
 	}
 
 }
