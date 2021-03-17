@@ -7,7 +7,12 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import live.lingting.virtual.currency.bitcoin.contract.OmniContract;
 import live.lingting.virtual.currency.core.Endpoints;
+import live.lingting.virtual.currency.core.enums.TransactionStatus;
+import live.lingting.virtual.currency.core.enums.VirtualCurrencyPlatform;
+import live.lingting.virtual.currency.core.model.TransactionInfo;
+import live.lingting.virtual.currency.core.util.AbiUtils;
 import live.lingting.virtual.currency.core.util.JacksonUtils;
 
 /**
@@ -78,6 +83,38 @@ public class TransactionByHash implements Domain<TransactionByHash> {
 	public TransactionByHash of(Endpoints endpoints, Object params) throws JsonProcessingException {
 		HttpRequest request = HttpRequest.get(endpoints.getHttpUrl("v1/transaction/tx/" + params));
 		return JacksonUtils.toObj(request.execute().body(), TransactionByHash.class);
+	}
+
+	public TransactionInfo toTransactionInfo(BigInteger confirmationsMin) {
+		// 交易查询不到 或者 valid 为 false
+		if (getAmount() == null || !getValid()) {
+			return null;
+		}
+
+		OmniContract contract = OmniContract.getById(getPropertyId());
+
+		return new TransactionInfo()
+
+				.setContract(contract != null ? contract : AbiUtils.createContract(getPropertyId().toString()))
+
+				.setBlock(getBlock())
+
+				.setHash(getTxId())
+
+				.setValue(getAmount())
+
+				.setVirtualCurrencyPlatform(VirtualCurrencyPlatform.BITCOIN)
+
+				.setTime(getBlockTime())
+
+				.setFrom(getSendingAddress())
+
+				.setTo(getReferenceAddress())
+
+				.setStatus(
+						// 大于等于 配置的最小值则 交易成功,否则等待
+						getConfirmations().compareTo(confirmationsMin) >= 0 ? TransactionStatus.SUCCESS
+								: TransactionStatus.WAIT);
 	}
 
 }

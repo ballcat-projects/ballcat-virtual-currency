@@ -5,6 +5,7 @@ import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.TimeZone;
 import lombok.AllArgsConstructor;
@@ -141,14 +142,32 @@ public class TransactionInfo {
 		/**
 		 * 地址 -> btc个数, 单位: 个
 		 */
-		private Map<String, BigDecimal> in;
+		private Map<String, BigDecimal> in = new HashMap<>();
 
 		/**
 		 * 地址 -> btc个数, 单位: 个
 		 */
-		private Map<String, BigDecimal> out;
+		private Map<String, BigDecimal> out = new HashMap<>();
 
-		private BigDecimal fee;
+		private BigDecimal fee = BigDecimal.ZERO;
+
+		public void addIn(String address, BigDecimal val) {
+			if (in.containsKey(address)) {
+				in.put(address, in.get(address).add(val));
+			}
+			else {
+				in.put(address, val);
+			}
+		}
+
+		public void addOut(String address, BigDecimal val) {
+			if (out.containsKey(address)) {
+				out.put(address, out.get(address).add(val));
+			}
+			else {
+				out.put(address, val);
+			}
+		}
 
 	}
 

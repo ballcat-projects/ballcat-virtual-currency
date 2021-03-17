@@ -56,7 +56,7 @@ import live.lingting.virtual.currency.etherscan.util.EtherscanUtils;
  * @author lingting 2020-09-01 17:16
  */
 @Slf4j
-public class EtherscanServiceImpl implements PlatformService<EtherscanTransactionGenerate> {
+public class EtherscanServiceImpl implements PlatformService<EtherscanTransactionGenerate, EtherscanHistoryQueryParams> {
 
 	private static final String EMPTY_ADDRESS = "0x0000000000000000000000000000000000000000";
 
@@ -290,6 +290,11 @@ public class EtherscanServiceImpl implements PlatformService<EtherscanTransactio
 	public boolean validate(String address) throws Throwable {
 		Balance of = Balance.of(client, address);
 		return of.getAmount() != null;
+	}
+
+	@Override
+	public List<TransactionInfo> listHistoryByAddress(EtherscanHistoryQueryParams query) throws Throwable {
+		return null;
 	}
 
 	/**

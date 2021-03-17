@@ -22,6 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import lombok.var;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Context;
@@ -46,10 +47,13 @@ import live.lingting.virtual.currency.bitcoin.endpoints.BitcoinSochainEndpoints;
 import live.lingting.virtual.currency.bitcoin.endpoints.BlockchainEndpoints;
 import live.lingting.virtual.currency.bitcoin.endpoints.OmniEndpoints;
 import live.lingting.virtual.currency.bitcoin.model.FeeAndSpent;
+import live.lingting.virtual.currency.bitcoin.model.Properties;
 import live.lingting.virtual.currency.bitcoin.model.Unspent;
+import live.lingting.virtual.currency.bitcoin.model.blockchain.BlockchainHistory;
 import live.lingting.virtual.currency.bitcoin.model.blockchain.LatestBlock;
 import live.lingting.virtual.currency.bitcoin.model.blockchain.RawTransaction;
 import live.lingting.virtual.currency.bitcoin.model.cypher.Balance;
+import live.lingting.virtual.currency.bitcoin.model.omni.AddressHistory;
 import live.lingting.virtual.currency.bitcoin.model.omni.Balances;
 import live.lingting.virtual.currency.bitcoin.model.omni.Domain;
 import live.lingting.virtual.currency.bitcoin.model.omni.PushTx;
@@ -57,8 +61,8 @@ import live.lingting.virtual.currency.bitcoin.model.omni.TokenHistory;
 import live.lingting.virtual.currency.bitcoin.model.omni.TransactionByHash;
 import live.lingting.virtual.currency.bitcoin.properties.BitcoinProperties;
 import live.lingting.virtual.currency.bitcoin.util.BitcoinUtils;
-import live.lingting.virtual.currency.core.Endpoints;
 import live.lingting.virtual.currency.core.Contract;
+import live.lingting.virtual.currency.core.Endpoints;
 import live.lingting.virtual.currency.core.PlatformService;
 import live.lingting.virtual.currency.core.enums.TransactionStatus;
 import live.lingting.virtual.currency.core.enums.VirtualCurrencyPlatform;
@@ -67,12 +71,13 @@ import live.lingting.virtual.currency.core.model.TransactionInfo;
 import live.lingting.virtual.currency.core.model.TransferParams;
 import live.lingting.virtual.currency.core.model.TransferResult;
 import live.lingting.virtual.currency.core.util.AbiUtils;
+import live.lingting.virtual.currency.core.util.AssertUtils;
 
 /**
  * @author lingting 2020-09-01 17:16
  */
 @Slf4j
-public class BitcoinServiceImpl implements PlatformService<BitcoinTransactionGenerate> {
+public class BitcoinServiceImpl implements PlatformService<BitcoinTransactionGenerate, BitcoinHistoryQueryParams> {
 
 	/**
 	 * 精度需要计算的标志
@@ -97,9 +102,16 @@ public class BitcoinServiceImpl implements PlatformService<BitcoinTransactionGen
 	 */
 	private static final TokenHistory STATIC_TOKEN_HISTORY = new TokenHistory();
 
+	/**
+	 * 用于调用of方法生成新对象
+	 */
+	private static final AddressHistory STATIC_ADDRESS_HISTORY = new AddressHistory();
+
 	private final BitcoinProperties properties;
 
-	private final	NetworkParameters np ;
+	private final NetworkParameters np;
+
+	private final BigInteger confirmationsMin;
 
 	private final BlockchainEndpoints blockchainEndpoints;
 
@@ -112,6 +124,7 @@ public class BitcoinServiceImpl implements PlatformService<BitcoinTransactionGen
 	public BitcoinServiceImpl(BitcoinProperties properties) {
 		this.properties = properties;
 		this.np = properties.getNp();
+		this.confirmationsMin = new BigInteger(properties.getConfirmationsMin().toString());
 
 		if (properties.getEndpoints() == BitcoinEndpoints.MAINNET) {
 			blockchainEndpoints = BlockchainEndpoints.MAINNET;
@@ -166,36 +179,7 @@ public class BitcoinServiceImpl implements PlatformService<BitcoinTransactionGen
 			return btcTransactionHandler(sumOut, outInfos, rawTransaction);
 		}
 
-		TransactionByHash response = request(STATIC_TRANSACTION_HASH, omniEndpoints, hash);
-		// 交易查询不到 或者 valid 为 false
-		if (response.getAmount() == null || !response.getValid()) {
-			return Optional.empty();
-		}
-
-		OmniContract contract = OmniContract.getById(response.getPropertyId());
-		TransactionInfo transactionInfo = new TransactionInfo()
-
-				.setContract(contract != null ? contract : AbiUtils.createContract(response.getPropertyId().toString()))
-
-				.setBlock(response.getBlock())
-
-				.setHash(hash)
-
-				.setValue(response.getAmount())
-
-				.setVirtualCurrencyPlatform(VirtualCurrencyPlatform.BITCOIN)
-
-				.setTime(response.getBlockTime())
-
-				.setFrom(response.getSendingAddress())
-
-				.setTo(response.getReferenceAddress())
-
-				.setStatus(
-						// 大于等于 配置的最小值则 交易成功,否则等待
-						response.getConfirmations().compareTo(BigInteger.valueOf(properties.getConfirmationsMin())) >= 0
-								? TransactionStatus.SUCCESS : TransactionStatus.WAIT);
-		return Optional.of(transactionInfo);
+		return getTransactionInfoOfOmni(hash);
 	}
 
 	@Override
@@ -321,13 +305,7 @@ public class BitcoinServiceImpl implements PlatformService<BitcoinTransactionGen
 		if (contract != OmniContract.BTC) {
 			contractAmount = valueToBalanceByContract(value, contract);
 			// 构筑输出hex
-			String contractHex = StrUtil.format("{}{}{}",
-					// 合约转账 开头字符串
-					PROPERTY_PREFIX,
-					// 合约hash 的 十六进制 前面补0 到 16位
-					StrUtil.padPre(new BigInteger(contract.getHash()).toString(16), 16, "0"),
-					// 转账数量 的 十六进制 前面补0 到 16位
-					StrUtil.padPre(contractAmount.toString(16), 16, "0"));
+			String contractHex = Properties.of(contract.getHash(), contractAmount).toScript();
 
 			// 加入输出
 			tx.addOutput(Coin.ZERO, new Script(Utils.HEX.decode(contractHex)));
@@ -485,6 +463,220 @@ public class BitcoinServiceImpl implements PlatformService<BitcoinTransactionGen
 	public boolean validate(String address) throws JsonProcessingException {
 		Balance balance = Balance.of(cypherEndpoints, address);
 		return StrUtil.isBlank(balance.getError());
+	}
+
+	@Override
+	public List<TransactionInfo> listHistoryByAddress(BitcoinHistoryQueryParams query) throws Throwable {
+		AssertUtils.isFalse(StrUtil.isBlank(query.getAddress()), "查询地址不能为空!");
+		int index = Math.max(query.getPageIndex(), 1);
+		// 仅查询omni交易
+		if (query.isOnlyOmni()) {
+			Map<String, Object> map = new HashMap<>();
+			map.put("addr", query.getAddress());
+			map.put("page", index - 1);
+			AddressHistory history = request(STATIC_ADDRESS_HISTORY, omniEndpoints, map);
+			List<TransactionInfo> list = new ArrayList<>(history.getTransactions().size());
+
+			for (var tx: history.getTransactions()){
+				list.add(tx.toTransactionInfo(confirmationsMin));
+			}
+			return list;
+		}
+		return listBitcoinHistoryByAddress(query, index);
+	}
+
+	public List<TransactionInfo> listBitcoinHistoryByAddress(BitcoinHistoryQueryParams query, int index)
+			throws Throwable {
+		int size = query.getPageIndex() < 0 || query.getPageIndex() > 50 ? 10 : query.getPageSize();
+		// 查询所有交易
+		BlockchainHistory history = BlockchainHistory.of(blockchainEndpoints, query.getAddress(), index, size);
+		// 当前块
+		LatestBlock block = LatestBlock.of(blockchainEndpoints);
+		List<TransactionInfo> list = new ArrayList<>(history.getTxs().size());
+		TransactionInfo info;
+		boolean isBtc = true;
+		// 总输入
+		BigDecimal sumIn;
+		// 总输出
+		BigDecimal sumOut;
+		// 输出的 omni 上的合约数量
+		BigDecimal omniOut;
+		// 合约
+		Contract contract;
+
+		TransactionInfo.BtcInfo btcInfo;
+		for (var tx : history.getTxs()) {
+			sumIn = BigDecimal.ZERO;
+			sumOut = BigDecimal.ZERO;
+			omniOut = BigDecimal.ZERO;
+			btcInfo = new TransactionInfo.BtcInfo();
+			contract = null;
+			isBtc = true;
+
+			// 计算输入
+			for (var in : tx.getInputs()) {
+				// 转化输入数量. 新单位为 个
+				BigDecimal value = getNumberByBalanceAndContract(in.getPrevOut().getValue(), OmniContract.BTC);
+				sumIn = sumIn.add(value);
+				btcInfo.addIn(new Script(Hex.decode(in.getPrevOut().getScript())).getToAddress(np).toString(), value);
+			}
+
+			// 计算输出
+			for (var out : tx.getOut()) {
+				// 指定字符串开头
+				if (out.getScript().startsWith(PROPERTY_PREFIX)
+						// 长度为 44
+						&& out.getScript().length() == 44) {
+					isBtc = false;
+					// 解析脚本
+					Properties properties = Properties.of(out.getScript());
+					// 解析合约
+					contract = OmniContract.getByHash(properties.getHash().toString());
+					// 如果合约未预置
+					if (contract == null) {
+						contract = AbiUtils.createContract(properties.getHash().toString(),
+								// 查询精度
+								getDecimalsByContract(AbiUtils.createContract(properties.getHash().toString())));
+					}
+					// 合约输出
+					omniOut = getNumberByBalanceAndContract(properties.getAmounts(), contract);
+				}
+				else {
+					BigDecimal value = getNumberByBalanceAndContract(out.getValue(), OmniContract.BTC);
+					sumOut = sumOut.add(value);
+					btcInfo.addOut(new Script(Hex.decode(out.getScript())).getToAddress(np).toString(), value);
+				}
+			}
+
+			// 计算手续费
+			btcInfo.setFee(sumIn.subtract(sumOut));
+
+			info = new TransactionInfo()
+					// hash
+					.setHash(tx.getHash())
+					// 块
+					.setBlock(tx.getBlockHeight())
+					// 交易状态
+					.setStatus(
+							// 交易没有块
+							tx.getBlockHeight() == null
+									// 当前块 - 交易所在块 < 最小确认数
+									|| block.getHeight().subtract(tx.getBlockHeight()).compareTo(confirmationsMin) < 0
+											? TransactionStatus.WAIT : TransactionStatus.SUCCESS)
+					// 合约
+					.setContract(isBtc ? OmniContract.BTC : contract)
+					// 平台
+					.setVirtualCurrencyPlatform(VirtualCurrencyPlatform.BITCOIN)
+					// 时间
+					.setTime(tx.getTime()).setBtcInfo(btcInfo);
+
+			// omni 交易 付款人, 收款人, 以及转账金额处理
+			if (!isBtc) {
+				// 转账金额
+				info.setValue(omniOut);
+				// 付款人,收款人处理
+				omniTransactionResolve(info, btcInfo.getIn(), btcInfo.getOut());
+			}
+
+			list.add(info);
+		}
+		return list;
+	}
+
+	/**
+	 * 根据输入和输出解析出omni的转账人和收款人
+	 * @param info 交易对象
+	 * @param inMap 所有输入数据
+	 * @param outMap 所有输出数据
+	 * @author lingting 2021-03-16 14:08
+	 */
+	private void omniTransactionResolve(TransactionInfo info, Map<String, BigDecimal> inMap,
+			Map<String, BigDecimal> outMap) throws JsonProcessingException {
+
+		// 付款人处理
+		if (inMap.size() == 1) {
+			info.setFrom(inMap.keySet().toArray(new String[0])[0]);
+		}
+		// 收款人处理
+		if (outMap.size() == 1) {
+			info.setTo(outMap.keySet().toArray(new String[0])[0]);
+		}
+
+		if (StrUtil.isNotBlank(info.getFrom()) && StrUtil.isNotBlank(info.getTo())) {
+			// 简单处理完成
+			return;
+		}
+
+		// 筛选后的输入地址
+		List<String> inList = new ArrayList<>();
+		// 筛选后的输出地址
+		List<String> outList = new ArrayList<>();
+
+		Script script;
+		for (String in : inMap.keySet()) {
+			script = ScriptBuilder.createOutputScript(Address.fromString(np, in));
+
+			// 地址在输出中. 可能是收款人
+			if (outMap.containsKey(in)) {
+				continue;
+			}
+
+			// omni 不支持,所以不可能是输入地址
+			if (ScriptPattern.isP2WH(script)) {
+				continue;
+			}
+
+			inList.add(in);
+		}
+
+		// 筛选后的输入不为空 , 筛选输出
+		if (!inList.isEmpty()) {
+			for (String in : outMap.keySet()) {
+				script = ScriptBuilder.createOutputScript(Address.fromString(np, in));
+
+				// omni 不支持,所以不可能是输入地址
+				if (ScriptPattern.isP2WH(script)) {
+					continue;
+				}
+
+				outList.add(in);
+			}
+		}
+
+		// 如果输入 或 输出 为空. 输入 或 输出 数量大于1
+		if ((inList.isEmpty() || outList.isEmpty()) || inList.size() > 1 || outList.size() > 1) {
+			// 从omni拿数据
+			Optional<TransactionInfo> optional = getTransactionInfoOfOmni(info.getHash());
+			if (optional.isPresent()) {
+				TransactionInfo omni = optional.get();
+				info.setFrom(omni.getFrom());
+				info.setTo(omni.getTo());
+			}
+			else {
+				// 无法查询到数据. 修改状态
+				info.setStatus(TransactionStatus.WAIT);
+			}
+		}
+		else {
+			info.setFrom(inList.get(0));
+			info.setTo(outList.get(0));
+		}
+	}
+
+	/**
+	 * 直接从omni服务获取交易信息
+	 * @param hash 交易hash
+	 * @return java.util.Optional<live.lingting.virtual.currency.core.model.TransactionInfo>
+	 * @author lingting 2021-03-16 14:39
+	 */
+	public Optional<TransactionInfo> getTransactionInfoOfOmni(String hash) throws JsonProcessingException {
+		TransactionByHash response = request(STATIC_TRANSACTION_HASH, omniEndpoints, hash);
+
+		TransactionInfo info = response.toTransactionInfo(confirmationsMin);
+		if (info == null) {
+			return Optional.empty();
+		}
+		return Optional.of(info);
 	}
 
 	/**

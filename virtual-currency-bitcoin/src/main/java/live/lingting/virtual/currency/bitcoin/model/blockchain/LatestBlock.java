@@ -7,6 +7,7 @@ import java.math.BigInteger;
 import java.util.List;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import live.lingting.virtual.currency.bitcoin.endpoints.BlockchainEndpoints;
 import live.lingting.virtual.currency.core.Endpoints;
 import live.lingting.virtual.currency.core.util.JacksonUtils;
 
@@ -32,7 +33,7 @@ public class LatestBlock {
 	@JsonProperty("txIndexes")
 	private List<Object> txIndexes;
 
-	public static LatestBlock of(Endpoints endpoints) throws JsonProcessingException {
+	public static LatestBlock of(BlockchainEndpoints endpoints) throws JsonProcessingException {
 		HttpRequest request = HttpRequest.get(endpoints.getHttpUrl("latestblock"));
 		return JacksonUtils.toObj(request.execute().body(), LatestBlock.class);
 	}

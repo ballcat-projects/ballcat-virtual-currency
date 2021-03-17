@@ -3,6 +3,7 @@ package live.lingting.virtual.currency.core;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.MathContext;
+import java.util.List;
 import java.util.Optional;
 import live.lingting.virtual.currency.core.model.Account;
 import live.lingting.virtual.currency.core.model.TransactionInfo;
@@ -14,7 +15,7 @@ import live.lingting.virtual.currency.core.model.TransferResult;
  *
  * @author lingting 2020-09-01 17:15
  */
-public interface PlatformService<G> {
+public interface PlatformService<G, Q> {
 
 	/**
 	 * 通过交易hash获取交易信息
@@ -163,5 +164,14 @@ public interface PlatformService<G> {
 	 * @author lingting 2021-01-19 15:41
 	 */
 	boolean validate(String address) throws Throwable;
+
+	/**
+	 * 查询指定地址的历史交易记录
+	 * @param query 查询条件- 各个平台实现都不一致
+	 * @throws Throwable 抛出异常
+	 * @return java.util.List<live.lingting.virtual.currency.core.model.TransactionInfo>
+	 * @author lingting 2021-03-15 11:13
+	 */
+	List<TransactionInfo> listHistoryByAddress(Q query) throws Throwable;
 
 }

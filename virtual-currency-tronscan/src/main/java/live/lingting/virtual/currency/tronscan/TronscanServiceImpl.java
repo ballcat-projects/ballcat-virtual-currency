@@ -45,7 +45,7 @@ import live.lingting.virtual.currency.tronscan.util.TronscanUtils;
  * @author lingting 2020-09-01 17:16
  */
 @Slf4j
-public class TronscanServiceImpl implements PlatformService<TronscanTransactionGenerate> {
+public class TronscanServiceImpl implements PlatformService<TronscanTransactionGenerate, TronscanHistoryQueryParams> {
 
 	@Getter
 	private static final Map<String, Integer> CONTRACT_DECIMAL_CACHE = new ConcurrentHashMap<>();
@@ -367,6 +367,11 @@ public class TronscanServiceImpl implements PlatformService<TronscanTransactionG
 			log.error("验证地址出错!", e);
 			return false;
 		}
+	}
+
+	@Override
+	public List<TransactionInfo> listHistoryByAddress(TronscanHistoryQueryParams query) throws Throwable {
+		return null;
 	}
 
 }

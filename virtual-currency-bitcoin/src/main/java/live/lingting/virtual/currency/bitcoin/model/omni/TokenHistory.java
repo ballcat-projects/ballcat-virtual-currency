@@ -29,7 +29,9 @@ public class TokenHistory implements Domain<TokenHistory> {
 	@Override
 	public TokenHistory of(Endpoints endpoints, Object params) throws JsonProcessingException {
 		HttpRequest request = HttpRequest.post(endpoints.getHttpUrl("v1/properties/gethistory/" + params));
-		return JacksonUtils.toObj(request.execute().body(), TokenHistory.class);
+		request.form("page", "0");
+		String body = request.execute().body();
+		return JacksonUtils.toObj(body, TokenHistory.class);
 	}
 
 	@NoArgsConstructor
