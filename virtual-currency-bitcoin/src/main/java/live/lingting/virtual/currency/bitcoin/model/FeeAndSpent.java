@@ -41,7 +41,7 @@ public class FeeAndSpent {
 	public static FeeAndSpent of(PlatformService service, Contract contract, TransferParams params,
 			List<Unspent> unspentList, Coin amount, BigInteger min) throws Throwable {
 		// 记录本次转账使用的 spent
-		List<Unspent> useList = new ArrayList<>();
+		List<Unspent> useList = new ArrayList<>(5);
 		// 转出数量
 		Coin outNumber = Coin.ZERO;
 		// 总手续费(不找零)

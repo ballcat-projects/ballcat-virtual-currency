@@ -105,19 +105,19 @@ public class EtherscanServiceImpl implements PlatformService<EtherscanTransactio
 			contract = AbiUtils.createContract(contractAddress);
 		}
 
-		TransactionInfo transactionInfo = new TransactionInfo()
+		TransactionInfo transactionInfo = TransactionInfo.builder()
 				// 平台
-				.setVirtualCurrencyPlatform(VirtualCurrencyPlatform.ETHERSCAN)
+				.virtualCurrencyPlatform(VirtualCurrencyPlatform.ETHERSCAN)
 				// 交易hash
-				.setHash(byHash.getHash())
+				.hash(byHash.getHash())
 				// 转账人
-				.setFrom(StrUtil.isNotBlank(input.getFrom()) ? input.getFrom() : byHash.getFrom())
+				.from(StrUtil.isNotBlank(input.getFrom()) ? input.getFrom() : byHash.getFrom())
 				// 收款人
-				.setTo(input.getTo())
+				.to(input.getTo())
 				// 设置合约类型, input 中的优先
-				.setContract(contract)
+				.contract(contract)
 				// 设置金额
-				.setValue(getNumberByBalanceAndContract(input.getValue(), contract));
+				.value(getNumberByBalanceAndContract(input.getValue(), contract)).build();
 
 		// 交易不存在块
 		if (byHash.getBlockNumber() == null) {

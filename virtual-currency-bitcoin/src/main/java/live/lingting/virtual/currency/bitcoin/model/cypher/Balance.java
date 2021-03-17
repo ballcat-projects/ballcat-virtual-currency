@@ -48,8 +48,7 @@ public class Balance {
 	private BigInteger finalNumberTx;
 
 	public static Balance of(BitcoinCypherEndpoints endpoints, String address) throws JsonProcessingException {
-		HttpRequest request = HttpRequest
-				.get(endpoints.getHttpUrl("addrs/" + address + "/balance"));
+		HttpRequest request = HttpRequest.get(endpoints.getHttpUrl("addrs/" + address + "/balance"));
 		String response = request.execute().body();
 		return JacksonUtils.toObj(response, Balance.class);
 	}

@@ -158,7 +158,7 @@ public class BitcoinServiceImpl implements PlatformService<BitcoinTransactionGen
 		// 总输出数量
 		BigInteger sumOut = BigInteger.ZERO;
 		// 输出详情
-		Map<String, BigDecimal> outInfos = new HashMap<>(rawTransaction.getOuts().size());
+		Map<String, BigDecimal> outInfos = new HashMap<>(rawTransaction.getOuts().size(), 1);
 
 		// 搜索输出, 判断是否为 btc交易
 		for (RawTransaction.Out out : rawTransaction.getOuts()) {
@@ -471,13 +471,13 @@ public class BitcoinServiceImpl implements PlatformService<BitcoinTransactionGen
 		int index = Math.max(query.getPageIndex(), 1);
 		// 仅查询omni交易
 		if (query.isOnlyOmni()) {
-			Map<String, Object> map = new HashMap<>();
+			Map<String, Object> map = new HashMap<>(2, 1);
 			map.put("addr", query.getAddress());
 			map.put("page", index - 1);
 			AddressHistory history = request(STATIC_ADDRESS_HISTORY, omniEndpoints, map);
 			List<TransactionInfo> list = new ArrayList<>(history.getTransactions().size());
 
-			for (var tx: history.getTransactions()){
+			for (var tx : history.getTransactions()) {
 				list.add(tx.toTransactionInfo(confirmationsMin));
 			}
 			return list;
@@ -550,25 +550,29 @@ public class BitcoinServiceImpl implements PlatformService<BitcoinTransactionGen
 
 			// 计算手续费
 			btcInfo.setFee(sumIn.subtract(sumOut));
-
-			info = new TransactionInfo()
+			info = TransactionInfo.builder()
 					// hash
-					.setHash(tx.getHash())
+					.hash(tx.getHash())
 					// 块
-					.setBlock(tx.getBlockHeight())
+					.block(tx.getBlockHeight())
 					// 交易状态
-					.setStatus(
+					.status(
 							// 交易没有块
 							tx.getBlockHeight() == null
 									// 当前块 - 交易所在块 < 最小确认数
 									|| block.getHeight().subtract(tx.getBlockHeight()).compareTo(confirmationsMin) < 0
 											? TransactionStatus.WAIT : TransactionStatus.SUCCESS)
 					// 合约
-					.setContract(isBtc ? OmniContract.BTC : contract)
+					.contract(isBtc ? OmniContract.BTC : contract)
+
 					// 平台
-					.setVirtualCurrencyPlatform(VirtualCurrencyPlatform.BITCOIN)
+					.virtualCurrencyPlatform(VirtualCurrencyPlatform.BITCOIN)
+
+					.btcInfo(btcInfo)
+
+					.build()
 					// 时间
-					.setTime(tx.getTime()).setBtcInfo(btcInfo);
+					.setTime(tx.getTime());
 
 			// omni 交易 付款人, 收款人, 以及转账金额处理
 			if (!isBtc) {
@@ -608,9 +612,9 @@ public class BitcoinServiceImpl implements PlatformService<BitcoinTransactionGen
 		}
 
 		// 筛选后的输入地址
-		List<String> inList = new ArrayList<>();
+		List<String> inList = new ArrayList<>(inMap.size());
 		// 筛选后的输出地址
-		List<String> outList = new ArrayList<>();
+		List<String> outList = new ArrayList<>(inMap.size());
 
 		Script script;
 		for (String in : inMap.keySet()) {
@@ -688,7 +692,7 @@ public class BitcoinServiceImpl implements PlatformService<BitcoinTransactionGen
 		if (!str.contains(FLAG)) {
 			return 0;
 		}
-		return str.substring(str.indexOf(FLAG)).length() - 1;
+		return str.substring(str.indexOf(FLAG.charAt(0))).length() - 1;
 	}
 
 	/**
@@ -730,7 +734,7 @@ public class BitcoinServiceImpl implements PlatformService<BitcoinTransactionGen
 		// 总输出数量
 		BigInteger sumOut = BigInteger.ZERO;
 		// 输出详情
-		Map<String, BigDecimal> outInfos = new HashMap<>(rawTransaction.getOuts().size());
+		Map<String, BigDecimal> outInfos = new HashMap<>(rawTransaction.getOuts().size(), 1);
 
 		// 输出统计
 		for (RawTransaction.Out out : rawTransaction.getOuts()) {
@@ -745,7 +749,7 @@ public class BitcoinServiceImpl implements PlatformService<BitcoinTransactionGen
 		// 总输入数量
 		BigInteger sumIn = BigInteger.ZERO;
 		// 输入详情
-		Map<String, BigDecimal> inInfos = new HashMap<>(rawTransaction.getIns().size());
+		Map<String, BigDecimal> inInfos = new HashMap<>(rawTransaction.getIns().size(), 1);
 
 		// 输入统计
 		for (RawTransaction.In in : rawTransaction.getIns()) {
@@ -754,17 +758,15 @@ public class BitcoinServiceImpl implements PlatformService<BitcoinTransactionGen
 		// 手续费 = 输入 - 输出 转换为 btc
 		BigDecimal fee = getNumberByBalanceAndContract(sumIn.subtract(sumOut), OmniContract.BTC);
 
-		TransactionInfo transactionInfo = new TransactionInfo().setContract(OmniContract.BTC)
+		TransactionInfo transactionInfo = TransactionInfo.builder().contract(OmniContract.BTC)
 
-				.setBlock(rawTransaction.getBlockHeight())
+				.block(rawTransaction.getBlockHeight())
 
-				.setHash(rawTransaction.getHash())
+				.hash(rawTransaction.getHash())
 
-				.setVirtualCurrencyPlatform(VirtualCurrencyPlatform.BITCOIN)
-
-				.setTime(rawTransaction.getTime())
+				.virtualCurrencyPlatform(VirtualCurrencyPlatform.BITCOIN)
 				// btc 详情
-				.setBtcInfo(new TransactionInfo.BtcInfo(inInfos, outInfos, fee));
+				.btcInfo(new TransactionInfo.BtcInfo(inInfos, outInfos, fee)).build().setTime(rawTransaction.getTime());
 
 		// 没有高度
 		if (rawTransaction.getBlockHeight() == null) {

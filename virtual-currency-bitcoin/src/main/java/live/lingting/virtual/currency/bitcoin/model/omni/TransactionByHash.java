@@ -93,28 +93,27 @@ public class TransactionByHash implements Domain<TransactionByHash> {
 
 		OmniContract contract = OmniContract.getById(getPropertyId());
 
-		return new TransactionInfo()
+		return TransactionInfo.builder()
 
-				.setContract(contract != null ? contract : AbiUtils.createContract(getPropertyId().toString()))
+				.contract(contract != null ? contract : AbiUtils.createContract(getPropertyId().toString()))
 
-				.setBlock(getBlock())
+				.block(getBlock())
 
-				.setHash(getTxId())
+				.hash(getTxId())
 
-				.setValue(getAmount())
+				.value(getAmount())
 
-				.setVirtualCurrencyPlatform(VirtualCurrencyPlatform.BITCOIN)
+				.virtualCurrencyPlatform(VirtualCurrencyPlatform.BITCOIN)
 
-				.setTime(getBlockTime())
+				.from(getSendingAddress())
 
-				.setFrom(getSendingAddress())
+				.to(getReferenceAddress())
 
-				.setTo(getReferenceAddress())
-
-				.setStatus(
+				.status(
 						// 大于等于 配置的最小值则 交易成功,否则等待
 						getConfirmations().compareTo(confirmationsMin) >= 0 ? TransactionStatus.SUCCESS
-								: TransactionStatus.WAIT);
+								: TransactionStatus.WAIT)
+				.build().setTime(getBlockTime());
 	}
 
 }

@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
@@ -284,7 +285,7 @@ public class TriggerRequest<T extends TriggerResult> {
 
 	public TriggerRequest<T> addSignature(String s) {
 		if (signature == null) {
-			signature = new ArrayList<>();
+			signature = Collections.emptyList();
 		}
 		signature.add(s);
 		return this;

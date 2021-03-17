@@ -83,7 +83,7 @@ public class BitcoinUtils {
 	 * @author lingting 2021-01-12 17:10
 	 */
 	public static Account createMultiAddress(NetworkParameters parameters, int min, int number) {
-		List<ECKey> keys = new ArrayList<>();
+		List<ECKey> keys = new ArrayList<>(number);
 		for (int i = 0; i < number; i++) {
 			keys.add(new ECKey(new SecureRandom()));
 		}

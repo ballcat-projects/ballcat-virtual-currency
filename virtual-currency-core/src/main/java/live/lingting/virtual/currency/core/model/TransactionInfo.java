@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TimeZone;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -22,6 +23,7 @@ import live.lingting.virtual.currency.core.enums.VirtualCurrencyPlatform;
  */
 @Getter
 @Setter
+@Builder
 @Accessors(chain = true)
 public class TransactionInfo {
 

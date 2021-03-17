@@ -18,7 +18,8 @@ import live.lingting.virtual.currency.core.util.JacksonUtils;
 @Data
 public class BlockchainHistory {
 
-	public static BlockchainHistory of(BlockchainEndpoints endpoints, String address, int index, int size) throws JsonProcessingException {
+	public static BlockchainHistory of(BlockchainEndpoints endpoints, String address, int index, int size)
+			throws JsonProcessingException {
 		String url = endpoints
 				.getHttpUrl(StrUtil.format("rawaddr/{}?limit={}&offset={}", address, size, size * (index - 1)));
 

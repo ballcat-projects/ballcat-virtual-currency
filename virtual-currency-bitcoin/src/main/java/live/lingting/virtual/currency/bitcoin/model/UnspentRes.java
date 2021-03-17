@@ -3,6 +3,7 @@ package live.lingting.virtual.currency.bitcoin.model;
 import cn.hutool.http.HttpRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
@@ -29,11 +30,12 @@ public abstract class UnspentRes {
 	 * @return live.lingting.virtual.currency.bitcoin.model.UnspentRes
 	 * @author lingting 2021-01-08 18:40
 	 */
-	public static UnspentRes of(BitcoinEndpoints bitcoinEndpoints, int min, String address) throws JsonProcessingException {
-		// 测试节点使用  sochain
-		boolean isSochain = bitcoinEndpoints==BitcoinEndpoints.TEST;
+	public static UnspentRes of(BitcoinEndpoints bitcoinEndpoints, int min, String address)
+			throws JsonProcessingException {
+		// 测试节点使用 sochain
+		boolean isSochain = bitcoinEndpoints == BitcoinEndpoints.TEST;
 
-		Endpoints endpoints = isSochain? BlockchainEndpoints.MAINNET : BitcoinSochainEndpoints.TEST;
+		Endpoints endpoints = isSochain ? BlockchainEndpoints.MAINNET : BitcoinSochainEndpoints.TEST;
 
 		HttpRequest request;
 		// sochain 节点处理
@@ -61,7 +63,7 @@ public abstract class UnspentRes {
 		}
 
 		if (response.equals(BlockchainUnspentRes.ERROR)) {
-			return new BlockchainUnspentRes().setUnspentList(new ArrayList<>());
+			return new BlockchainUnspentRes().setUnspentList(Collections.emptyList());
 		}
 		return JacksonUtils.toObj(response, BlockchainUnspentRes.class);
 	}

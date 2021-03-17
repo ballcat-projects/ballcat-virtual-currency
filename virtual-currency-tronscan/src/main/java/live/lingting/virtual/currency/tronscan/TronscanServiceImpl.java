@@ -76,11 +76,11 @@ public class TronscanServiceImpl implements PlatformService<TronscanTransactionG
 		}
 
 		// 生成返回值
-		TransactionInfo vcTransactionInfo = new TransactionInfo()
+		TransactionInfo vcTransactionInfo = TransactionInfo.builder()
 				// 平台
-				.setVirtualCurrencyPlatform(VirtualCurrencyPlatform.TRONSCAN)
+				.virtualCurrencyPlatform(VirtualCurrencyPlatform.TRONSCAN)
 				// hash
-				.setHash(hash);
+				.hash(hash).build();
 		// 原始数据
 		RawData rawData = transaction.getRawData();
 		// 合约参数
@@ -257,7 +257,7 @@ public class TronscanServiceImpl implements PlatformService<TronscanTransactionG
 			return TronscanTransactionGenerate.failed("由公钥推导出的地址与传入地址不符!");
 		}
 
-		if (TronscanUtils.isHexAddress(to)){
+		if (TronscanUtils.isHexAddress(to)) {
 			to = TronscanUtils.decodeAddressParam(to);
 		}
 
