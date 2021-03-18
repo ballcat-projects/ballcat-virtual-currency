@@ -1,15 +1,15 @@
 package live.lingting.virtual.currency.tronscan;
 
 import lombok.extern.slf4j.Slf4j;
-import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.params.MainNetParams;
 import org.bouncycastle.util.encoders.Hex;
 import org.junit.Test;
-import live.lingting.virtual.currency.core.model.Account;
 import live.lingting.virtual.currency.core.Mnemonic;
 import live.lingting.virtual.currency.core.bip.Bip32;
 import live.lingting.virtual.currency.core.bip.Bip44Constant;
+import live.lingting.virtual.currency.core.model.Account;
+import live.lingting.virtual.currency.core.util.AssertUtils;
 import live.lingting.virtual.currency.tronscan.util.TronscanUtils;
 
 /**
@@ -30,28 +30,27 @@ public class Bip32Test {
 		MainNetParams np = MainNetParams.get();
 		Mnemonic m = Mnemonic.of(mnemonicStr, seedBytes, "", 0);
 		Bip32 rootBip = m.getBip();
-		String path = "m/44'/0'/0'/0";
-		Bip32 extBip = rootBip.getBipByPath(path);
-		DeterministicKey extKey = extBip.getKey();
-		System.out.println(extKey.getPublicKeyAsHex());
-		System.out.println(extKey.getPrivateKeyAsHex());
-		System.out.println(extBip.getExtPrivate(np));
-		System.out.println(extBip.getExtPublicKey(np));
-		System.out.println("-----------------------------");
-		DeterministicKey path1 = extBip.getKeyByPath("0");
-		Account account1 = TronscanUtils.createAccount(path1);
-		System.out.println(account1.getAddress());
+		String extPath = "m/44'/0'/0'/0";
+		Bip32 extBip = rootBip.getBipByPath(extPath);
 
-		System.out.println("-----------------------------");
-		// Bip bip =
-		// Bip.create("xprv9zusQfxwpgYTsTFPAAZSTJNu7bJ45tsB8NJB9qtWT2K5zX4Y8LBvRXZjtwiA3CNZ1XzfiqrPckZk4Q6ByPdFhgQP9Q59zb9wkxP1JZb5p3h",
-		// np);
-		Bip32 bip = Bip32.create(
+		AssertUtils.equals(extBip.getExtPublicKey(np),
+				"xpub6DuDpBVqf46m5wKrGC6SpSKdfd8YVMb2VbDmxEJ81Mr4sKPgfsWAyKtDkDTyWqSFsfGNe9ga7coxPs3EMW5feGDZZsTuE3FTJjD7ALGMnBz");
+		AssertUtils.equals(extBip.getExtPrivate(np),
+				"xprv9zusQfxwpgYTsTFPAAZSTJNu7bJ45tsB8NJB9qtWT2K5zX4Y8LBvRXZjtwiA3CNZ1XzfiqrPckZk4Q6ByPdFhgQP9Q59zb9wkxP1JZb5p3h");
+
+		// 通过助记词生成的地址
+		DeterministicKey key1 = extBip.getKeyByPath("0");
+		String a1 = TronscanUtils.getBaseAddressByPublicKey(key1.getPublicKeyAsHex());
+		AssertUtils.equals(a1, "TAPoDb3ybMuB4ApqLQ5KPdvnXdLqGeT734");
+
+		// 通过扩展公钥生成地址
+		Bip32 bip32 = Bip32.create(
 				"xpub6DuDpBVqf46m5wKrGC6SpSKdfd8YVMb2VbDmxEJ81Mr4sKPgfsWAyKtDkDTyWqSFsfGNe9ga7coxPs3EMW5feGDZZsTuE3FTJjD7ALGMnBz",
 				np);
-		DeterministicKey path2 = bip.getKeyByPath("0");
-		// Account account2 = BitcoinUtil.createLegacyAddress(np, path2);
-		System.out.println(LegacyAddress.fromKey(np, path2).toString());
+
+		DeterministicKey key2 = bip32.getKeyByPath("0");
+		String a2 = TronscanUtils.getBaseAddressByPublicKey(key2.getPublicKeyAsHex());
+		AssertUtils.equals(a2, "TAPoDb3ybMuB4ApqLQ5KPdvnXdLqGeT734");
 	}
 
 	@Test
