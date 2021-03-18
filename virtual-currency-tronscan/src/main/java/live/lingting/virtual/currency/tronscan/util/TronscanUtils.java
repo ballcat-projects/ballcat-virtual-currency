@@ -10,8 +10,11 @@ import java.util.function.Function;
 import java.util.regex.Pattern;
 import lombok.SneakyThrows;
 import org.bitcoinj.core.Base58;
+import org.bitcoinj.core.ECKey;
 import org.bitcoinj.crypto.DeterministicKey;
 import org.bouncycastle.jcajce.provider.digest.Keccak;
+import org.bouncycastle.math.ec.ECPoint;
+import org.bouncycastle.util.Arrays;
 import org.bouncycastle.util.encoders.Hex;
 import org.tron.tronj.crypto.SECP256K1;
 import org.tron.tronj.utils.Base58Check;
@@ -20,6 +23,7 @@ import live.lingting.virtual.currency.core.enums.AbiMethod;
 import live.lingting.virtual.currency.core.exception.AbiMethodNotSupportException;
 import live.lingting.virtual.currency.core.model.Account;
 import live.lingting.virtual.currency.core.util.AbiUtils;
+import live.lingting.virtual.currency.tronscan.constant.TronConstants;
 import live.lingting.virtual.currency.tronscan.contract.TronscanContract;
 import live.lingting.virtual.currency.tronscan.model.Trc20Data;
 
@@ -198,6 +202,19 @@ public class TronscanUtils {
 	}
 
 	public static String getBaseAddressByPublicKey(String publicKey) {
+		if (publicKey.length() != TronConstants.PUBLIC_KEY_LENGTH) {
+			// 0x 开头的的公钥处理
+			if (publicKey.startsWith(TronConstants.INCORRECT_PREFIX)
+					&& publicKey.length() == TronConstants.PUBLIC_KEY_LENGTH + 2) {
+				publicKey = publicKey.substring(TronConstants.INCORRECT_PREFIX.length());
+			}
+			// 大概率不是波场的公钥, 尝试解析.
+			else {
+				ECPoint ecPoint = ECKey.fromPublicOnly(Hex.decode(publicKey)).getPubKeyPoint();
+				publicKey = Hex.toHexString(Arrays.copyOfRange(ecPoint.getEncoded(false), 1, 65));
+			}
+		}
+
 		Keccak.Digest256 digest = new Keccak.Digest256();
 		// 对公钥进行hash
 		byte[] hash = digest.digest(Hex.decode(publicKey));
