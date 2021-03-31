@@ -15,9 +15,6 @@ import live.lingting.virtual.currency.core.util.JacksonUtils;
 @Setter
 public abstract class AbstractJsonRpc {
 
-	protected AbstractJsonRpc() {
-	}
-
 	/**
 	 * 便于依赖自行修改实例
 	 */
@@ -28,10 +25,7 @@ public abstract class AbstractJsonRpc {
 	@JsonProperty("jsonrpc")
 	private String jsonRpc = "2.0";
 
-	@SneakyThrows
-	@Override
-	public String toString() {
-		return JacksonUtils.toJson(this);
+	protected AbstractJsonRpc() {
 	}
 
 	/**
@@ -40,6 +34,12 @@ public abstract class AbstractJsonRpc {
 	 */
 	protected static long generateId() {
 		return SNOWFLAKE.nextId();
+	}
+
+	@SneakyThrows
+	@Override
+	public String toString() {
+		return JacksonUtils.toJson(this);
 	}
 
 }

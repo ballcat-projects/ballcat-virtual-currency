@@ -29,11 +29,12 @@ public abstract class UnspentRes {
 	 * @return live.lingting.virtual.currency.bitcoin.model.UnspentRes
 	 * @author lingting 2021-01-08 18:40
 	 */
-	public static UnspentRes of(BitcoinEndpoints bitcoinEndpoints, int min, String address) throws JsonProcessingException {
-		// 测试节点使用  sochain
-		boolean isSochain = bitcoinEndpoints==BitcoinEndpoints.TEST;
+	public static UnspentRes of(BitcoinEndpoints bitcoinEndpoints, int min, String address)
+			throws JsonProcessingException {
+		// 测试节点使用 sochain
+		boolean isSochain = bitcoinEndpoints == BitcoinEndpoints.TEST;
 
-		Endpoints endpoints = !isSochain? BlockchainEndpoints.MAINNET : BitcoinSochainEndpoints.TEST;
+		Endpoints endpoints = !isSochain ? BlockchainEndpoints.MAINNET : BitcoinSochainEndpoints.TEST;
 
 		HttpRequest request;
 		// sochain 节点处理

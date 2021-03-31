@@ -69,7 +69,7 @@ public class EtherscanServiceImpl implements PlatformService<EtherscanTransactio
 
 	public EtherscanServiceImpl(EtherscanProperties properties) {
 		this.properties = properties;
-		client = HttpJsonRpc.of(properties.getEndpoints().getHttpUrl(properties.getProjectId()));
+		client = properties.getHttpClient();
 	}
 
 	@Override

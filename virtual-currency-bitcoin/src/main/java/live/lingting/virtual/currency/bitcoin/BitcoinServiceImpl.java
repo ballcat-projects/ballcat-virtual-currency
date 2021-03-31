@@ -57,8 +57,8 @@ import live.lingting.virtual.currency.bitcoin.model.omni.TokenHistory;
 import live.lingting.virtual.currency.bitcoin.model.omni.TransactionByHash;
 import live.lingting.virtual.currency.bitcoin.properties.BitcoinProperties;
 import live.lingting.virtual.currency.bitcoin.util.BitcoinUtils;
-import live.lingting.virtual.currency.core.Endpoints;
 import live.lingting.virtual.currency.core.Contract;
+import live.lingting.virtual.currency.core.Endpoints;
 import live.lingting.virtual.currency.core.PlatformService;
 import live.lingting.virtual.currency.core.enums.TransactionStatus;
 import live.lingting.virtual.currency.core.enums.VirtualCurrencyPlatform;
@@ -99,7 +99,7 @@ public class BitcoinServiceImpl implements PlatformService<BitcoinTransactionGen
 
 	private final BitcoinProperties properties;
 
-	private final	NetworkParameters np ;
+	private final NetworkParameters np;
 
 	private final BlockchainEndpoints blockchainEndpoints;
 

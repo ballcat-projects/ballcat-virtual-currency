@@ -14,8 +14,6 @@ import org.web3j.crypto.ECKeyPair;
 import org.web3j.crypto.Keys;
 import live.lingting.virtual.currency.core.enums.AbiMethod;
 import live.lingting.virtual.currency.core.exception.AbiMethodNotSupportException;
-import live.lingting.virtual.currency.core.exception.InsufficientBalanceException;
-import live.lingting.virtual.currency.core.exception.VirtualCurrencyException;
 import live.lingting.virtual.currency.core.model.Account;
 import live.lingting.virtual.currency.core.util.AbiUtils;
 import live.lingting.virtual.currency.etherscan.contract.EtherscanContract;

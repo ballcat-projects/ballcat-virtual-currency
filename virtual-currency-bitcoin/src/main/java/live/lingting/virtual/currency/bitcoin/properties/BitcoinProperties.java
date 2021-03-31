@@ -63,10 +63,6 @@ public class BitcoinProperties {
 	@Setter(value = AccessLevel.NONE)
 	private NetworkParameters np;
 
-	public NetworkParameters getNp() {
-		return endpoints == BitcoinEndpoints.MAINNET ? MainNetParams.get() : TestNet3Params.get();
-	}
-
 	/**
 	 * 获取锁, 成功则允许发送请求, 手动实现限制, 限制请求在 5-10s 一次
 	 */
@@ -94,5 +90,9 @@ public class BitcoinProperties {
 			return Collections.emptyList();
 		}
 	};
+
+	public NetworkParameters getNp() {
+		return endpoints == BitcoinEndpoints.MAINNET ? MainNetParams.get() : TestNet3Params.get();
+	}
 
 }

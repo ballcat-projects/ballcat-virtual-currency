@@ -2,7 +2,6 @@ package live.lingting.virtual.currency.core.enums;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import live.lingting.virtual.currency.core.exception.VirtualCurrencyException;
 
 /**
  * abi方法

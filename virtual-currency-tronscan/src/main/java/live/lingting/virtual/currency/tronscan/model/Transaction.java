@@ -1,7 +1,6 @@
 package live.lingting.virtual.currency.tronscan.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import java.math.BigInteger;
 import java.util.List;
 import lombok.Data;

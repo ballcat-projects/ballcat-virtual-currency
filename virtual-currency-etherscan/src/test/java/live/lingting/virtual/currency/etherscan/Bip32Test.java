@@ -6,10 +6,10 @@ import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.params.MainNetParams;
 import org.bouncycastle.util.encoders.Hex;
 import org.junit.Test;
-import live.lingting.virtual.currency.core.model.Account;
 import live.lingting.virtual.currency.core.Mnemonic;
 import live.lingting.virtual.currency.core.bip.Bip32;
 import live.lingting.virtual.currency.core.bip.Bip44Constant;
+import live.lingting.virtual.currency.core.model.Account;
 import live.lingting.virtual.currency.etherscan.util.EtherscanUtils;
 
 /**

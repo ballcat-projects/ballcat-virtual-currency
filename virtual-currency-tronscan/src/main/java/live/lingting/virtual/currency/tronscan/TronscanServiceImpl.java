@@ -257,7 +257,7 @@ public class TronscanServiceImpl implements PlatformService<TronscanTransactionG
 			return TronscanTransactionGenerate.failed("由公钥推导出的地址与传入地址不符!");
 		}
 
-		if (TronscanUtils.isHexAddress(to)){
+		if (TronscanUtils.isHexAddress(to)) {
 			to = TronscanUtils.decodeAddressParam(to);
 		}
 
