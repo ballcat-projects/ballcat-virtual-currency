@@ -30,15 +30,15 @@ import org.web3j.crypto.Keys;
 import org.web3j.crypto.RawTransaction;
 import org.web3j.crypto.TransactionEncoder;
 import org.web3j.utils.Numeric;
-import live.lingting.virtual.currency.core.model.Account;
-import live.lingting.virtual.currency.core.JsonRpcClient;
 import live.lingting.virtual.currency.core.Contract;
+import live.lingting.virtual.currency.core.PlatformService;
 import live.lingting.virtual.currency.core.enums.TransactionStatus;
 import live.lingting.virtual.currency.core.enums.VirtualCurrencyPlatform;
+import live.lingting.virtual.currency.core.jsonrpc.http.HttpJsonRpc;
+import live.lingting.virtual.currency.core.model.Account;
 import live.lingting.virtual.currency.core.model.TransactionInfo;
 import live.lingting.virtual.currency.core.model.TransferParams;
 import live.lingting.virtual.currency.core.model.TransferResult;
-import live.lingting.virtual.currency.core.PlatformService;
 import live.lingting.virtual.currency.core.util.AbiUtils;
 import live.lingting.virtual.currency.etherscan.contract.EtherscanContract;
 import live.lingting.virtual.currency.etherscan.enums.EtherscanReceiptStatus;
@@ -65,11 +65,11 @@ public class EtherscanServiceImpl implements PlatformService<EtherscanTransactio
 
 	private final EtherscanProperties properties;
 
-	private final JsonRpcClient client;
+	private final HttpJsonRpc client;
 
 	public EtherscanServiceImpl(EtherscanProperties properties) {
 		this.properties = properties;
-		client = properties.getHttpClient();
+		client = HttpJsonRpc.of(properties.getEndpoints().getHttpUrl(properties.getProjectId()));
 	}
 
 	@Override

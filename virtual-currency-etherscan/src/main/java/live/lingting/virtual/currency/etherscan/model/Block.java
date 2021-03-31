@@ -5,7 +5,7 @@ import java.util.List;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import live.lingting.virtual.currency.core.JsonRpcClient;
+import live.lingting.virtual.currency.core.jsonrpc.http.HttpJsonRpc;
 
 /**
  * @author lingting 2021/1/5 20:03
@@ -75,11 +75,11 @@ public class Block extends BaseResponse {
 	@JsonProperty("uncles")
 	private List<Object> uncles;
 
-	public static Block of(JsonRpcClient client, BlockEnum block) throws Throwable {
+	public static Block of(HttpJsonRpc client, BlockEnum block) throws Throwable {
 		return client.invoke("eth_getBlockByNumber", Block.class, block.getVal(), false);
 	}
 
-	public static Block of(JsonRpcClient client, String hash) throws Throwable {
+	public static Block of(HttpJsonRpc client, String hash) throws Throwable {
 		return client.invoke("eth_getBlockByHash", Block.class, hash, false);
 	}
 

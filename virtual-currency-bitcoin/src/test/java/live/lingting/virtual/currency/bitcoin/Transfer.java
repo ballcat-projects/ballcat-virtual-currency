@@ -22,12 +22,12 @@ import live.lingting.virtual.currency.bitcoin.model.UnspentRes;
 import live.lingting.virtual.currency.bitcoin.model.omni.PushTx;
 import live.lingting.virtual.currency.bitcoin.properties.BitcoinProperties;
 import live.lingting.virtual.currency.bitcoin.util.BitcoinUtils;
-import live.lingting.virtual.currency.core.JsonRpcClient;
 import live.lingting.virtual.currency.core.model.Account;
 import live.lingting.virtual.currency.core.model.TransferParams;
 import live.lingting.virtual.currency.core.model.TransferResult;
 import live.lingting.virtual.currency.core.util.AssertUtils;
 import live.lingting.virtual.currency.core.util.JacksonUtils;
+import live.lingting.virtual.currency.core.jsonrpc.http.HttpJsonRpc;
 
 /**
  * @author lingting 2021/1/10 15:54
@@ -74,7 +74,7 @@ public class Transfer {
 
 	private static BitcoinServiceImpl service;
 
-	private static JsonRpcClient client;
+	private static HttpJsonRpc client;
 
 	/**
 	 * 配置网络环境为测试服
@@ -138,7 +138,7 @@ public class Transfer {
 		headers.put("Authorization", "Basic " + Base64.encode("omnicorerpc" + ":" + "5hMTZI9iBGFqKxsWfOUF"));
 
 		// 这里使用的同事搭建的测试服节点
-		client = JsonRpcClient.of("http://192.168.1.206:18332", headers);
+		client = HttpJsonRpc.of("http://192.168.1.206:18332", headers);
 		service = new BitcoinServiceImpl(new BitcoinProperties()
 				// 广播交易
 				.setBroadcastTransaction((raw, endpoints) -> {
@@ -167,7 +167,7 @@ public class Transfer {
 				.setEndpoints(BitcoinEndpoints.TEST));
 	}
 
-	public static List<Unspent> listUnspent(JsonRpcClient client, String address) {
+	public static List<Unspent> listUnspent(HttpJsonRpc client, String address) {
 		try {
 			List<Map<String, Object>> list = client.invoke("listunspent", List.class, 6, 9999999,
 					new String[] { address });
@@ -353,11 +353,11 @@ public class Transfer {
 
 		// 可通过 向 moneyqMan7uh8FqdCA2BV5yZ8qVrc9ikLP 转入 btc 来获取 omni 测试币
 		// 没找到 Omni 的测试网接口, 所以使用 rpc 查询
-		System.out.println(
-				"a1 OMNI 余额: " + client.invokeObj("omni_getbalance", a1, Convert.toInt(OmniContract.OMNI.getHash())));
+		System.out.println("a1 OMNI 余额: "
+				+ client.invoke("omni_getbalance", String.class, a1, Convert.toInt(OmniContract.OMNI.getHash())));
 
-		System.out.println(
-				"a5 OMNI 余额: " + client.invokeObj("omni_getbalance", a5, Convert.toInt(OmniContract.OMNI.getHash())));
+		System.out.println("a5 OMNI 余额: "
+				+ client.invoke("omni_getbalance", String.class, a5, Convert.toInt(OmniContract.OMNI.getHash())));
 
 		BigDecimal value = new BigDecimal("0.01");
 		System.out.println("a1 向 a5 转 " + value.toPlainString() + " OMNI");
@@ -369,8 +369,8 @@ public class Transfer {
 		else {
 			System.out.println("转账成功");
 			System.out.println(transfer.getHash());
-			System.out.println(client.invokeObj("omni_gettransaction", transfer.getHash()));
-			System.out.println(client.invokeObj("omni_gettrade", transfer.getHash()));
+			System.out.println(client.invoke("omni_gettransaction", String.class, transfer.getHash()));
+			System.out.println(client.invoke("omni_gettrade", String.class, transfer.getHash()));
 		}
 	}
 
