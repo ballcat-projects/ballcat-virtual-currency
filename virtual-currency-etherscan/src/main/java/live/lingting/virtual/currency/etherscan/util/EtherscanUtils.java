@@ -1,5 +1,7 @@
 package live.lingting.virtual.currency.etherscan.util;
 
+import static org.web3j.crypto.Keys.ADDRESS_LENGTH_IN_HEX;
+
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.StrUtil;
 import java.math.BigInteger;
@@ -41,7 +43,8 @@ public class EtherscanUtils {
 			String[] array = dataToArray(AbiMethod.SEND_MULTI_SIG_TOKEN, input.getData());
 			input.setTo(array[0]);
 			input.setValue(new BigInteger(array[1], 16));
-			String address = START + AbiUtils.removePreZero(array[2]);
+
+			String address = decodeAddressParam(array[2]);
 			input.setContract(EtherscanContract.getByHash(address));
 			input.setContractAddress(address);
 		});
@@ -180,6 +183,16 @@ public class EtherscanUtils {
 	 */
 	public static String keyDeserialization(BigInteger key) {
 		return key.toString(16);
+	}
+
+	public static String decodeAddressParam(String param) {
+		String address = AbiUtils.removePreZero(param);
+		// 保证长度
+		if (address.length() < ADDRESS_LENGTH_IN_HEX) {
+			address = StrUtil.padPre(address, ADDRESS_LENGTH_IN_HEX, "0");
+		}
+
+		return START + address;
 	}
 
 }
