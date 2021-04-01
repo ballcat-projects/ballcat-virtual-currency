@@ -35,6 +35,10 @@ public enum AbiMethod {
 	 * 转账 transferFrom(address _from, address _to, uint256 _value)
 	 */
 	TRANSFER_FROM("23b872dd"),
+	/**
+	 * 清扫 sweep(address _token, uint256 _amount) ***
+	 */
+	SWEEP("6ea056a9"),
 
 	;
 

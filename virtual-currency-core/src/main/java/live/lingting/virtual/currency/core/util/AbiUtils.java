@@ -2,12 +2,15 @@ package live.lingting.virtual.currency.core.util;
 
 import cn.hutool.core.util.StrUtil;
 import java.math.BigInteger;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import org.bouncycastle.util.encoders.Hex;
 import live.lingting.virtual.currency.core.Contract;
 
 /**
  * @author lingting 2020/12/25 22:07
  */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class AbiUtils {
 
 	public static final String REMOVE_ZERO_REG_STR = "^(0+)";
@@ -19,6 +22,17 @@ public class AbiUtils {
 	 */
 	public static String[] stringToArrayBy64(String str) {
 		return StrUtil.cut(str, 64);
+	}
+
+	/**
+	 * 字符串 移除前缀后 以 64 长度分割
+	 * @author lingting 2021-04-01 15:49
+	 */
+	public static String[] stringToArrayBy64(String prefix, String str) {
+		if (str.startsWith(prefix)) {
+			str = str.substring(prefix.length());
+		}
+		return stringToArrayBy64(str);
 	}
 
 	/**

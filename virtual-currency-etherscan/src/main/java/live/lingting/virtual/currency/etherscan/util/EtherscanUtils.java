@@ -26,27 +26,19 @@ public class EtherscanUtils {
 
 	public static final String START = "0x";
 
-	public static final Map<String, Consumer<Input>> METHOD_HANDLER;
+	private static final Map<String, Consumer<Input>> METHOD_HANDLER;
 
 	static {
 		// 合约函数数据解析方法
 		METHOD_HANDLER = new ConcurrentHashMap<>(AbiMethod.values().length);
 		METHOD_HANDLER.put(AbiMethod.TRANSFER.getMethodId(), input -> {
-			String str = input.getData();
-			if (str.startsWith(START + AbiMethod.TRANSFER.getMethodId())) {
-				str = str.substring((START + AbiMethod.TRANSFER.getMethodId()).length());
-			}
-			String[] array = AbiUtils.stringToArrayBy64(str);
+			String[] array = dataToArray(AbiMethod.TRANSFER, input.getData());
 			input.setTo(array[0]);
 			input.setValue(new BigInteger(array[1], 16));
 		});
 
 		METHOD_HANDLER.put(AbiMethod.SEND_MULTI_SIG_TOKEN.getMethodId(), input -> {
-			String str = input.getData();
-			if (str.startsWith(START + AbiMethod.SEND_MULTI_SIG_TOKEN.getMethodId())) {
-				str = str.substring((START + AbiMethod.SEND_MULTI_SIG_TOKEN.getMethodId()).length());
-			}
-			String[] array = AbiUtils.stringToArrayBy64(str);
+			String[] array = dataToArray(AbiMethod.SEND_MULTI_SIG_TOKEN, input.getData());
 			input.setTo(array[0]);
 			input.setValue(new BigInteger(array[1], 16));
 			String address = START + AbiUtils.removePreZero(array[2]);
@@ -55,25 +47,25 @@ public class EtherscanUtils {
 		});
 
 		METHOD_HANDLER.put(AbiMethod.SEND_MULTI_SIG.getMethodId(), input -> {
-			String str = input.getData();
-			if (str.startsWith(START + AbiMethod.SEND_MULTI_SIG.getMethodId())) {
-				str = str.substring((START + AbiMethod.SEND_MULTI_SIG.getMethodId()).length());
-			}
-			String[] array = AbiUtils.stringToArrayBy64(str);
+			String[] array = dataToArray(AbiMethod.SEND_MULTI_SIG, input.getData());
 			input.setTo(array[0]);
 			input.setValue(new BigInteger(array[1], 16));
 		});
 
 		METHOD_HANDLER.put(AbiMethod.TRANSFER_FROM.getMethodId(), input -> {
-			String str = input.getData();
-			if (str.startsWith(START + AbiMethod.TRANSFER_FROM.getMethodId())) {
-				str = str.substring((START + AbiMethod.TRANSFER_FROM.getMethodId()).length());
-			}
-			String[] array = AbiUtils.stringToArrayBy64(str);
+			String[] array = dataToArray(AbiMethod.TRANSFER_FROM, input.getData());
 			input.setFrom(array[0]);
 			input.setTo(array[1]);
 			input.setValue(new BigInteger(array[2], 16));
 		});
+	}
+
+	/**
+	 * input.getData() -> array
+	 * @author lingting 2021-04-01 15:52
+	 */
+	private static String[] dataToArray(AbiMethod method, String data) {
+		return AbiUtils.stringToArrayBy64(START + method.getMethodId(), data);
 	}
 
 	/**
