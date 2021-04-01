@@ -15,6 +15,6 @@ public interface JsonRpc {
 	 * @return T
 	 * @author lingting 2021-03-31 16:18
 	 */
-	<T> T invoke(String method, Class<T> t, Object... args);
+	<T> T invoke(String method, Class<T> t, Object... args) throws JsonRpcException;
 
 }

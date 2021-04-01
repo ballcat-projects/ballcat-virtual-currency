@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import live.lingting.virtual.currency.core.jsonrpc.JsonRpcException;
 import live.lingting.virtual.currency.core.jsonrpc.http.HttpJsonRpc;
 
 /**
@@ -58,7 +59,7 @@ public class TransactionByHash extends BaseResponse {
 	@JsonProperty("value")
 	private String value;
 
-	public static TransactionByHash of(HttpJsonRpc client, String hash) throws Throwable {
+	public static TransactionByHash of(HttpJsonRpc client, String hash) throws JsonRpcException {
 		return client.invoke("eth_getTransactionByHash", TransactionByHash.class, hash);
 	}
 

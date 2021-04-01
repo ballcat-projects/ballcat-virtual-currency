@@ -10,6 +10,7 @@ import java.util.function.Consumer;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import live.lingting.virtual.currency.core.jsonrpc.JsonRpc;
+import live.lingting.virtual.currency.core.jsonrpc.JsonRpcException;
 import live.lingting.virtual.currency.core.jsonrpc.http.model.JsonRpcRequest;
 import live.lingting.virtual.currency.core.jsonrpc.http.model.JsonRpcResponse;
 import live.lingting.virtual.currency.core.util.JacksonUtils;
@@ -61,7 +62,7 @@ public class HttpJsonRpc implements JsonRpc {
 	}
 
 	@Override
-	public <T> T invoke(String method, Class<T> t, Object... args) {
+	public <T> T invoke(String method, Class<T> t, Object... args) throws JsonRpcException {
 		return invoke(method, t, Collections.emptyMap(), args);
 	}
 
@@ -73,11 +74,13 @@ public class HttpJsonRpc implements JsonRpc {
 	 * @param extHeaders 额外的请求头
 	 * @param args 参数
 	 * @return T
+	 * @exception JsonRpcException json rpc 请求处理异常
 	 * @author lingting 2021-03-31 16:39
 	 */
 	@SneakyThrows
 	@SuppressWarnings("unchecked")
-	public <T> T invoke(String method, Class<T> t, Map<String, String> extHeaders, Object... args) {
+	public <T> T invoke(String method, Class<T> t, Map<String, String> extHeaders, Object... args)
+			throws JsonRpcException {
 		HttpRequest post = HttpRequest.post(url)
 				// json rpc type
 				.contentType(CONTENT_TYPE)
@@ -92,6 +95,10 @@ public class HttpJsonRpc implements JsonRpc {
 
 		// 解析返回值
 		JsonRpcResponse response = JacksonUtils.toObj(json, JsonRpcResponse.class);
+
+		if (response.getError() != null) {
+			throw new JsonRpcException(response.getError());
+		}
 
 		if (response.getResult() == null) {
 			return null;

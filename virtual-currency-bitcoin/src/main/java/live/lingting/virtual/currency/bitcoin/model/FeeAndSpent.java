@@ -39,7 +39,7 @@ public class FeeAndSpent {
 	private Boolean zero = false;
 
 	public static FeeAndSpent of(BitcoinServiceImpl service, Contract contract, TransferParams params,
-			List<Unspent> unspentList, Coin amount, BigInteger min) throws Throwable {
+			List<Unspent> unspentList, Coin amount, BigInteger min) throws Exception {
 		// 记录本次转账使用的 spent
 		List<Unspent> useList = new ArrayList<>();
 		// 转出数量

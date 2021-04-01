@@ -67,7 +67,7 @@ public class TronscanServiceImpl implements PlatformService<TronscanTransactionG
 	}
 
 	@Override
-	public Optional<TransactionInfo> getTransactionByHash(String hash) throws Throwable {
+	public Optional<TransactionInfo> getTransactionByHash(String hash) throws Exception {
 		Transaction transaction = Transaction.of(properties, hash);
 
 		// 没有返回txId 表示此交易未被确认 或 不存在
@@ -242,7 +242,7 @@ public class TronscanServiceImpl implements PlatformService<TronscanTransactionG
 
 	@Override
 	public TronscanTransactionGenerate transactionGenerate(Account from, String to, Contract contract, BigDecimal value,
-			TransferParams params) throws Throwable {
+			TransferParams params) throws Exception {
 		if (value.compareTo(BigDecimal.ZERO) <= 0) {
 			return TronscanTransactionGenerate.failed("转账金额必须大于0!");
 		}
@@ -310,7 +310,7 @@ public class TronscanServiceImpl implements PlatformService<TronscanTransactionG
 	}
 
 	@Override
-	public TronscanTransactionGenerate transactionSign(TronscanTransactionGenerate generate) throws Throwable {
+	public TronscanTransactionGenerate transactionSign(TronscanTransactionGenerate generate) throws Exception {
 		// 如果上一步失败则直接返回
 		if (!generate.getSuccess()) {
 			return generate;
@@ -327,7 +327,7 @@ public class TronscanServiceImpl implements PlatformService<TronscanTransactionG
 	}
 
 	@Override
-	public TransferResult transactionBroadcast(TronscanTransactionGenerate generate) throws Throwable {
+	public TransferResult transactionBroadcast(TronscanTransactionGenerate generate) throws Exception {
 		// 如果上一步失败则直接返回
 		if (!generate.getSuccess()) {
 			return TransferResult.failed(generate);

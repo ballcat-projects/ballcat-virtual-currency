@@ -21,6 +21,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import lombok.Getter;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
@@ -28,6 +29,7 @@ import org.bitcoinj.core.Context;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Sha256Hash;
+import org.bitcoinj.core.SignatureDecodeException;
 import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutPoint;
@@ -103,11 +105,9 @@ public class BitcoinServiceImpl implements PlatformService<BitcoinTransactionGen
 
 	private final BlockchainEndpoints blockchainEndpoints;
 
-	private final OmniEndpoints omniEndpoints = OmniEndpoints.MAINNET;
+	private static final OmniEndpoints OMNI_ENDPOINTS = OmniEndpoints.MAINNET;
 
 	private final BitcoinCypherEndpoints cypherEndpoints;
-
-	private final BitcoinSochainEndpoints sochainEndpoints;
 
 	public BitcoinServiceImpl(BitcoinProperties properties) {
 		this.properties = properties;
@@ -116,18 +116,16 @@ public class BitcoinServiceImpl implements PlatformService<BitcoinTransactionGen
 		if (properties.getEndpoints() == BitcoinEndpoints.MAINNET) {
 			blockchainEndpoints = BlockchainEndpoints.MAINNET;
 			cypherEndpoints = BitcoinCypherEndpoints.MAINNET;
-			sochainEndpoints = BitcoinSochainEndpoints.MAINNET;
 		}
 		else {
 			blockchainEndpoints = BlockchainEndpoints.TEST;
 			cypherEndpoints = BitcoinCypherEndpoints.TEST;
-			sochainEndpoints = BitcoinSochainEndpoints.TEST;
 		}
 
 	}
 
 	@Override
-	public Optional<TransactionInfo> getTransactionByHash(String hash) throws Throwable {
+	public Optional<TransactionInfo> getTransactionByHash(String hash) throws Exception {
 		RawTransaction rawTransaction = RawTransaction.of(blockchainEndpoints, hash);
 
 		if (rawTransaction == null || StrUtil.isBlank(rawTransaction.getHash())
@@ -166,7 +164,7 @@ public class BitcoinServiceImpl implements PlatformService<BitcoinTransactionGen
 			return btcTransactionHandler(sumOut, outInfos, rawTransaction);
 		}
 
-		TransactionByHash response = request(STATIC_TRANSACTION_HASH, omniEndpoints, hash);
+		TransactionByHash response = request(STATIC_TRANSACTION_HASH, OMNI_ENDPOINTS, hash);
 		// 交易查询不到 或者 valid 为 false
 		if (response.getAmount() == null || !response.getValid()) {
 			return Optional.empty();
@@ -212,7 +210,7 @@ public class BitcoinServiceImpl implements PlatformService<BitcoinTransactionGen
 			return CONTRACT_DECIMAL_CACHE.get(contract.getHash());
 		}
 
-		TokenHistory history = request(STATIC_TOKEN_HISTORY, omniEndpoints, contract.getHash());
+		TokenHistory history = request(STATIC_TOKEN_HISTORY, OMNI_ENDPOINTS, contract.getHash());
 		int decimals = getDecimalsByString(history.getTransactions().get(0).getAmount());
 		CONTRACT_DECIMAL_CACHE.put(contract.getHash(), decimals);
 		return decimals;
@@ -227,7 +225,7 @@ public class BitcoinServiceImpl implements PlatformService<BitcoinTransactionGen
 			}
 			return balance.getFinalBalance();
 		}
-		Balances balances = request(STATIC_BALANCES, omniEndpoints, address);
+		Balances balances = request(STATIC_BALANCES, OMNI_ENDPOINTS, address);
 		if (CollectionUtil.isEmpty(balances.getBalance())) {
 			return BigInteger.ZERO;
 		}
@@ -260,7 +258,7 @@ public class BitcoinServiceImpl implements PlatformService<BitcoinTransactionGen
 
 	@Override
 	public BitcoinTransactionGenerate transactionGenerate(Account from, String to, Contract contract, BigDecimal value,
-			TransferParams params) throws Throwable {
+			TransferParams params) throws Exception {
 		if (value.compareTo(BigDecimal.ZERO) <= 0) {
 			return BitcoinTransactionGenerate.failed("转账金额必须大于0!");
 		}
@@ -309,7 +307,8 @@ public class BitcoinServiceImpl implements PlatformService<BitcoinTransactionGen
 		tx.addOutput(btcAmount, toAddress);
 
 		// 找零输出
-		if (fs.getZero()) {
+		boolean zero = fs.getZero();
+		if (zero) {
 			tx.addOutput(
 					// 找零 = 输出数量 - 总手续费 - 转账数量
 					fs.getOutNumber().subtract(fs.getFee()).subtract(btcAmount),
@@ -350,9 +349,11 @@ public class BitcoinServiceImpl implements PlatformService<BitcoinTransactionGen
 	}
 
 	@Override
-	public BitcoinTransactionGenerate transactionSign(BitcoinTransactionGenerate generate) throws Throwable {
+	public BitcoinTransactionGenerate transactionSign(BitcoinTransactionGenerate generate)
+			throws SignatureDecodeException {
 		// 如果上一步失败则直接返回
-		if (!generate.getSuccess()) {
+		boolean error = !generate.getSuccess();
+		if (error) {
 			return generate;
 		}
 		org.bitcoinj.core.Transaction tx = generate.getBitcoin().getTransaction();
@@ -465,13 +466,14 @@ public class BitcoinServiceImpl implements PlatformService<BitcoinTransactionGen
 	}
 
 	@Override
-	public TransferResult transactionBroadcast(BitcoinTransactionGenerate generate) throws Throwable {
+	public TransferResult transactionBroadcast(BitcoinTransactionGenerate generate) throws Exception {
 		// 如果上一步失败则直接返回
-		if (!generate.getSuccess()) {
+		boolean error = !generate.getSuccess();
+		if (error) {
 			return TransferResult.failed(generate);
 		}
 		// 广播交易, 返回 交易hash
-		PushTx pushTx = properties.getBroadcastTransaction().apply(generate.getSignHex(), omniEndpoints);
+		PushTx pushTx = properties.getBroadcastTransaction().apply(generate.getSignHex(), OMNI_ENDPOINTS);
 		if (!pushTx.isSuccess()) {
 			if (pushTx.getE() != null) {
 				return TransferResult.failed(pushTx.getE());
@@ -481,8 +483,9 @@ public class BitcoinServiceImpl implements PlatformService<BitcoinTransactionGen
 		return TransferResult.success(pushTx.getTxId());
 	}
 
+	@SneakyThrows
 	@Override
-	public boolean validate(String address) throws JsonProcessingException {
+	public boolean validate(String address) {
 		Balance balance = Balance.of(cypherEndpoints, address);
 		return StrUtil.isBlank(balance.getError());
 	}
@@ -515,7 +518,8 @@ public class BitcoinServiceImpl implements PlatformService<BitcoinTransactionGen
 	 */
 	private <T> T request(Domain<T> domain, Endpoints endpoints, Object params) throws JsonProcessingException {
 		// 获取锁
-		if (properties.getLock().get()) {
+		boolean lock = properties.getLock().get();
+		if (lock) {
 			try {
 				// 执行请求方法
 				return domain.of(endpoints, params);
@@ -534,7 +538,7 @@ public class BitcoinServiceImpl implements PlatformService<BitcoinTransactionGen
 	 * 解析原始交易数据, 返回结果
 	 * @author lingting 2021-01-10 19:00
 	 */
-	private Optional<TransactionInfo> btcTransactionHandler(RawTransaction rawTransaction) throws Throwable {
+	private Optional<TransactionInfo> btcTransactionHandler(RawTransaction rawTransaction) throws Exception {
 		// 总输出数量
 		BigInteger sumOut = BigInteger.ZERO;
 		// 输出详情
@@ -549,7 +553,7 @@ public class BitcoinServiceImpl implements PlatformService<BitcoinTransactionGen
 	}
 
 	private Optional<TransactionInfo> btcTransactionHandler(BigInteger sumOut, Map<String, BigDecimal> outInfos,
-			RawTransaction rawTransaction) throws Throwable {
+			RawTransaction rawTransaction) throws Exception {
 		// 总输入数量
 		BigInteger sumIn = BigInteger.ZERO;
 		// 输入详情
@@ -598,7 +602,7 @@ public class BitcoinServiceImpl implements PlatformService<BitcoinTransactionGen
 	 * @author lingting 2021-01-10 19:31
 	 */
 	private BigInteger statisticsDetails(BigInteger sumIn, Map<String, BigDecimal> inInfos, RawTransaction.Out out)
-			throws Throwable {
+			throws Exception {
 		// 统计输入数量
 		sumIn = sumIn.add(out.getValue());
 		// 存在统计详情

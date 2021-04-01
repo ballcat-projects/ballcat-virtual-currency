@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import live.lingting.virtual.currency.core.jsonrpc.JsonRpcException;
 import live.lingting.virtual.currency.core.jsonrpc.http.HttpJsonRpc;
 
 /**
@@ -52,7 +53,7 @@ public class TransactionReceipt extends BaseResponse {
 	@JsonProperty("logs")
 	private List<Log> logs;
 
-	public static TransactionReceipt of(HttpJsonRpc client, String hash) throws Throwable {
+	public static TransactionReceipt of(HttpJsonRpc client, String hash) throws JsonRpcException {
 		return client.invoke("eth_getTransactionReceipt", TransactionReceipt.class, hash);
 	}
 

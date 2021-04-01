@@ -25,6 +25,11 @@ public abstract class AbstractJsonRpc {
 	@JsonProperty("jsonrpc")
 	private String jsonRpc = "2.0";
 
+	/**
+	 * 错误信息
+	 */
+	private Error error;
+
 	protected AbstractJsonRpc() {
 	}
 
@@ -40,6 +45,16 @@ public abstract class AbstractJsonRpc {
 	@Override
 	public String toString() {
 		return JacksonUtils.toJson(this);
+	}
+
+	@Getter
+	@Setter
+	public static class Error {
+
+		private Long code;
+
+		private String message;
+
 	}
 
 }
