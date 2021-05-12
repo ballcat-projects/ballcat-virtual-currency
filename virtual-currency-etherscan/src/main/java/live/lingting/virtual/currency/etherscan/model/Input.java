@@ -1,6 +1,5 @@
 package live.lingting.virtual.currency.etherscan.model;
 
-import static live.lingting.virtual.currency.core.util.AbiUtils.removePreZero;
 import static live.lingting.virtual.currency.etherscan.util.EtherscanUtils.START;
 
 import java.math.BigInteger;
@@ -8,6 +7,7 @@ import lombok.Data;
 import lombok.experimental.Accessors;
 import live.lingting.virtual.currency.core.enums.AbiMethod;
 import live.lingting.virtual.currency.etherscan.contract.EtherscanContract;
+import live.lingting.virtual.currency.etherscan.util.EtherscanUtils;
 
 /**
  * @author lingting 2020-09-02 14:20
@@ -56,7 +56,7 @@ public class Input {
 			this.to = to;
 		}
 		else {
-			this.to = START + removePreZero(to);
+			this.to = EtherscanUtils.decodeAddressParam(to);
 		}
 		return this;
 	}
@@ -66,7 +66,7 @@ public class Input {
 			this.from = from;
 		}
 		else {
-			this.from = START + removePreZero(from);
+			this.from = EtherscanUtils.decodeAddressParam(to);
 		}
 		return this;
 	}

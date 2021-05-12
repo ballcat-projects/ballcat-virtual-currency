@@ -29,7 +29,9 @@ public enum EtherscanEndpoints implements Endpoints {
 	/*
 	 * 下面这个节点实际名称 GÖRLI, 由于该名称存在非ascii字符，改名
 	 */
-	GOERLI("https://goerli.infura.io/v3/", ""),;
+	GOERLI("https://goerli.infura.io/v3/", ""),
+
+	;
 
 	private final String http;
 

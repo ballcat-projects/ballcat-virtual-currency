@@ -14,13 +14,9 @@
     <dependencies>
         <dependency>
             <groupId>live.lingting</groupId>
-            <artifactId>virtual-currency-core</artifactId>
+            <artifactId>virtual-currency-tronscan-sdk</artifactId>
             <version>${revision}</version>
         </dependency>
 
-        <dependency>
-            <groupId>org.tron.tronj</groupId>
-            <artifactId>utils</artifactId>
-        </dependency>
     </dependencies>
 </project>

@@ -8,8 +8,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.web3j.crypto.RawTransaction;
-import live.lingting.virtual.currency.core.model.Account;
 import live.lingting.virtual.currency.core.Contract;
+import live.lingting.virtual.currency.core.model.Account;
 import live.lingting.virtual.currency.core.model.TransactionGenerate;
 
 /**

@@ -1,4 +1,4 @@
-package live.lingting.virtual.currency.bitcoin.model.cupher;
+package live.lingting.virtual.currency.bitcoin.model.cypher;
 
 import cn.hutool.http.HttpRequest;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -8,7 +8,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 import live.lingting.virtual.currency.bitcoin.endpoints.BitcoinCypherEndpoints;
-import live.lingting.virtual.currency.core.Endpoints;
 import live.lingting.virtual.currency.core.util.JacksonUtils;
 
 /**
@@ -48,9 +47,8 @@ public class Balance {
 	@JsonProperty("final_n_tx")
 	private BigInteger finalNumberTx;
 
-	public static Balance of(Endpoints endpoints, String address) throws JsonProcessingException {
-		HttpRequest request = HttpRequest
-				.get(BitcoinCypherEndpoints.of(endpoints).getHttpUrl("addrs/" + address + "/balance"));
+	public static Balance of(BitcoinCypherEndpoints endpoints, String address) throws JsonProcessingException {
+		HttpRequest request = HttpRequest.get(endpoints.getHttpUrl("addrs/" + address + "/balance"));
 		String response = request.execute().body();
 		return JacksonUtils.toObj(response, Balance.class);
 	}

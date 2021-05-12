@@ -160,6 +160,10 @@ public class Bip32 {
 		return getKey().serializePubB58(np);
 	}
 
+	public String getExtPublic(NetworkParameters np) {
+		return getExtPublicKey(np);
+	}
+
 	/**
 	 * 获取当前bip的扩展私钥 - 可以用于生成子公钥和子私钥
 	 * @param np 环境

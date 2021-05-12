@@ -5,7 +5,8 @@ import java.util.List;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import live.lingting.virtual.currency.core.JsonRpcClient;
+import live.lingting.virtual.currency.core.jsonrpc.JsonRpcException;
+import live.lingting.virtual.currency.core.jsonrpc.http.HttpJsonRpc;
 
 /**
  * 拥有块中的所有交易详细数据
@@ -77,7 +78,7 @@ public class BlockAndTransaction extends BaseResponse {
 	@JsonProperty("uncles")
 	private List<Object> uncles;
 
-	public static BlockAndTransaction of(JsonRpcClient client, String hash) throws Throwable {
+	public static BlockAndTransaction of(HttpJsonRpc client, String hash) throws JsonRpcException {
 		return client.invoke("eth_getBlockByHash", BlockAndTransaction.class, hash, true);
 	}
 

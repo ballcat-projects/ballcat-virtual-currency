@@ -28,11 +28,4 @@ public enum BitcoinCypherEndpoints implements Endpoints {
 
 	private final String desc;
 
-	public static BitcoinCypherEndpoints of(Endpoints endpoints) {
-		if (endpoints == BitcoinEndpoints.MAINNET) {
-			return MAINNET;
-		}
-		return TEST;
-	}
-
 }

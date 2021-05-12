@@ -1,6 +1,5 @@
 package live.lingting.virtual.currency.tronscan.model;
 
-import cn.hutool.http.HttpRequest;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -10,8 +9,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import live.lingting.virtual.currency.tronscan.properties.TronscanProperties;
-import live.lingting.virtual.currency.core.util.JacksonUtils;
-import live.lingting.virtual.currency.tronscan.properties.TronscanProperties;
 import live.lingting.virtual.currency.tronscan.util.TronscanModelUtils;
 
 /**
@@ -20,11 +17,6 @@ import live.lingting.virtual.currency.tronscan.util.TronscanModelUtils;
 @NoArgsConstructor
 @Data
 public class NodeInfo {
-
-	@SneakyThrows
-	public static NodeInfo of(TronscanProperties properties) {
-		return TronscanModelUtils.get(properties, "wallet/getnodeinfo", NodeInfo.class);
-	}
 
 	@JsonProperty("activeConnectCount")
 	private Long activeConnectCount;
@@ -58,6 +50,11 @@ public class NodeInfo {
 
 	@JsonProperty("totalFlow")
 	private Long totalFlow;
+
+	@SneakyThrows
+	public static NodeInfo of(TronscanProperties properties) {
+		return TronscanModelUtils.get(properties, "wallet/getnodeinfo", NodeInfo.class);
+	}
 
 	@NoArgsConstructor
 	@Data

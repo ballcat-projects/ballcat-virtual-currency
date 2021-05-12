@@ -7,6 +7,8 @@ import java.util.List;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 import live.lingting.virtual.currency.bitcoin.endpoints.BitcoinEndpoints;
+import live.lingting.virtual.currency.bitcoin.endpoints.BitcoinSochainEndpoints;
+import live.lingting.virtual.currency.bitcoin.endpoints.BlockchainEndpoints;
 import live.lingting.virtual.currency.bitcoin.model.blockchain.BlockchainUnspentRes;
 import live.lingting.virtual.currency.bitcoin.model.sochain.SochainUnspentRes;
 import live.lingting.virtual.currency.core.Endpoints;
@@ -21,20 +23,25 @@ public abstract class UnspentRes {
 
 	/**
 	 * 获取指定地址未使用utxo
-	 * @param endpoints 节点
+	 * @param bitcoinEndpoints 节点
 	 * @param min 最小确认数, 部分节点, 此参数无效
 	 * @param address 地址
 	 * @return live.lingting.virtual.currency.bitcoin.model.UnspentRes
 	 * @author lingting 2021-01-08 18:40
 	 */
-	public static UnspentRes of(Endpoints endpoints, int min, String address) throws JsonProcessingException {
-		boolean isSochain = endpoints.getHttp().contains("sochain.com");
+	public static UnspentRes of(BitcoinEndpoints bitcoinEndpoints, int min, String address)
+			throws JsonProcessingException {
+		// 测试节点使用 sochain
+		boolean isSochain = bitcoinEndpoints == BitcoinEndpoints.TEST;
+
+		Endpoints endpoints = !isSochain ? BlockchainEndpoints.MAINNET : BitcoinSochainEndpoints.TEST;
+
 		HttpRequest request;
 		// sochain 节点处理
 		if (isSochain) {
 			request = HttpRequest.get(endpoints.getHttpUrl("v2/get_tx_unspent/"
-					// 网络
-					+ (endpoints == BitcoinEndpoints.SOCHAIN_MAINNET ? "BTC/" : "BTCTEST/")
+					// 网络 BTC
+					+ ("BTCTEST/")
 					// 地址
 					+ address
 

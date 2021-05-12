@@ -5,8 +5,8 @@ import java.util.Map;
 import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.experimental.Accessors;
-import live.lingting.virtual.currency.core.JsonRpcClient;
 import live.lingting.virtual.currency.core.Endpoints;
+import live.lingting.virtual.currency.core.jsonrpc.http.HttpJsonRpc;
 
 /**
  * infura平台配置
@@ -48,12 +48,12 @@ public class EtherscanProperties {
 	private Map<String, String> headers;
 
 	@SneakyThrows
-	public JsonRpcClient getHttpClient() {
+	public HttpJsonRpc getHttpClient() {
 		// 是否自定义 web3j url
 		if (StrUtil.isNotBlank(url)) {
-			return JsonRpcClient.of(url, headers);
+			return HttpJsonRpc.of(url, headers);
 		}
-		return JsonRpcClient.of(getEndpoints().getHttpUrl(getProjectId()));
+		return HttpJsonRpc.of(getEndpoints().getHttpUrl(getProjectId()));
 	}
 
 }

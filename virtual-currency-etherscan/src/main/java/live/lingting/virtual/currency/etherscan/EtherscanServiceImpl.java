@@ -30,15 +30,17 @@ import org.web3j.crypto.Keys;
 import org.web3j.crypto.RawTransaction;
 import org.web3j.crypto.TransactionEncoder;
 import org.web3j.utils.Numeric;
-import live.lingting.virtual.currency.core.model.Account;
-import live.lingting.virtual.currency.core.JsonRpcClient;
 import live.lingting.virtual.currency.core.Contract;
+import live.lingting.virtual.currency.core.PlatformService;
 import live.lingting.virtual.currency.core.enums.TransactionStatus;
 import live.lingting.virtual.currency.core.enums.VirtualCurrencyPlatform;
+import live.lingting.virtual.currency.core.exception.AbiMethodNotSupportException;
+import live.lingting.virtual.currency.core.jsonrpc.JsonRpcException;
+import live.lingting.virtual.currency.core.jsonrpc.http.HttpJsonRpc;
+import live.lingting.virtual.currency.core.model.Account;
 import live.lingting.virtual.currency.core.model.TransactionInfo;
 import live.lingting.virtual.currency.core.model.TransferParams;
 import live.lingting.virtual.currency.core.model.TransferResult;
-import live.lingting.virtual.currency.core.PlatformService;
 import live.lingting.virtual.currency.core.util.AbiUtils;
 import live.lingting.virtual.currency.etherscan.contract.EtherscanContract;
 import live.lingting.virtual.currency.etherscan.enums.EtherscanReceiptStatus;
@@ -65,7 +67,7 @@ public class EtherscanServiceImpl implements PlatformService<EtherscanTransactio
 
 	private final EtherscanProperties properties;
 
-	private final JsonRpcClient client;
+	private final HttpJsonRpc client;
 
 	public EtherscanServiceImpl(EtherscanProperties properties) {
 		this.properties = properties;
@@ -73,7 +75,8 @@ public class EtherscanServiceImpl implements PlatformService<EtherscanTransactio
 	}
 
 	@Override
-	public Optional<TransactionInfo> getTransactionByHash(String hash) throws Throwable {
+	public Optional<TransactionInfo> getTransactionByHash(String hash)
+			throws JsonRpcException, AbiMethodNotSupportException {
 		TransactionByHash byHash = TransactionByHash.of(client, hash);
 
 		// 返回值为null 或者 错误码不为null
@@ -117,7 +120,7 @@ public class EtherscanServiceImpl implements PlatformService<EtherscanTransactio
 				// 设置合约类型, input 中的优先
 				.setContract(contract)
 				// 设置金额
-				.setValue(getNumberByBalanceAndContract(input.getValue(), contract));
+				.setValue(getNumberByBalanceAndContract(input.getValue(), contract, MathContext.UNLIMITED));
 
 		// 交易不存在块
 		if (byHash.getBlockNumber() == null) {
@@ -150,7 +153,7 @@ public class EtherscanServiceImpl implements PlatformService<EtherscanTransactio
 
 	@Override
 	@SuppressWarnings("all")
-	public Integer getDecimalsByContract(Contract contract) throws Throwable {
+	public Integer getDecimalsByContract(Contract contract) throws JsonRpcException {
 		if (contract == null) {
 			return 0;
 		}
@@ -180,7 +183,7 @@ public class EtherscanServiceImpl implements PlatformService<EtherscanTransactio
 
 	@Override
 	@SuppressWarnings("all")
-	public BigInteger getBalanceByAddressAndContract(String address, Contract contract) throws Throwable {
+	public BigInteger getBalanceByAddressAndContract(String address, Contract contract) throws JsonRpcException {
 		if (contract == EtherscanContract.ETH) {
 			return EtherscanUtils
 					.toBigInteger(client.invoke("eth_getBalance", String.class, address, BlockEnum.LATEST.getVal()));
@@ -198,7 +201,7 @@ public class EtherscanServiceImpl implements PlatformService<EtherscanTransactio
 
 	@Override
 	public BigDecimal getNumberByBalanceAndContract(BigInteger balance, Contract contract, MathContext mathContext)
-			throws Throwable {
+			throws JsonRpcException {
 		// 合约为null 返回原值
 		if (contract == null) {
 			return new BigDecimal(balance);
@@ -212,7 +215,7 @@ public class EtherscanServiceImpl implements PlatformService<EtherscanTransactio
 
 	@Override
 	public EtherscanTransactionGenerate transactionGenerate(Account from, String to, Contract contract,
-			BigDecimal value, TransferParams params) throws Throwable {
+			BigDecimal value, TransferParams params) throws Exception {
 		if (value.compareTo(BigDecimal.ZERO) <= 0) {
 			return EtherscanTransactionGenerate.failed("转账金额必须大于0!");
 		}
@@ -257,9 +260,10 @@ public class EtherscanServiceImpl implements PlatformService<EtherscanTransactio
 	}
 
 	@Override
-	public EtherscanTransactionGenerate transactionSign(EtherscanTransactionGenerate generate) throws Throwable {
+	public EtherscanTransactionGenerate transactionSign(EtherscanTransactionGenerate generate) {
 		// 如果上一步失败则直接返回
-		if (!generate.getSuccess()) {
+		boolean error = !generate.getSuccess();
+		if (error) {
 			return generate;
 		}
 		Credentials credentials = Credentials.create(generate.getFrom().getPrivateKey(),
@@ -275,19 +279,20 @@ public class EtherscanServiceImpl implements PlatformService<EtherscanTransactio
 	}
 
 	@Override
-	public TransferResult transactionBroadcast(EtherscanTransactionGenerate generate) throws Throwable {
+	public TransferResult transactionBroadcast(EtherscanTransactionGenerate generate) throws JsonRpcException {
 		// 如果上一步失败则直接返回
-		if (!generate.getSuccess()) {
-			return TransferResult.failed(generate);
-		}
-		// 广播交易
-		String hash = client.invoke("eth_sendRawTransaction", String.class, generate.getSignHex());
+		boolean error = !generate.getSuccess();
+		if (error) {
+			// 广播交易
+			String hash = client.invoke("eth_sendRawTransaction", String.class, generate.getSignHex());
 
-		return TransferResult.success(hash);
+			return TransferResult.success(hash);
+		}
+		return TransferResult.failed(generate);
 	}
 
 	@Override
-	public boolean validate(String address) throws Throwable {
+	public boolean validate(String address) {
 		Balance of = Balance.of(client, address);
 		return of.getAmount() != null;
 	}
@@ -304,13 +309,13 @@ public class EtherscanServiceImpl implements PlatformService<EtherscanTransactio
 	 */
 	@SuppressWarnings("all")
 	private List<Type> ethCall(String method, List<Type> input, List<TypeReference<?>> out, String from, String to)
-			throws Throwable {
+			throws JsonRpcException {
 		return ethCall(method, input, out, from, to, BlockEnum.LATEST.getVal());
 	}
 
 	@SuppressWarnings("all")
 	private List<Type> ethCall(String method, List<Type> input, List<TypeReference<?>> out, String from, String to,
-			String block) throws Throwable {
+			String block) throws JsonRpcException {
 		Assert.notNull(input);
 		Assert.notNull(out);
 		// 编译方法

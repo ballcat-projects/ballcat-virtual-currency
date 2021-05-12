@@ -12,29 +12,21 @@ import java.util.List;
 import java.util.Map;
 import lombok.SneakyThrows;
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.ECKey;
-import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.core.NetworkParameters;
-import org.bitcoinj.core.SegwitAddress;
-import org.bitcoinj.core.Sha256Hash;
-import org.bitcoinj.core.Transaction;
-import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.TestNet3Params;
-import org.bitcoinj.script.Script;
-import org.bitcoinj.script.ScriptBuilder;
-import org.bouncycastle.util.encoders.Hex;
 import org.junit.Test;
-import live.lingting.virtual.currency.bitcoin.endpoints.BitcoinEndpoints;
 import live.lingting.virtual.currency.bitcoin.contract.OmniContract;
+import live.lingting.virtual.currency.bitcoin.endpoints.BitcoinEndpoints;
 import live.lingting.virtual.currency.bitcoin.model.Unspent;
 import live.lingting.virtual.currency.bitcoin.model.UnspentRes;
 import live.lingting.virtual.currency.bitcoin.model.omni.PushTx;
 import live.lingting.virtual.currency.bitcoin.properties.BitcoinProperties;
 import live.lingting.virtual.currency.bitcoin.util.BitcoinUtils;
+import live.lingting.virtual.currency.core.jsonrpc.http.HttpJsonRpc;
 import live.lingting.virtual.currency.core.model.Account;
-import live.lingting.virtual.currency.core.JsonRpcClient;
 import live.lingting.virtual.currency.core.model.TransferParams;
 import live.lingting.virtual.currency.core.model.TransferResult;
+import live.lingting.virtual.currency.core.util.AssertUtils;
 import live.lingting.virtual.currency.core.util.JacksonUtils;
 
 /**
@@ -82,7 +74,7 @@ public class Transfer {
 
 	private static BitcoinServiceImpl service;
 
-	private static JsonRpcClient client;
+	private static HttpJsonRpc client;
 
 	/**
 	 * 配置网络环境为测试服
@@ -146,7 +138,7 @@ public class Transfer {
 		headers.put("Authorization", "Basic " + Base64.encode("omnicorerpc" + ":" + "5hMTZI9iBGFqKxsWfOUF"));
 
 		// 这里使用的同事搭建的测试服节点
-		client = JsonRpcClient.of("http://192.168.1.206:18332", headers);
+		client = HttpJsonRpc.of("http://192.168.1.206:18332", headers);
 		service = new BitcoinServiceImpl(new BitcoinProperties()
 				// 广播交易
 				.setBroadcastTransaction((raw, endpoints) -> {
@@ -172,10 +164,10 @@ public class Transfer {
 					}
 				})
 				// 比特 节点
-				.setEndpoints(BitcoinEndpoints.SOCHAIN_TEST));
+				.setEndpoints(BitcoinEndpoints.TEST));
 	}
 
-	public static List<Unspent> listUnspent(JsonRpcClient client, String address) {
+	public static List<Unspent> listUnspent(HttpJsonRpc client, String address) {
 		try {
 			List<Map<String, Object>> list = client.invoke("listunspent", List.class, 6, 9999999,
 					new String[] { address });
@@ -204,118 +196,39 @@ public class Transfer {
 	}
 
 	/**
-	 * 创建兼容性的隔离见证地址
+	 * 本测试用例的交易已经在测试链广播成功, 可通过txId查询比对数据
+	 * @author lingting 2021-03-19 16:45
 	 */
 	@Test
 	@SneakyThrows
-	public void createMultiSegwitAddress() {
-		init();
-		np = MainNetParams.get();
-		ECKey ecKey = ECKey.fromPrivate(Hex.decode(ac7.getPrivateKey()));
-		System.out.println("公钥: " + ecKey.getPublicKeyAsHex());
-		System.out.println("私钥: " + ecKey.getPrivateKeyAsHex());
-		System.out.println("私钥-WIF: " + ecKey.getPrivateKeyAsWiF(np));
-		System.out.println("私钥-WIF压缩: " + BitcoinUtils.hexToWif(np, ecKey.getPubKey(), true));
-
-		LegacyAddress legacyAddress = LegacyAddress.fromKey(np, ecKey);
-		System.out.println("普通地址: " + legacyAddress.toString());
-		SegwitAddress segwitAddress = SegwitAddress.fromKey(np, ecKey);
-		System.out.println("隔离见证地址: " + segwitAddress.toString());
-
-		System.out.println("兼容性隔离见证地址: " + BitcoinUtils.createMultiSegwitAddress(np, ecKey).getAddress());
-		System.out.println("-------------------");
-		ecKey = ECKey.fromPrivate(Hex.decode("9a9a6539856be209b8ea2adbd155c0919646d108515b60b7b13d6a79f1ae5174"));
-		System.out.println("兼容性隔离见证地址: " + BitcoinUtils.createMultiSegwitAddress(np, ecKey).getAddress());
-
-		// 测试方法有无问题
-		// https://github.com/bitcoinj/bitcoinj/pull/1987/commits/c3df32ad4e0457e9d3c3f8941eb4a0a048f087e1
-		String priWIF = "L3E6dAmEwcRNbeUnzjd6YuhMm9fDxgzVmJHXAV1gtXm5e49Dctiv";
-		System.out.println("-------------------");
-		System.out
-				.println(
-						"兼容性隔离见证地址: " + BitcoinUtils
-								.createMultiSegwitAddress(MainNetParams.get(),
-										ECKey.fromPrivate(
-												Hex.decode(BitcoinUtils.wifToHex(MainNetParams.get(), priWIF))))
-								.getAddress());
-	}
-
-	@Test
-	public void createMultiAddress() throws Throwable {
-		init();
-		client.invokeObj("omni_getallbalancesforid", 1);
-		System.out.println("----------------------------------------------");
-		System.out.println("2Mv6KiSdZhde22KsFkRMGiVVebdwupS4UX1");
-		System.out.println(client.invokeObj("omni_getbalance", "2Mv6KiSdZhde22KsFkRMGiVVebdwupS4UX1", 1));
-		System.out.println(client.invokeObj("omni_getbalance", "2Mv6KiSdZhde22KsFkRMGiVVebdwupS4UX1", 2));
-		System.out.println("----------------------------------------------");
-		System.out.println("tb1qdhgxl3vjcg9djhd30zykmz83x63nau4rtmahmd");
-		System.out.println(client.invokeObj("omni_getbalance", "tb1qdhgxl3vjcg9djhd30zykmz83x63nau4rtmahmd", 1));
-		System.out.println(client.invokeObj("omni_getbalance", "tb1qdhgxl3vjcg9djhd30zykmz83x63nau4rtmahmd", 2));
-		System.out.println("----------------------------------------------");
-		System.out.println("2Mw3TeWtsJwJ6C7WE8cpjMhS2X4cWk87NLC");
-		System.out.println(client.invokeObj("omni_getbalance", "2Mw3TeWtsJwJ6C7WE8cpjMhS2X4cWk87NLC", 1));
-		System.out.println(client.invokeObj("omni_getbalance", "2Mw3TeWtsJwJ6C7WE8cpjMhS2X4cWk87NLC", 2));
-
-		System.out.println("----------------------------------------------");
-		System.out.println("miBEA6o6nZcaLZebR1dsDv4AMHRwJk1mbi");
-		System.out.println(client.invokeObj("omni_getbalance", "miBEA6o6nZcaLZebR1dsDv4AMHRwJk1mbi", 1));
-		System.out.println(client.invokeObj("omni_getbalance", "miBEA6o6nZcaLZebR1dsDv4AMHRwJk1mbi", 2));
-
-		System.out.println("----------------------------------------------");
-		System.out.println("2N2vMRNmBiSJQtu3wv2onGPE2museEg9nLw");
-		System.out.println(client.invokeObj("omni_getbalance", "2N2vMRNmBiSJQtu3wv2onGPE2museEg9nLw", 1));
-		System.out.println(client.invokeObj("omni_getbalance", "2N2vMRNmBiSJQtu3wv2onGPE2museEg9nLw", 2));
-
-		client.invokeObj("omni_gettradehistoryforaddress", a1);
-		client.invokeObj("omni_gettrade", "6c424490ddf78903c79117aec800556d4a2daf7b7b4a936210902804fff4ab70");
-		client.invokeObj("omni_gettrade", "def1ea75c0a263c8d8fbc9a1e67a20c25f71a89cc0273ce93267d55a64d0ba93");
-		client.invokeObj("omni_gettrade", "f884404c0ebd199152b727c720e39bf4756027ced7a066f22e6d40cc46654572");
-		client.invokeObj("omni_gettrade", "790d15d045e5712ba2f203b1e55bf35ac6cbb9ad2521e1140c95db804cfb7559");
-		client.invokeObj("omni_gettrade", "5ba9d08a06eb2c0e98c01d34a4517ab711058e8bafee71b9f938a7f0d23df33a");
-		client.invokeObj("omni_gettrade", "0da0ca259b5ddb3da6b9ccde5dd4a0fc36fe9a9d54f1b8472502a137cf0044a8");
-
-		List<ECKey> keys = ListUtil.toList(
-				// 020f36d7b035992140d1aec93cdbfd1780c5cb70a138394d42e296e94734a8846a
-				ECKey.fromPrivate(Hex.decode("395222b75a102bdabaeb3f6d616ad7972642e5bfe529e3052814ef340e931fb3")),
-				// 03a7167a1b607ae82b9935c28d1795150668a60a41899acfdd2028282d63edb9dc
-				ECKey.fromPrivate(Hex.decode("998059439fa9a6591cae0e0ba863c1544384aefe4c90c1e98eec670ab55bfc8c")),
-				// 0376ad68f86690a1f2c2e7aca2f5722c245fadceb9d9889e5ababde3534127d93b
-				ECKey.fromPrivate(Hex.decode("7102ee9535259e129c392ee061b0e97ecd86d248fd99425a1aa4285ccaf651cc")));
-		Account multiAddress = BitcoinUtils.createMultiAddress(MainNetParams.get(), 1, keys);
-		System.out.println(multiAddress.getAddress());
-		System.out.println("------------------");
-		multiAddress.getPublicKeyArray().forEach(System.out::println);
-		System.out.println("------------------");
-		multiAddress.getPrivateKeyArray().forEach(System.out::println);
-
-		System.out.println("--------------------");
-		Account segwitAddress = BitcoinUtils.createSegwitAddress(TestNet3Params.get());
-		System.out.println(segwitAddress.getAddress());
-		System.out.println(segwitAddress.getPublicKey());
-		System.out.println(segwitAddress.getPrivateKey());
-
-		System.out.println("-------------------");
-		keys = ListUtil.toList(
-				// 0266ec44c371aefc0a0f42a0accfd34f005d0921ca02f0e1711747b801c28fada1
-				ECKey.fromPrivate(Hex.decode("1dd474829a4ac9d3baad15637c67a9d79887031271ec0fd6067d5543837d0946")),
-				// 0355b6efa12c7fcf479ab16578cb3bca07bdad3e224f38b3aec59874721dd44c5c
-				ECKey.fromPrivate(Hex.decode("b4dfe7d37e99962bc21678961940373e592fa7691d5e3a176ca26e06156b18fc")),
-				// 03103cabc278c7f6ddcb72a95362cf43b1e660d4eafe0ec3ba89aa5ee914bdd88a
-				ECKey.fromPrivate(Hex.decode("84f5a909a1d7ec9bde9f1930ca4ab8b8cb551920377ce940a6e50d1b3f906d17")));
-		multiAddress = BitcoinUtils.createMultiAddress(TestNet3Params.get(), 2, keys);
-		// 2Mv6KiSdZhde22KsFkRMGiVVebdwupS4UX1
-		System.out.println(multiAddress.getAddress());
-		System.out.println("------------------");
-		multiAddress.getPublicKeyArray().forEach(System.out::println);
-		System.out.println("------------------");
-		multiAddress.getPrivateKeyArray().forEach(System.out::println);
-	}
-
-	@Test
-	@SneakyThrows
 	public void btcMulti() {
-		init();
+		service = new BitcoinServiceImpl(new BitcoinProperties().setBroadcastTransaction((raw, endpoints) -> {
+			try {
+				// 不进行交易的广播
+				return PushTx.success("");
+			}
+			catch (Throwable throwable) {
+				return new PushTx(throwable);
+			}
+			// 获取未花费输出
+		}).setUnspent((address, endpoints) -> {
+			try {
+				// 出于测试需要, 使用指定的未花费输出
+				return new ArrayList<Unspent>() {
+					{
+						add(new Unspent().setValue(new BigInteger("1029719"))
+								.setHash("2bde430e919273f2777b11a7cae9228ae8710129a6ee2ca8b46a6fd5e2f2591a").setOut(1L)
+								.setConfirmations(new BigInteger("35688"))
+								.setScript("a9141f396a0c4994cae1820224bb249a21de3ad4e73287"));
+					}
+				};
+			}
+			catch (Exception e) {
+				return Collections.emptyList();
+			}
+			// 测试节点
+		}).setEndpoints(BitcoinEndpoints.TEST));
+
 		// 模拟两个人分别拥有私钥, 进行签名使用
 		Account u1 = BitcoinUtils.getMultiAccountOfKey("2Mv6KiSdZhde22KsFkRMGiVVebdwupS4UX1", 2,
 				ListUtil.toList("0266ec44c371aefc0a0f42a0accfd34f005d0921ca02f0e1711747b801c28fada1",
@@ -334,44 +247,43 @@ public class Transfer {
 		BigDecimal value = new BigDecimal("0.001");
 		// 1. u1 生成交易
 		BitcoinTransactionGenerate ug1 = service.transactionGenerate(u1, a1, OmniContract.BTC, value,
-				TransferParams.empty());
+				new TransferParams().setFee(Coin.valueOf(88)));
+
+		AssertUtils.equals(ug1.getBitcoin().getTransaction().getTxId().toString(),
+				"00179375fdc07017409ddfc0b67e19877325cf93b51f720971d5f76c1c2e163b", "u1生成的txId异常!");
+
 		// 2. u1 签名交易
 		ug1 = service.transactionSign(ug1);
+
+		AssertUtils.equals(ug1.getBitcoin().getTransaction().getTxId().toString(),
+				"2d1222330211c202f1502248af266141bf7a53b778d0f15c96ce4c08d6160df0", "u1签名后的txId异常!");
+
+		AssertUtils.equals(ug1.getSignHex(),
+				"01000000011a59f2e2d56f6ab4a82ceea6290171e88a22e9caa7117b77f27392910e43de2b01000000b40047304402204a4cd012d1f55ce2e67eea1c4ee79d02c9ce8bc4dcdc368c21020c746771b3d402206ca103eef6aa61798a3faa5f317f5ab83a36284b85ea89b6f5880ba4c31df7e1014c6952210266ec44c371aefc0a0f42a0accfd34f005d0921ca02f0e1711747b801c28fada1210355b6efa12c7fcf479ab16578cb3bca07bdad3e224f38b3aec59874721dd44c5c2103103cabc278c7f6ddcb72a95362cf43b1e660d4eafe0ec3ba89aa5ee914bdd88a53aeffffffff02a0860100000000001976a9141d2d4cbe20c9d587f52d49becc755157cdfc041788ac07e20d000000000017a9141f396a0c4994cae1820224bb249a21de3ad4e7328700000000",
+				"u1签名异常!");
+
 		// 3. u1 将 原始数据 发送给 u2
 		String rawHex = ug1.getSignHex();
 		// u2 生成交易
 		BitcoinTransactionGenerate ug2 = BitcoinTransactionGenerate.ofBitcoinRaw(u2, np, rawHex);
+
+		AssertUtils.equals(ug2.getBitcoin().getTransaction().getTxId().toString(),
+				ug1.getBitcoin().getTransaction().getTxId().toString(), "根据rawHex生成的交易信息异常!");
+
 		// u2 签名
 		ug2 = service.transactionSign(ug2);
-		// 广播
-		System.out.println(ug2.getSignHex());
+
+		AssertUtils.equals(ug2.getBitcoin().getTransaction().getTxId().toString(),
+				"72344a82f9b99597a4d9bdb6bd1c54871e98dabff59fa15241b6c926f4fd03ca", "u2签名后的txId异常!");
+
+		AssertUtils.equals(ug2.getSignHex(),
+				"01000000011a59f2e2d56f6ab4a82ceea6290171e88a22e9caa7117b77f27392910e43de2b01000000fc0047304402204a4cd012d1f55ce2e67eea1c4ee79d02c9ce8bc4dcdc368c21020c746771b3d402206ca103eef6aa61798a3faa5f317f5ab83a36284b85ea89b6f5880ba4c31df7e1014730440220328e213dcb90dac79e1d72f2a13d9f6cb0ffb05dc96fd22870e8cc7554acb92502200296437ed6bbd84ed67f8a7761fe5b99ada7b2dd7f53172c46be57eecec9fd16014c6952210266ec44c371aefc0a0f42a0accfd34f005d0921ca02f0e1711747b801c28fada1210355b6efa12c7fcf479ab16578cb3bca07bdad3e224f38b3aec59874721dd44c5c2103103cabc278c7f6ddcb72a95362cf43b1e660d4eafe0ec3ba89aa5ee914bdd88a53aeffffffff02a0860100000000001976a9141d2d4cbe20c9d587f52d49becc755157cdfc041788ac07e20d000000000017a9141f396a0c4994cae1820224bb249a21de3ad4e7328700000000",
+				"u2签名异常!");
 	}
 
 	@Test
 	public void p2sh_p2wpkh() {
-		np = MainNetParams.get();
-		Transaction tx = new Transaction(np, Hex.decode(
-				"0100000001db6b1b20aa0fd7b23880be2ecbd4a98130974cf4748fb66092ac4d3ceb1a54770100000000feffffff02b8b4eb0b000000001976a914a457b684d7f0d539a46a45bbc043f35b59d0d96388ac0008af2f000000001976a914fd270b1ee6abcaea97fea7ad0402e8bd8ad6d77c88ac92040000"));
 
-		ECKey key = ECKey.fromPrivate(Hex.decode("eb696a065ef48a2192da5b28b694f87544b30fae8327c4510137a922f32c6dcf"));
-
-		Script redeemScript = new Script(Hex.decode("001479091972186c449eb1ded22b78e40d009bdf0089"));
-		Script redeemScript_2 = new ScriptBuilder().smallNum(0).data(key.getPubKeyHash()).build();
-
-		Sha256Hash signHash1 = tx.hashForSignature(0, redeemScript, Transaction.SigHash.ALL, false);
-		Sha256Hash signHash2 = tx.hashForWitnessSignature(0, redeemScript, Coin.valueOf(10), Transaction.SigHash.ALL,
-				false);
-		Sha256Hash signHash3 = tx.hashForWitnessSignature(0, redeemScript, Coin.valueOf(11), Transaction.SigHash.ALL,
-				false);
-		Sha256Hash signHash4 = tx.hashForWitnessSignature(0, redeemScript, BitcoinUtils.btcToCoin(new BigDecimal("10")),
-				Transaction.SigHash.ALL, false);
-
-		ECKey.ECDSASignature sign1 = key.sign(signHash1);
-		ECKey.ECDSASignature sign2 = key.sign(signHash2);
-		ECKey.ECDSASignature sign3 = key.sign(signHash3);
-		ECKey.ECDSASignature sign4 = key.sign(signHash4);
-
-		System.out.println(tx.getTxId());
 	}
 
 	@Test
@@ -441,11 +353,11 @@ public class Transfer {
 
 		// 可通过 向 moneyqMan7uh8FqdCA2BV5yZ8qVrc9ikLP 转入 btc 来获取 omni 测试币
 		// 没找到 Omni 的测试网接口, 所以使用 rpc 查询
-		System.out.println(
-				"a1 OMNI 余额: " + client.invokeObj("omni_getbalance", a1, Convert.toInt(OmniContract.OMNI.getHash())));
+		System.out.println("a1 OMNI 余额: "
+				+ client.invoke("omni_getbalance", String.class, a1, Convert.toInt(OmniContract.OMNI.getHash())));
 
-		System.out.println(
-				"a5 OMNI 余额: " + client.invokeObj("omni_getbalance", a5, Convert.toInt(OmniContract.OMNI.getHash())));
+		System.out.println("a5 OMNI 余额: "
+				+ client.invoke("omni_getbalance", String.class, a5, Convert.toInt(OmniContract.OMNI.getHash())));
 
 		BigDecimal value = new BigDecimal("0.01");
 		System.out.println("a1 向 a5 转 " + value.toPlainString() + " OMNI");
@@ -457,8 +369,8 @@ public class Transfer {
 		else {
 			System.out.println("转账成功");
 			System.out.println(transfer.getHash());
-			System.out.println(client.invokeObj("omni_gettransaction", transfer.getHash()));
-			System.out.println(client.invokeObj("omni_gettrade", transfer.getHash()));
+			System.out.println(client.invoke("omni_gettransaction", String.class, transfer.getHash()));
+			System.out.println(client.invoke("omni_gettrade", String.class, transfer.getHash()));
 		}
 	}
 

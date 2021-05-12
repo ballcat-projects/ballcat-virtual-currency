@@ -16,6 +16,14 @@ import live.lingting.virtual.currency.tronscan.util.TronscanModelUtils;
 @Data
 public class Block {
 
+	@JsonProperty("blockID")
+	private String blockId;
+
+	@JsonProperty("block_header")
+	private BlockHeader blockHeader;
+
+	private List<Transaction> transactions;
+
 	/**
 	 * 当前的固化块
 	 * @author lingting 2021-02-26 18:12
@@ -24,14 +32,6 @@ public class Block {
 	public Block solidityNow(TronscanProperties properties) {
 		return TronscanModelUtils.get(properties, "walletsolidity/getnowblock", Block.class);
 	}
-
-	@JsonProperty("blockID")
-	private String blockId;
-
-	@JsonProperty("block_header")
-	private BlockHeader blockHeader;
-
-	private List<Transaction> transactions;
 
 	@NoArgsConstructor
 	@Data

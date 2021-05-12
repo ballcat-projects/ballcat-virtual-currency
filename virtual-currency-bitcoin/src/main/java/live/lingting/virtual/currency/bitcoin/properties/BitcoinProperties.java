@@ -2,7 +2,6 @@ package live.lingting.virtual.currency.bitcoin.properties;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 import lombok.AccessLevel;
@@ -64,11 +63,6 @@ public class BitcoinProperties {
 	@Setter(value = AccessLevel.NONE)
 	private NetworkParameters np;
 
-	public NetworkParameters getNp() {
-		return endpoints == BitcoinEndpoints.MAINNET || endpoints == BitcoinEndpoints.SOCHAIN_MAINNET
-				? MainNetParams.get() : TestNet3Params.get();
-	}
-
 	/**
 	 * 获取锁, 成功则允许发送请求, 手动实现限制, 限制请求在 5-10s 一次
 	 */
@@ -87,7 +81,7 @@ public class BitcoinProperties {
 	/**
 	 * 获取未花费输出
 	 */
-	public BiFunction<String, Endpoints, List<Unspent>> unspent = (address, endpoints) -> {
+	public BiFunction<String, BitcoinEndpoints, List<Unspent>> unspent = (address, endpoints) -> {
 		try {
 			return UnspentRes.of(endpoints, getConfirmationsMin(), address).toUnspentList();
 		}
@@ -97,24 +91,8 @@ public class BitcoinProperties {
 		}
 	};
 
-	/**
-	 * 自定义 omni 节点url, 可为空
-	 */
-	private String omniUrl;
-
-	/**
-	 * 自定义 bitcoin 节点url, 可为空
-	 */
-	private String bitcoinUrl;
-
-	/**
-	 * rpc 地址
-	 */
-	private String rpcUrl;
-
-	/**
-	 * rpc 请求时的请求头
-	 */
-	private Map<String, String> headers;
+	public NetworkParameters getNp() {
+		return endpoints == BitcoinEndpoints.MAINNET ? MainNetParams.get() : TestNet3Params.get();
+	}
 
 }

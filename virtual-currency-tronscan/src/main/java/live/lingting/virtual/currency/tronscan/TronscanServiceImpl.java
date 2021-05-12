@@ -67,7 +67,7 @@ public class TronscanServiceImpl implements PlatformService<TronscanTransactionG
 	}
 
 	@Override
-	public Optional<TransactionInfo> getTransactionByHash(String hash) throws Throwable {
+	public Optional<TransactionInfo> getTransactionByHash(String hash) throws Exception {
 		Transaction transaction = Transaction.of(properties, hash);
 
 		// 没有返回txId 表示此交易未被确认 或 不存在
@@ -242,7 +242,7 @@ public class TronscanServiceImpl implements PlatformService<TronscanTransactionG
 
 	@Override
 	public TronscanTransactionGenerate transactionGenerate(Account from, String to, Contract contract, BigDecimal value,
-			TransferParams params) throws Throwable {
+			TransferParams params) throws Exception {
 		if (value.compareTo(BigDecimal.ZERO) <= 0) {
 			return TronscanTransactionGenerate.failed("转账金额必须大于0!");
 		}
@@ -252,10 +252,15 @@ public class TronscanServiceImpl implements PlatformService<TronscanTransactionG
 		if (!isHexAddress && !from.getAddress().equals(baseAddress)) {
 			return TronscanTransactionGenerate.failed("由公钥推导出的地址与传入地址不符!");
 		}
-		// 传入 hex 地址. 与 hex地址比对
-		else if (isHexAddress && !from.getAddress().equals(TronscanUtils.baseToHex(baseAddress))) {
+		// 传入 hex 地址. 将hex地址转为 Base58
+		else if (isHexAddress && !baseAddress.equals(TronscanUtils.decodeAddressParam(from.getAddress()))) {
 			return TronscanTransactionGenerate.failed("由公钥推导出的地址与传入地址不符!");
 		}
+
+		if (TronscanUtils.isHexAddress(to)) {
+			to = TronscanUtils.decodeAddressParam(to);
+		}
+
 		// 以 base58 地址为基准
 		from.setAddress(baseAddress);
 		// 计算转账数量
@@ -305,7 +310,7 @@ public class TronscanServiceImpl implements PlatformService<TronscanTransactionG
 	}
 
 	@Override
-	public TronscanTransactionGenerate transactionSign(TronscanTransactionGenerate generate) throws Throwable {
+	public TronscanTransactionGenerate transactionSign(TronscanTransactionGenerate generate) throws Exception {
 		// 如果上一步失败则直接返回
 		if (!generate.getSuccess()) {
 			return generate;
@@ -322,7 +327,7 @@ public class TronscanServiceImpl implements PlatformService<TronscanTransactionG
 	}
 
 	@Override
-	public TransferResult transactionBroadcast(TronscanTransactionGenerate generate) throws Throwable {
+	public TransferResult transactionBroadcast(TronscanTransactionGenerate generate) throws Exception {
 		// 如果上一步失败则直接返回
 		if (!generate.getSuccess()) {
 			return TransferResult.failed(generate);

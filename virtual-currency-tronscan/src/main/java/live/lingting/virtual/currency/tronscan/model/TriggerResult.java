@@ -3,6 +3,7 @@ package live.lingting.virtual.currency.tronscan.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -12,13 +13,14 @@ import lombok.Setter;
  *
  * @author lingting 2020/12/25 19:20
  */
-@Data
+@Getter
+@Setter
 public class TriggerResult {
 
 	private String response;
 
-	@Getter
-	@Setter
+	@Data
+	@EqualsAndHashCode(callSuper = true)
 	public static class TriggerConstantResult extends TriggerResult {
 
 		private String code;
@@ -43,8 +45,8 @@ public class TriggerResult {
 
 	}
 
-	@Getter
-	@Setter
+	@Data
+	@EqualsAndHashCode(callSuper = true)
 	public static class Trc20TransferGenerateResult extends TriggerResult {
 
 		private String code;
@@ -74,8 +76,8 @@ public class TriggerResult {
 
 	}
 
-	@Getter
-	@Setter
+	@Data
+	@EqualsAndHashCode(callSuper = true)
 	public static class TransferBroadcastResult extends TriggerResult {
 
 		private String code;
@@ -90,8 +92,8 @@ public class TriggerResult {
 
 	}
 
-	@Getter
-	@Setter
+	@Data
+	@EqualsAndHashCode(callSuper = true)
 	public static class Trc10TransferGenerateResult extends TriggerResult {
 
 		@JsonProperty("Error")
@@ -110,8 +112,8 @@ public class TriggerResult {
 
 	}
 
-	@Getter
-	@Setter
+	@Data
+	@EqualsAndHashCode(callSuper = true)
 	public static class TrxTransferGenerateResult extends TriggerResult {
 
 		@JsonProperty("Error")

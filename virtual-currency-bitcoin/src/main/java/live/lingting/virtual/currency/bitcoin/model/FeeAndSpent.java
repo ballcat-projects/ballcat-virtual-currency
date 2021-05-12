@@ -10,10 +10,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.var;
 import org.bitcoinj.core.Coin;
+import live.lingting.virtual.currency.bitcoin.BitcoinServiceImpl;
 import live.lingting.virtual.currency.bitcoin.contract.OmniContract;
 import live.lingting.virtual.currency.bitcoin.util.BitcoinUtils;
 import live.lingting.virtual.currency.core.Contract;
-import live.lingting.virtual.currency.core.PlatformService;
 import live.lingting.virtual.currency.core.exception.InsufficientBalanceException;
 import live.lingting.virtual.currency.core.model.TransferParams;
 
@@ -38,8 +38,8 @@ public class FeeAndSpent {
 
 	private Boolean zero = false;
 
-	public static FeeAndSpent of(PlatformService service, Contract contract, TransferParams params,
-			List<Unspent> unspentList, Coin amount, BigInteger min) throws Throwable {
+	public static FeeAndSpent of(BitcoinServiceImpl service, Contract contract, TransferParams params,
+			List<Unspent> unspentList, Coin amount, BigInteger min) throws Exception {
 		// 记录本次转账使用的 spent
 		List<Unspent> useList = new ArrayList<>();
 		// 转出数量

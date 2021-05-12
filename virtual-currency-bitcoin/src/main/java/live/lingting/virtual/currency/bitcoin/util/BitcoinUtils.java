@@ -12,6 +12,8 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Base58;
 import org.bitcoinj.core.Coin;
@@ -31,6 +33,7 @@ import live.lingting.virtual.currency.core.util.JacksonUtils;
  * @author lingting 2020/12/28 17:49
  */
 @Slf4j
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class BitcoinUtils {
 
 	/**
