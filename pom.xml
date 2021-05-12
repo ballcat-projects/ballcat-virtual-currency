@@ -20,7 +20,7 @@
     <url>https://github.com/lingting-gzm/VirtualCurrency</url>
 
     <properties>
-        <revision>0.4.2-SNAPSHOT</revision>
+        <revision>0.4.2</revision>
         <scm.url>git@github.com:lingting-gzm/VirtualCurrency.git</scm.url>
 
         <java.version>1.8</java.version>
